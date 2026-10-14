@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <title>小熊 Bear (@bear__only150)｜Official Media Kit ＆ 品牌合作履歷</title>
-<meta name="description" content="150cm穿搭實驗室｜小熊 Bear (@bear__only150) 官方品牌合作履歷與模特卡。近30天自然檢視57.7萬次、觸及31.3萬人，75%以上為25-44歲高消費力輕熟受眾。">
+<meta name="description" content="150cm穿搭實驗室｜小熊 Bear (@bear__only150) 官方品牌合作履歷與模特卡。跨平台累積逾1.1萬粉絲、近30天自然瀏覽破70萬次，84%為25-44歲高消費力輕熟受眾。">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Huninn&family=Noto+Sans+TC:wght@400;500;700&display=swap">
 <style>
@@ -236,6 +236,69 @@ body {
   border-radius: 50%;
   background: var(--accent);
   display: inline-block;
+}
+
+/* Platform Matrix Grid */
+.platform-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: 14px;
+  margin-bottom: 14px;
+}
+.platform-card {
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 18px;
+  padding: 18px 20px;
+  box-shadow: var(--shadow);
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  gap: 10px;
+}
+.platform-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+.platform-name {
+  font-weight: 700;
+  font-size: 15px;
+  color: var(--ink);
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.platform-handle {
+  font-size: 12px;
+  color: var(--muted);
+}
+.platform-num {
+  font-family: "Huninn", sans-serif;
+  font-size: 28px;
+  color: var(--ink);
+  margin: 2px 0 4px;
+  font-variant-numeric: tabular-nums;
+}
+.platform-num small {
+  font-size: 13px;
+  font-family: "Noto Sans TC", sans-serif;
+  color: var(--muted);
+  font-weight: normal;
+  margin-left: 4px;
+}
+.platform-detail {
+  font-size: 12.5px;
+  color: var(--muted);
+  line-height: 1.45;
+}
+.platform-pill {
+  font-size: 11.5px;
+  font-weight: 600;
+  padding: 3px 9px;
+  border-radius: 999px;
+  display: inline-block;
+  align-self: flex-start;
 }
 
 /* KPI Metrics Grid */
@@ -577,7 +640,7 @@ footer {
   .no-print { display: none !important; }
   body { background: #fff; color: #000; }
   .wrap { padding: 0; max-width: 100%; }
-  .hero, .kpi-card, .panel, .post-card, .cta-card { box-shadow: none; break-inside: avoid; }
+  .hero, .kpi-card, .platform-card, .panel, .post-card, .cta-card { box-shadow: none; break-inside: avoid; }
 }
 </style>
 </head>
@@ -694,18 +757,58 @@ footer {
     </a>
   </div>
 
-  <!-- 30-Day Real Insights -->
-  <h2 class="section-title"><span class="dot"></span>近 30 天跨平台社群洞察表現（Threads・IG・TikTok 官方後台數據）</h2>
+  <!-- 30-Day Real Insights & Platform Matrix -->
+  <h2 class="section-title"><span class="dot"></span>三大社群平台影響力矩陣 ＆ 近 30 天數據表現（官方後台）</h2>
+
+  <!-- Three Platforms Matrix -->
+  <div class="platform-grid">
+    <div class="platform-card">
+      <div>
+        <div class="platform-head">
+          <span class="platform-name">🧵 Threads</span>
+          <span class="platform-handle">@bear__only150</span>
+        </div>
+        <div class="platform-num">4,940 <small>位粉絲</small></div>
+        <div class="platform-detail">近月瀏覽 <strong>63 萬次</strong>・爆款按讚率 <strong>11.25%</strong></div>
+      </div>
+      <span class="platform-pill" style="background:var(--accent-soft); color:var(--accent);">🔥 首頁推流 98.9%・心理療癒與日常話題</span>
+    </div>
+
+    <div class="platform-card">
+      <div>
+        <div class="platform-head">
+          <span class="platform-name">📸 Instagram</span>
+          <span class="platform-handle">@bear__only150</span>
+        </div>
+        <div class="platform-num">3,722 <small>位粉絲</small></div>
+        <div class="platform-detail">Reels 互動 <strong>94.4%</strong>・非粉觸及 <strong>80.4%</strong></div>
+      </div>
+      <span class="platform-pill" style="background:var(--sun-soft); color:var(--sun);">✨ 150cm 穿搭實驗・精緻美學視覺</span>
+    </div>
+
+    <div class="platform-card">
+      <div>
+        <div class="platform-head">
+          <span class="platform-name">🎵 TikTok</span>
+          <span class="platform-handle">@bear_only150</span>
+        </div>
+        <div class="platform-num">2,339 <small>位粉絲</small></div>
+        <div class="platform-detail">累計獲讚 <strong>1.26 萬</strong>・主頁連刷率 <strong>17.7%</strong></div>
+      </div>
+      <span class="platform-pill" style="background:var(--sage-soft); color:var(--sage);">🚀 FYP 推薦 94.8%・跨國美妝品牌首選</span>
+    </div>
+  </div>
+
   <div class="kpi-grid">
     <div class="kpi-card">
       <div class="kpi-label">跨平台自然總瀏覽次數</div>
       <div class="kpi-num">705,231</div>
-      <span class="kpi-delta">Threads 57.7萬＋IG 9.4萬＋TT 3.4萬</span>
+      <span class="kpi-delta">Threads 63萬＋IG 9.4萬＋TT 3.4萬</span>
     </div>
     <div class="kpi-card">
       <div class="kpi-label">跨平台觸及不重複受眾</div>
       <div class="kpi-num">384,504</div>
-      <span class="kpi-delta">全網累積逾 10,845+ 粉絲 🏆</span>
+      <span class="kpi-delta">全網正式突破 11,001+ 粉絲 🏆</span>
     </div>
     <div class="kpi-card">
       <div class="kpi-label">近 30 天總互動次數</div>
@@ -746,7 +849,7 @@ footer {
         </div>
       </div>
       <p style="font-size:13px; color:var(--muted); margin:16px 0 0;">
-        💡 <b>高消費力受眾結構</b>：跨平台突破 <b>1.08 萬粉絲（10,845+）</b>，三大平台（IG 84.0% / TikTok 78.6% / Threads 81.8%）皆高度集中於 <b>25–44 歲具穩定收入之上班族與輕熟族群</b>，且逾 <b>90% 位於台灣與香港</b>。對日常穿搭、保養美妝、宅配美食與質感生活小家電具備實質購買力。
+        💡 <b>高消費力受眾結構</b>：跨平台突破 <b>1.1 萬粉絲（11,001+）</b>，三大平台（IG 84.0% / TikTok 78.6% / Threads 81.8%）皆高度集中於 <b>25–44 歲具穩定收入之上班族與輕熟族群</b>，且逾 <b>90% 位於台灣與香港</b>。對日常穿搭、保養美妝、宅配美食與質感生活小家電具備實質購買力。
       </p>
     </div>
 
@@ -793,18 +896,22 @@ footer {
 
     <div class="post-card">
       <div>
-        <span class="tag tag-accent" style="margin-bottom:8px;display:inline-block;">☀️ 原創連載 IP（D_156+）</span>
-        <p class="post-quote">「醫生叫我每天都要曬太陽D_156☀️
-今天的太陽直接從陽台偷
-順便跟大家介紹同一個爸媽養出...」</p>
+        <span class="tag tag-accent" style="margin-bottom:8px;display:inline-block;">☀️ 原創療癒連載 IP（D_157 超級爆款）</span>
+        <p class="post-quote">「醫生叫我每天都要曬太陽D_157☀️
+去花店pick一支最喜歡的花
+不用一束 只要一支
+就是我每週的快樂🌼🌼🌼」</p>
       </div>
       <div>
         <div class="post-stats">
-          <span>自然觀看 <strong>1.4 萬次</strong></span>
-          <span>❤️ <strong>1,201</strong> ・ 💬 74</span>
+          <span>自然瀏覽 <strong>3.8 萬次</strong></span>
+          <span>❤️ <strong>4,285</strong> ・ 💬 <strong>214</strong></span>
+        </div>
+        <div style="font-size:12px; color:var(--muted); margin-top:6px; line-height:1.4;">
+          📌 主頁造訪 <strong>9,617 次（點閱率 25.2%）</strong>・按讚率 <strong>11.25%</strong>
         </div>
         <div class="post-links no-print">
-          <a class="post-link-btn btn-threads" href="https://www.threads.net/@bear__only150/post/DeYO_cfge6-" target="_blank" rel="noopener">🧵 Threads 貼文 ↗</a>
+          <a class="post-link-btn btn-threads" href="https://www.threads.net/@bear__only150/post/DebMbsUgQL1" target="_blank" rel="noopener">🧵 Threads 貼文 ↗</a>
         </div>
       </div>
     </div>
