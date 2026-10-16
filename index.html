@@ -390,6 +390,85 @@ body {
 }
 .bar-fill.gold { background: var(--sun); }
 
+/* Demographics Visual Dashboard */
+.demo-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(270px, 1fr));
+  gap: 16px;
+  margin-bottom: 20px;
+}
+.demo-card {
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 18px;
+  padding: 20px;
+  box-shadow: var(--shadow);
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+}
+.demo-card h3 {
+  margin: 0 0 14px;
+  font-size: 15.5px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+.gender-track {
+  height: 24px;
+  background: var(--surface-alt);
+  border-radius: 999px;
+  overflow: hidden;
+  display: flex;
+  margin: 6px 0 4px;
+  border: 1px solid var(--line);
+}
+.gender-female {
+  background: linear-gradient(90deg, #E87A90, #F398A9);
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #fff;
+  font-size: 11.5px;
+  font-weight: 700;
+  text-shadow: 0 1px 2px rgba(0,0,0,0.2);
+}
+.gender-male {
+  background: linear-gradient(90deg, #5B86B8, #739ECB);
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #fff;
+  font-size: 11.5px;
+  font-weight: 700;
+  text-shadow: 0 1px 2px rgba(0,0,0,0.2);
+}
+.gender-other {
+  background: var(--muted);
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #fff;
+  font-size: 10.5px;
+  font-weight: 600;
+  opacity: 0.65;
+}
+.demo-insight-box {
+  margin-top: 14px;
+  padding: 11px 13px;
+  background: var(--bg);
+  border-radius: 12px;
+  border: 1px solid var(--line);
+  font-size: 12px;
+  color: var(--ink);
+  line-height: 1.5;
+}
+
 /* Pillars */
 .pillar-list {
   display: grid;
@@ -822,52 +901,129 @@ footer {
     </div>
   </div>
 
-  <!-- Audience Structure & Content Advantages -->
-  <h2 class="section-title"><span class="dot"></span>受眾輪廓 ＆ 品牌合作三大優勢</h2>
-  <div class="two-col">
-    <div class="panel">
-      <h3>
-        <span>受眾年齡分佈（主力為具消費力上班族）</span>
-        <span class="tag">25–44 歲高達 84.0%</span>
-      </h3>
-      <div class="bar-group">
-        <div class="bar-item">
-          <div class="bar-head"><span><b>25–34 歲</b>（核心小資上班族／輕熟白領）</span><span><b>47.6% – 52.1%</b></span></div>
-          <div class="bar-track"><div class="bar-fill" style="width: 52.1%"></div></div>
+  <!-- Audience Demographics & Content Advantages -->
+  <h2 class="section-title"><span class="dot"></span>受眾輪廓數據視覺化（男女比・年齡比・地理分佈）</h2>
+
+  <div class="demo-grid">
+    <!-- Card 1: 👥 粉絲性別分佈 -->
+    <div class="demo-card">
+      <div>
+        <h3>
+          <span>👥 粉絲性別分佈</span>
+          <span class="tag tag-accent">男女雙引擎平衡</span>
+        </h3>
+        
+        <div style="margin-bottom:14px;">
+          <div style="display:flex; justify-content:space-between; font-size:12.5px; font-weight:600; margin-bottom:4px;">
+            <span>📸 Instagram 核心商業池</span>
+            <span style="color:var(--muted);">40.2% 女 ｜ 59.8% 男</span>
+          </div>
+          <div class="gender-track">
+            <div class="gender-female" style="width:40.2%;">👩 40.2%</div>
+            <div class="gender-male" style="width:59.8%;">👨 59.8%</div>
+          </div>
+          <div style="font-size:11.5px; color:var(--muted); margin-top:4px;">
+            女粉集中於穿搭保養 Reels 轉單；男粉點讚推流＆買 3C 家電美食
+          </div>
         </div>
-        <div class="bar-item">
-          <div class="bar-head"><span><b>35–44 歲</b>（高經濟能力族群）</span><span><b>23.6% – 36.1%</b></span></div>
-          <div class="bar-track"><div class="bar-fill gold" style="width: 36.1%"></div></div>
-        </div>
-        <div class="bar-item">
-          <div class="bar-head"><span><b>18–24 歲</b>（年輕大學生／社會新鮮人）</span><span><b>6.6% – 16.3%</b></span></div>
-          <div class="bar-track"><div class="bar-fill" style="width: 16.3%; opacity:0.65"></div></div>
-        </div>
-        <div class="bar-item">
-          <div class="bar-head"><span><b>45 歲以上</b></span><span><b>8.0% – 9.6%</b></span></div>
-          <div class="bar-track"><div class="bar-fill" style="width: 9.6%; opacity:0.45"></div></div>
+
+        <div>
+          <div style="display:flex; justify-content:space-between; font-size:12.5px; font-weight:600; margin-bottom:4px;">
+            <span>🧵 Threads 31 萬破圈受眾</span>
+            <span style="color:var(--muted);">49.0% 女 ｜ 31.5% 男</span>
+          </div>
+          <div class="gender-track">
+            <div class="gender-female" style="width:48.99%;">👩 49.0%</div>
+            <div class="gender-male" style="width:31.45%;">👨 31.5%</div>
+            <div class="gender-other" style="width:19.56%;">19.5%</div>
+          </div>
+          <div style="font-size:11.5px; color:var(--muted); margin-top:4px;">
+            公域觸及 15 萬+ 女性路人，美妝穿搭破圈種草力極強
+          </div>
         </div>
       </div>
-      <p style="font-size:13px; color:var(--muted); margin:16px 0 0;">
-        💡 <b>高消費力受眾結構</b>：跨平台突破 <b>1.1 萬粉絲（11,049+）</b>，三大平台（IG 84.0% / TikTok 78.6% / Threads 81.8%）皆高度集中於 <b>25–44 歲具穩定收入之上班族與輕熟族群</b>，且逾 <b>90% 位於台灣與香港</b>。對日常穿搭、保養美妝、宅配美食與質感生活小家電具備實質購買力。
-      </p>
+
+      <div class="demo-insight-box">
+        💡 <b>男女雙引擎變現</b>：非單一偏廢結構！美妝服飾有逾 15 萬女性池收割，高單價家電、3C 與美食更有高忠誠男粉買單推流。
+      </div>
     </div>
 
-    <div class="panel">
-      <h3><span>為什麼選擇與小熊合作？</span><span class="tag tag-accent">單季帶貨破 $16.3 萬+</span></h3>
-      <div class="pillar-list">
-        <div class="pillar">
-          <div class="pillar-title">1. 團購與導購實戰高轉換（單季累計 GMV 破 $16.3 萬）</div>
-          <p class="pillar-desc">單檔「伊頓果乾團購」創下 <b>$28,269</b> 銷售佳績；近 3 個月日常導購逾 <b>155+ 筆訂單（逾 $13.5 萬）</b>。小個子長褲頻繁單筆包色 2–3 件，美食、保養與千元家電皆具高轉單力。</p>
+    <!-- Card 2: 🎂 受眾年齡結構 -->
+    <div class="demo-card">
+      <div>
+        <h3>
+          <span>🎂 受眾年齡分佈</span>
+          <span class="tag">25–44 歲高達 84.0%</span>
+        </h3>
+        <div class="bar-group" style="margin-top:6px;">
+          <div class="bar-item">
+            <div class="bar-head"><span><b>25–34 歲</b>（核心小資上班族）</span><span><b>47.9% – 52.1%</b></span></div>
+            <div class="bar-track"><div class="bar-fill" style="width: 52.1%"></div></div>
+          </div>
+          <div class="bar-item">
+            <div class="bar-head"><span><b>35–44 歲</b>（高消費力輕熟白領）</span><span><b>23.6% – 36.1%</b></span></div>
+            <div class="bar-track"><div class="bar-fill gold" style="width: 36.1%"></div></div>
+          </div>
+          <div class="bar-item">
+            <div class="bar-head"><span><b>18–24 歲</b>（年輕學生新鮮人）</span><span><b>6.6% – 16.3%</b></span></div>
+            <div class="bar-track"><div class="bar-fill" style="width: 16.3%; opacity:0.55"></div></div>
+          </div>
+          <div class="bar-item">
+            <div class="bar-head"><span><b>45 歲以上</b></span><span><b>8.0% – 9.6%</b></span></div>
+            <div class="bar-track"><div class="bar-fill" style="width: 9.6%; opacity:0.4"></div></div>
+          </div>
         </div>
-        <div class="pillar">
-          <div class="pillar-title">2. 超高「活人感」，軟性種草不生硬</div>
-          <p class="pillar-desc">拒絕罐頭式說教廣編，擅長將產品自然融入「下班獨居療癒」、「反差感穿搭 Reels」與「日常修復日記」，讀者零排斥感、TikTok 主頁連刷率高達 17.7%。</p>
+      </div>
+
+      <div class="demo-insight-box">
+        💡 <b>高消費力保證</b>：全網超過 <b>84%</b> 皆為具正職穩定收入的社會人士，客單價高、退貨率低，絕非無消費力低齡學生。
+      </div>
+    </div>
+
+    <!-- Card 3: 📍 地理市場分佈 -->
+    <div class="demo-card">
+      <div>
+        <h3>
+          <span>📍 粉絲地理市場分佈</span>
+          <span class="tag" style="background:var(--sage-soft); color:var(--sage);">繁中市場 94%+</span>
+        </h3>
+        <div class="bar-group" style="margin-top:6px;">
+          <div class="bar-item">
+            <div class="bar-head"><span>🇹🇼 <b>台灣本土市場</b>（六都都會區）</span><span><b>88.0% – 89.3%</b></span></div>
+            <div class="bar-track"><div class="bar-fill" style="width: 89.3%; background:var(--sage);"></div></div>
+          </div>
+          <div class="bar-item">
+            <div class="bar-head"><span>🇭🇰 <b>香港市場</b>（IG 達近兩成）</span><span><b>5.2% – 19.8%</b></span></div>
+            <div class="bar-track"><div class="bar-fill gold" style="width: 19.8%"></div></div>
+          </div>
+          <div class="bar-item">
+            <div class="bar-head"><span>🌏 <b>星馬及其他海外華人</b></span><span><b>2.2% – 5.5%</b></span></div>
+            <div class="bar-track"><div class="bar-fill" style="width: 5.5%; opacity:0.5"></div></div>
+          </div>
         </div>
-        <div class="pillar">
-          <div class="pillar-title">3. 三平台公域破圈 × 私域導購雙引擎</div>
-          <p class="pillar-desc">Threads＋IG＋TikTok 單月破 70.5 萬瀏覽，親自深度體驗捕捉最真實體感細節，守時交稿，為品牌創造長尾口碑與銷量。</p>
-        </div>
+      </div>
+
+      <div class="demo-insight-box">
+        💡 <b>物流與團購保證</b>：台港繁中佔比逾 94%，超商取貨、台灣宅配免運 100% 適用，團購出貨零跨國阻力。
+      </div>
+    </div>
+  </div>
+
+  <!-- Brand Collaboration Advantages Panel -->
+  <div class="panel" style="margin-bottom:28px;">
+    <h3><span>為什麼選擇與小熊合作？品牌合作三大優勢</span><span class="tag tag-accent">單季帶貨破 $16.3 萬+</span></h3>
+    <div class="pillar-list">
+      <div class="pillar">
+        <div class="pillar-title">1. 團購與導購實戰高轉換（單季累計 GMV 破 $16.3 萬）</div>
+        <p class="pillar-desc">單檔「伊頓果乾團購」創下 <b>$28,269</b> 銷售佳績；近 3 個月日常導購逾 <b>155+ 筆訂單（逾 $13.5 萬）</b>。小個子長褲頻繁單筆包色 2–3 件，美食、保養與千元家電皆具高轉單力。</p>
+      </div>
+      <div class="pillar">
+        <div class="pillar-title">2. 超高「活人感」，軟性種草不生硬</div>
+        <p class="pillar-desc">拒絕罐頭式說教廣編，擅長將產品自然融入「下班獨居療癒」、「反差感穿搭 Reels」與「日常修復日記」，讀者零排斥感、TikTok 主頁連刷率高達 17.7%。</p>
+      </div>
+      <div class="pillar">
+        <div class="pillar-title">3. 三平台公域破圈 × 私域導購雙引擎</div>
+        <p class="pillar-desc">Threads＋IG＋TikTok 單月破 70.5 萬瀏覽，親自深度體驗捕捉最真實體感細節，守時交稿，為品牌創造長尾口碑與銷量。</p>
       </div>
     </div>
   </div>
