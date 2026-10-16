@@ -495,40 +495,76 @@ body {
 /* Top Posts Showcase */
 .post-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
-  gap: 14px;
+  grid-template-columns: repeat(auto-fit, minmax(270px, 1fr));
+  gap: 16px;
 }
 .post-card {
   background: var(--surface);
   border: 1px solid var(--line);
-  border-radius: 16px;
-  padding: 18px;
+  border-radius: 18px;
+  padding: 18px 20px;
   display: flex;
   flex-direction: column;
-  justify-content: space-between;
-  gap: 12px;
   box-shadow: var(--shadow);
+  height: 100%;
+}
+.post-card-top {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+.post-card-top .tag {
+  align-self: flex-start;
+  white-space: nowrap;
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 .post-quote {
-  font-size: 14px;
+  font-size: 13.5px;
   background: var(--surface-alt);
-  padding: 12px 14px;
+  padding: 11px 14px;
   border-radius: 12px;
   margin: 0;
+  line-height: 1.5;
+  height: 86px;
+  box-sizing: border-box;
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
   white-space: pre-line;
 }
-.post-stats {
+.post-stats-block {
+  margin-top: auto;
+  border-top: 1px solid var(--line);
+  padding-top: 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-height: 52px;
+}
+.post-stats-row {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  font-size: 13px;
+  font-size: 12.5px;
   color: var(--muted);
-  border-top: 1px solid var(--line);
-  padding-top: 10px;
 }
-.post-stats strong {
+.post-stats-row span {
+  white-space: nowrap;
+}
+.post-stats-row strong {
   color: var(--ink);
-  font-size: 15px;
+  font-size: 14.5px;
+}
+.post-stats-sub {
+  font-size: 11.5px;
+  color: var(--muted);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 .post-links {
   display: flex;
@@ -537,6 +573,8 @@ body {
   margin-top: 10px;
   padding-top: 8px;
   border-top: 1px dashed var(--line);
+  min-height: 30px;
+  align-items: center;
 }
 .post-link-btn {
   display: inline-flex;
@@ -1031,98 +1069,138 @@ footer {
   <!-- Representative Content -->
   <h2 class="section-title"><span class="dot"></span>近期代表性高互動內容（Content Highlights）</h2>
   <div class="post-grid">
+    <!-- Card 1: 阿嬤睡衣 -->
     <div class="post-card">
-      <div>
-        <span class="tag" style="margin-bottom:8px;display:inline-block;">👗 小個子穿搭實驗（三平台破 10 萬）</span>
+      <div class="post-card-top">
+        <span class="tag">👗 小個子穿搭實驗（全網破 10 萬）</span>
         <p class="post-quote">「152/45 拯救阿嬤睡衣
 有成功拯救...嗎
 （好喜歡這次音效」</p>
       </div>
-      <div>
-        <div class="post-stats">
-          <span>全網觀看 <strong>10.0 萬+</strong></span>
-          <span>❤️ 1,894 ・ 💬 75</span>
+      <div class="post-stats-block">
+        <div class="post-stats-row">
+          <span>全網自然觀看 <strong>10.0 萬+</strong></span>
+          <span>❤️ 1,894 ｜ 💬 75</span>
         </div>
-        <div class="post-links no-print">
-          <a class="post-link-btn btn-threads" href="https://www.threads.net/@bear__only150/post/DdnPcbVjrQi" target="_blank" rel="noopener">🧵 Threads 貼文 ↗</a>
-          <a class="post-link-btn btn-ig" href="https://www.instagram.com/reel/DdnPGRkpgYI/" target="_blank" rel="noopener">🎬 IG Reel ↗</a>
+        <div class="post-stats-sub">
+          📌 三平台大滿貫爆款・破圈百萬流量體質
         </div>
+      </div>
+      <div class="post-links no-print">
+        <a class="post-link-btn btn-threads" href="https://www.threads.net/@bear__only150/post/DdnPcbVjrQi" target="_blank" rel="noopener">🧵 Threads 貼文 ↗</a>
+        <a class="post-link-btn btn-ig" href="https://www.instagram.com/reel/DdnPGRkpgYI/" target="_blank" rel="noopener">🎬 IG Reel ↗</a>
       </div>
     </div>
 
+    <!-- Card 2: D_157 買花日記 -->
     <div class="post-card">
-      <div>
-        <span class="tag tag-accent" style="margin-bottom:8px;display:inline-block;">☀️ 原創療癒連載 IP（D_157 超級爆款）</span>
+      <div class="post-card-top">
+        <span class="tag tag-accent">☀️ 療癒連載 IP（D_157 超級爆款）</span>
         <p class="post-quote">「醫生叫我每天都要曬太陽D_157☀️
 去花店pick一支最喜歡的花
-不用一束 只要一支
-就是我每週的快樂🌼🌼🌼」</p>
+不用一束 只要一支 就是我每週的快樂🌼」</p>
       </div>
-      <div>
-        <div class="post-stats">
-          <span>自然瀏覽 <strong>5.5 萬次（55,621）</strong></span>
-          <span>❤️ <strong>4,300+</strong> ・ 💬 <strong>215+</strong></span>
+      <div class="post-stats-block">
+        <div class="post-stats-row">
+          <span>自然瀏覽 <strong>5.5 萬+（55,621）</strong></span>
+          <span>❤️ <strong>4,300+</strong> ｜ 💬 215+</span>
         </div>
-        <div style="font-size:12px; color:var(--muted); margin-top:6px; line-height:1.4;">
-          📌 主頁造訪 <strong>10,627 次</strong>・單篇吸粉 🔥 <strong>+49 位</strong>・觸及 <strong>48,600+ 人</strong>
+        <div class="post-stats-sub">
+          🔥 單篇吸粉 <strong>+49 位</strong>・主頁造訪 10,627 次
         </div>
-        <div class="post-links no-print">
-          <a class="post-link-btn btn-threads" href="https://www.threads.net/@bear__only150/post/DebMbsUgQL1" target="_blank" rel="noopener">🧵 Threads 貼文 ↗</a>
-        </div>
+      </div>
+      <div class="post-links no-print">
+        <a class="post-link-btn btn-threads" href="https://www.threads.net/@bear__only150/post/DebMbsUgQL1" target="_blank" rel="noopener">🧵 Threads 貼文 ↗</a>
       </div>
     </div>
 
+    <!-- Card 3: 西裝 Outlook -->
     <div class="post-card">
-      <div>
-        <span class="tag" style="margin-bottom:8px;display:inline-block;">✨ 甜酷反差穿搭 Reels</span>
+      <div class="post-card-top">
+        <span class="tag">✨ 甜酷反差穿搭 Reels（全帳吸粉王）</span>
         <p class="post-quote">「當不了Luke 只有Outlook
-152/45 今天放棄可愛風」</p>
+152/45 今天放棄可愛風
+齊瀏海配黑西裝的職場反差」</p>
       </div>
-      <div>
-        <div class="post-stats">
-          <span>全網觀看 <strong>2.3 萬次</strong></span>
-          <span>❤️ 995 ・ 單支漲粉 <strong>+71</strong></span>
+      <div class="post-stats-block">
+        <div class="post-stats-row">
+          <span>全網自然觀看 <strong>2.3 萬次</strong></span>
+          <span>❤️ 995 ｜ 💾 62 收藏</span>
         </div>
-        <div class="post-links no-print">
-          <a class="post-link-btn btn-threads" href="https://www.threads.net/@bear__only150/post/DeLOE8RFTvZ" target="_blank" rel="noopener">🧵 Threads 貼文 ↗</a>
-          <a class="post-link-btn btn-ig" href="https://www.instagram.com/reel/DeLN3-lJr_Z/" target="_blank" rel="noopener">🎬 IG Reel ↗</a>
+        <div class="post-stats-sub">
+          🔥 IG 單支暴漲 <strong>+71 粉絲</strong>・全帳漲粉冠軍
         </div>
+      </div>
+      <div class="post-links no-print">
+        <a class="post-link-btn btn-threads" href="https://www.threads.net/@bear__only150/post/DeLOE8RFTvZ" target="_blank" rel="noopener">🧵 Threads 貼文 ↗</a>
+        <a class="post-link-btn btn-ig" href="https://www.instagram.com/reel/DeLN3-lJr_Z/" target="_blank" rel="noopener">🎬 IG Reel ↗</a>
       </div>
     </div>
 
+    <!-- Card 4: Dear Dahlia 韓國彩妝 -->
     <div class="post-card">
-      <div>
-        <span class="tag tag-accent" style="margin-bottom:8px;display:inline-block;">💄 商業品牌合作｜Dear Dahlia 韓國純素美妝</span>
+      <div class="post-card-top">
+        <span class="tag tag-accent">💄 商業美妝合作｜Dear Dahlia 純素彩妝</span>
         <p class="post-quote">「在寶雅挖到寶藏底妝！
 Dear Dahlia 日間修護多合一 BB 霜
 持妝一整天天然水光肌」</p>
       </div>
-      <div>
-        <div class="post-stats">
-          <span>跨平台瀏覽 <strong>2,420+</strong></span>
-          <span>SEO 搜尋流量 <strong>26%+</strong>・非粉 <strong>70%</strong></span>
+      <div class="post-stats-block">
+        <div class="post-stats-row">
+          <span>跨平台自然瀏覽 <strong>2,420+</strong></span>
+          <span>觸及 <strong>1,350+ 人</strong></span>
         </div>
-        <div class="post-links no-print">
-          <a class="post-link-btn btn-threads" href="https://www.threads.net/@bear__only150/post/DdIcof8lEfr" target="_blank" rel="noopener">🧵 Threads 貼文 ↗</a>
-          <a class="post-link-btn btn-ig" href="https://www.instagram.com/reel/DdIcdqApnra/" target="_blank" rel="noopener">🎬 IG Reel ↗</a>
+        <div class="post-stats-sub">
+          🔍 TikTok 品牌 SEO 搜尋流量佔比 <strong>26%+</strong>
         </div>
+      </div>
+      <div class="post-links no-print">
+        <a class="post-link-btn btn-threads" href="https://www.threads.net/@bear__only150/post/DdIcof8lEfr" target="_blank" rel="noopener">🧵 Threads 貼文 ↗</a>
+        <a class="post-link-btn btn-ig" href="https://www.instagram.com/reel/DdIcdqApnra/" target="_blank" rel="noopener">🎬 IG Reel ↗</a>
       </div>
     </div>
 
+    <!-- Card 5: Disney+ 實體快閃店 -->
     <div class="post-card">
-      <div>
-        <span class="tag tag-accent" style="margin-bottom:8px;display:inline-block;">🎪 商業線下活動出席｜Disney+ 劇迷限定應援快閃店</span>
-        <p class="post-quote">「沒想到湊湊大巨蛋店直接變成Disney+陸劇快閃店欸！
-現場跟場景合照還有限量劇照小卡...」</p>
+      <div class="post-card-top">
+        <span class="tag tag-accent">🎪 商業線下活動｜Disney+ 劇迷快閃店</span>
+        <p class="post-quote">「湊湊大巨蛋店變成Disney+陸劇快閃店！
+現場跟場景合照還有限量劇照小卡
+邊吃火鍋邊沉浸式追劇」</p>
       </div>
-      <div>
-        <div class="post-stats">
-          <span>主頁回訪 <strong>2,572 次（導流率 133%）</strong></span>
-          <span>25–44歲高消費受眾 <strong>82.4%</strong>・雙篇曝光 <strong>3,640+</strong></span>
+      <div class="post-stats-block">
+        <div class="post-stats-row">
+          <span>雙篇總曝光 <strong>3,640+</strong></span>
+          <span>觸及 <strong>3,400 人次</strong></span>
         </div>
-        <div class="post-links no-print">
-          <a class="post-link-btn btn-threads" href="https://www.threads.net/@bear__only150/post/DdrFIYaAaQm" target="_blank" rel="noopener">🧵 Threads 貼文 ↗</a>
+        <div class="post-stats-sub">
+          🎯 個人檔案回訪 <strong>2,572 次</strong>（導流率 133%）
         </div>
+      </div>
+      <div class="post-links no-print">
+        <a class="post-link-btn btn-threads" href="https://www.threads.net/@bear__only150/post/DdrFIYaAaQm" target="_blank" rel="noopener">🧵 Threads 貼文 ↗</a>
+      </div>
+    </div>
+
+    <!-- Card 6: 1028 眼影盤避坑情報 -->
+    <div class="post-card">
+      <div class="post-card-top">
+        <span class="tag">⚡ 即時生活情報爆款｜1028 眼影盤 $99</span>
+        <p class="post-quote">「成功買到傳說中$99的1028眼影盤...
+溫馨提示(¬‿¬)第二盒就是原價了
+松山車站B1的康是美還有綠色跟紅色」</p>
+      </div>
+      <div class="post-stats-block">
+        <div class="post-stats-row">
+          <span>自然瀏覽 <strong>9,125 次（🟢 高於一般）</strong></span>
+          <span>觸及 <strong>7,441 人</strong></span>
+        </div>
+        <div class="post-stats-sub">
+          ✈️ <strong>28 次分享</strong>・搜尋流量高達 <strong>18.22%</strong>
+        </div>
+      </div>
+      <div class="post-links no-print">
+        <a class="post-link-btn btn-threads" href="https://www.threads.net/@bear__only150" target="_blank" rel="noopener">🧵 Threads 貼文 ↗</a>
       </div>
     </div>
   </div>
