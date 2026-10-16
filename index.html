@@ -495,18 +495,29 @@ body {
 /* Top Posts Showcase */
 .post-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(270px, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
   gap: 16px;
+}
+@media (min-width: 900px) {
+  .post-grid {
+    grid-template-columns: repeat(3, 1fr);
+  }
 }
 .post-card {
   background: var(--surface);
   border: 1px solid var(--line);
   border-radius: 18px;
-  padding: 18px 20px;
+  padding: 18px;
   display: flex;
   flex-direction: column;
   box-shadow: var(--shadow);
   height: 100%;
+  box-sizing: border-box;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+.post-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 24px rgba(60, 40, 20, 0.08);
 }
 .post-card-top {
   display: flex;
@@ -516,25 +527,25 @@ body {
 }
 .post-card-top .tag {
   align-self: flex-start;
-  white-space: nowrap;
-  max-width: 100%;
-  overflow: hidden;
-  text-overflow: ellipsis;
+  white-space: normal;
+  word-break: break-word;
+  line-height: 1.35;
+  font-size: 11.5px;
+  font-weight: 700;
+  padding: 4px 10px;
 }
 .post-quote {
-  font-size: 13.5px;
+  font-size: 13px;
   background: var(--surface-alt);
-  padding: 11px 14px;
+  padding: 10px 12px;
   border-radius: 12px;
   margin: 0;
-  line-height: 1.5;
-  height: 86px;
+  line-height: 1.55;
+  min-height: 72px;
   box-sizing: border-box;
-  display: -webkit-box;
-  -webkit-line-clamp: 3;
-  -webkit-box-orient: vertical;
-  overflow: hidden;
   white-space: pre-line;
+  word-break: break-word;
+  color: var(--ink);
 }
 .post-stats-block {
   margin-top: auto;
@@ -542,29 +553,33 @@ body {
   padding-top: 10px;
   display: flex;
   flex-direction: column;
-  gap: 4px;
-  min-height: 52px;
+  gap: 5px;
 }
 .post-stats-row {
   display: flex;
   justify-content: space-between;
-  align-items: center;
-  font-size: 12.5px;
+  align-items: baseline;
+  gap: 8px;
+  font-size: 12px;
   color: var(--muted);
+  flex-wrap: wrap;
 }
-.post-stats-row span {
-  white-space: nowrap;
+.post-stats-row > span {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 4px;
+  line-height: 1.4;
 }
 .post-stats-row strong {
   color: var(--ink);
-  font-size: 14.5px;
+  font-size: 13.5px;
+  font-weight: 700;
 }
 .post-stats-sub {
   font-size: 11.5px;
   color: var(--muted);
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
+  line-height: 1.4;
+  word-break: break-word;
 }
 .post-links {
   display: flex;
@@ -1079,11 +1094,11 @@ footer {
       </div>
       <div class="post-stats-block">
         <div class="post-stats-row">
-          <span>全網自然觀看 <strong>10.0 萬+</strong></span>
+          <span>全網觀看 <strong>10.0 萬+</strong></span>
           <span>❤️ 1,894 ｜ 💬 75</span>
         </div>
         <div class="post-stats-sub">
-          📌 三平台大滿貫爆款・破圈百萬流量體質
+          📌 三平台大滿貫爆款・破圈流量體質
         </div>
       </div>
       <div class="post-links no-print">
@@ -1097,13 +1112,13 @@ footer {
       <div class="post-card-top">
         <span class="tag tag-accent">☀️ 療癒連載 IP（D_157 超級爆款）</span>
         <p class="post-quote">「醫生叫我每天都要曬太陽D_157☀️
-去花店pick一支最喜歡的花
-不用一束 只要一支 就是我每週的快樂🌼」</p>
+不用一束 只要一支最喜歡的花
+就是我每週的快樂🌼🌼🌼」</p>
       </div>
       <div class="post-stats-block">
         <div class="post-stats-row">
-          <span>自然瀏覽 <strong>5.5 萬+（55,621）</strong></span>
-          <span>❤️ <strong>4,300+</strong> ｜ 💬 215+</span>
+          <span>自然瀏覽 <strong>5.5 萬+</strong></span>
+          <span>❤️ 4,300+ ｜ 💬 215+</span>
         </div>
         <div class="post-stats-sub">
           🔥 單篇吸粉 <strong>+49 位</strong>・主頁造訪 10,627 次
@@ -1124,11 +1139,11 @@ footer {
       </div>
       <div class="post-stats-block">
         <div class="post-stats-row">
-          <span>全網自然觀看 <strong>2.3 萬次</strong></span>
+          <span>全網觀看 <strong>2.3 萬次</strong></span>
           <span>❤️ 995 ｜ 💾 62 收藏</span>
         </div>
         <div class="post-stats-sub">
-          🔥 IG 單支暴漲 <strong>+71 粉絲</strong>・全帳漲粉冠軍
+          🔥 IG 單支暴漲 <strong>+71 粉絲</strong>・全帳自然漲粉第一
         </div>
       </div>
       <div class="post-links no-print">
@@ -1143,11 +1158,11 @@ footer {
         <span class="tag tag-accent">💄 商業美妝合作｜Dear Dahlia 純素彩妝</span>
         <p class="post-quote">「在寶雅挖到寶藏底妝！
 Dear Dahlia 日間修護多合一 BB 霜
-持妝一整天天然水光肌」</p>
+持妝一整天天然水光肌✨」</p>
       </div>
       <div class="post-stats-block">
         <div class="post-stats-row">
-          <span>跨平台自然瀏覽 <strong>2,420+</strong></span>
+          <span>全網瀏覽 <strong>2,420+</strong></span>
           <span>觸及 <strong>1,350+ 人</strong></span>
         </div>
         <div class="post-stats-sub">
@@ -1164,14 +1179,14 @@ Dear Dahlia 日間修護多合一 BB 霜
     <div class="post-card">
       <div class="post-card-top">
         <span class="tag tag-accent">🎪 商業線下活動｜Disney+ 劇迷快閃店</span>
-        <p class="post-quote">「湊湊大巨蛋店變成Disney+陸劇快閃店！
-現場跟場景合照還有限量劇照小卡
-邊吃火鍋邊沉浸式追劇」</p>
+        <p class="post-quote">「湊湊大巨蛋店變成Disney+快閃店！
+現場拍照還有限量劇照小卡
+邊吃火鍋邊沉浸式追劇🍲」</p>
       </div>
       <div class="post-stats-block">
         <div class="post-stats-row">
-          <span>雙篇總曝光 <strong>3,640+</strong></span>
-          <span>觸及 <strong>3,400 人次</strong></span>
+          <span>雙篇曝光 <strong>3,640+</strong></span>
+          <span>觸及 <strong>3,400 人</strong></span>
         </div>
         <div class="post-stats-sub">
           🎯 個人檔案回訪 <strong>2,572 次</strong>（導流率 133%）
@@ -1188,15 +1203,15 @@ Dear Dahlia 日間修護多合一 BB 霜
         <span class="tag">⚡ 即時生活情報爆款｜1028 眼影盤 $99</span>
         <p class="post-quote">「成功買到傳說中$99的1028眼影盤...
 溫馨提示(¬‿¬)第二盒就是原價了
-松山車站B1的康是美還有綠色跟紅色」</p>
+松山車站B1康是美還有貨」</p>
       </div>
       <div class="post-stats-block">
         <div class="post-stats-row">
-          <span>自然瀏覽 <strong>9,125 次（🟢 高於一般）</strong></span>
+          <span>自然瀏覽 <strong>9,125 次</strong></span>
           <span>觸及 <strong>7,441 人</strong></span>
         </div>
         <div class="post-stats-sub">
-          ✈️ <strong>28 次分享</strong>・搜尋流量高達 <strong>18.22%</strong>
+          ✈️ <strong>28 次分享</strong>・🟢 搜尋流量高達 <strong>18.2%</strong>
         </div>
       </div>
       <div class="post-links no-print">
