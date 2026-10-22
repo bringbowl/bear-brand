@@ -1,0 +1,1099 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>小熊 Bear ｜ 拍攝 ＆ 每日發文雙軌視覺行事曆</title>
+<meta name="description" content="小熊 Bear (@bear__only150) 2026 年 10–11 月自媒體拍攝素材與每日發文雙軌排程月曆">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Noto+Sans+TC:wght@400;500;600;700;900&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg: #faf7f2;
+  --surface: #ffffff;
+  --ink: #2c2825;
+  --muted: #78716c;
+  --line: #e8dfd5;
+  --line-strong: #d5c8bb;
+  --accent: #c06c52;
+  --accent-soft: #fbf0ec;
+  --sage: #4f7764;
+  --sage-soft: #eaf2ee;
+  --sun: #c97a1e;
+  --sun-soft: #fdf5ea;
+  --blue: #3b6b88;
+  --blue-soft: #e9f1f6;
+  --shadow: 0 4px 20px -2px rgba(44, 40, 37, 0.06), 0 2px 6px -1px rgba(44, 40, 37, 0.04);
+  --shadow-lg: 0 10px 30px -4px rgba(44, 40, 37, 0.1);
+  --radius: 16px;
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+  font-family: 'Plus Jakarta Sans', 'Noto Sans TC', system-ui, -apple-system, sans-serif;
+  background-color: var(--bg);
+  color: var(--ink);
+  line-height: 1.5;
+  padding: 24px 16px 60px;
+  -webkit-font-smoothing: antialiased;
+}
+
+.wrap {
+  max-width: 1240px;
+  margin: 0 auto;
+}
+
+/* Header */
+.cal-header {
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 20px;
+  padding: 24px 28px;
+  margin-bottom: 24px;
+  box-shadow: var(--shadow);
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  align-items: center;
+  gap: 16px;
+}
+
+.brand-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: var(--accent-soft);
+  color: var(--accent);
+  font-size: 12px;
+  font-weight: 700;
+  padding: 4px 12px;
+  border-radius: 999px;
+  margin-bottom: 6px;
+}
+
+.cal-title {
+  font-size: 24px;
+  font-weight: 800;
+  color: var(--ink);
+  letter-spacing: -0.5px;
+}
+
+.cal-sub {
+  font-size: 13.5px;
+  color: var(--muted);
+  margin-top: 2px;
+}
+
+.header-actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 9px 16px;
+  border-radius: 12px;
+  font-size: 13.5px;
+  font-weight: 600;
+  text-decoration: none;
+  border: 1px solid var(--line-strong);
+  background: #fff;
+  color: var(--ink);
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.btn:hover {
+  background: var(--bg);
+  border-color: var(--muted);
+}
+
+.btn-primary {
+  background: var(--ink);
+  color: #fff;
+  border-color: var(--ink);
+}
+
+.btn-primary:hover {
+  background: #403a35;
+}
+
+/* Month Switcher & Filter Toolbar */
+.toolbar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 14px;
+  margin-bottom: 18px;
+}
+
+.month-tabs {
+  display: inline-flex;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  padding: 4px;
+  border-radius: 14px;
+  box-shadow: var(--shadow);
+}
+
+.month-tab {
+  padding: 8px 20px;
+  font-size: 14px;
+  font-weight: 700;
+  border-radius: 10px;
+  border: none;
+  background: transparent;
+  color: var(--muted);
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.month-tab.active {
+  background: var(--ink);
+  color: #fff;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.12);
+}
+
+.filter-tags {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.filter-tag {
+  font-size: 12.5px;
+  font-weight: 600;
+  padding: 6px 14px;
+  border-radius: 999px;
+  border: 1px solid var(--line);
+  background: var(--surface);
+  color: var(--muted);
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.filter-tag.active {
+  border-color: var(--accent);
+  background: var(--accent-soft);
+  color: var(--accent);
+}
+
+/* Calendar Card & Grid */
+.calendar-card {
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 20px;
+  padding: 20px;
+  box-shadow: var(--shadow);
+  margin-bottom: 24px;
+  overflow: hidden;
+}
+
+.weekdays-grid {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 8px;
+  margin-bottom: 8px;
+  text-align: center;
+}
+
+.weekday-head {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--muted);
+  padding: 8px 0;
+  text-transform: uppercase;
+}
+
+.weekday-head.weekend {
+  color: var(--accent);
+}
+
+.days-grid {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 8px;
+}
+
+.day-cell {
+  min-height: 142px;
+  background: var(--bg);
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  padding: 8px;
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  cursor: pointer;
+  transition: all 0.18s ease;
+  position: relative;
+}
+
+.day-cell:hover {
+  background: #fff;
+  border-color: var(--accent);
+  box-shadow: var(--shadow);
+  transform: translateY(-2px);
+}
+
+.day-cell.other-month {
+  opacity: 0.35;
+  background: transparent;
+  border-style: dashed;
+}
+
+.day-cell.today {
+  border: 2px solid var(--accent);
+  background: #fff;
+}
+
+.day-cell.today::after {
+  content: "今日";
+  position: absolute;
+  top: 7px;
+  right: 7px;
+  font-size: 10px;
+  font-weight: 800;
+  color: #fff;
+  background: var(--accent);
+  padding: 1px 6px;
+  border-radius: 6px;
+}
+
+.day-num {
+  font-size: 14px;
+  font-weight: 800;
+  color: var(--ink);
+  line-height: 1;
+  margin-bottom: 2px;
+}
+
+/* Event Badges */
+.event-badge {
+  font-size: 11px;
+  font-weight: 600;
+  padding: 4px 6px;
+  border-radius: 6px;
+  line-height: 1.28;
+  display: block;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.badge-shoot {
+  background: var(--accent-soft);
+  color: #9c4125;
+  border-left: 3px solid var(--accent);
+}
+
+.badge-post {
+  background: var(--sage-soft);
+  color: #2b5643;
+  border-left: 3px solid var(--sage);
+}
+
+.badge-review {
+  background: var(--sun-soft);
+  color: #8c5310;
+  border-left: 3px solid var(--sun);
+}
+
+.badge-groupbuy {
+  background: #fee2e2;
+  color: #991b1b;
+  border-left: 3px solid #dc2626;
+  font-weight: 700;
+}
+
+.badge-done {
+  background: #f3f4f6;
+  color: #4b5563;
+  border-left: 3px solid #9ca3af;
+  text-decoration: line-through;
+}
+
+/* Selected Day Detail Box (Modal / Drawer) */
+.detail-box {
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 20px;
+  padding: 24px;
+  box-shadow: var(--shadow-lg);
+  margin-bottom: 24px;
+  animation: fadeIn 0.25s ease;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(6px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.detail-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 16px;
+  padding-bottom: 14px;
+  border-bottom: 1px solid var(--line);
+}
+
+.detail-date {
+  font-size: 19px;
+  font-weight: 800;
+  color: var(--ink);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.detail-badge {
+  font-size: 12px;
+  padding: 2px 10px;
+  border-radius: 999px;
+  background: var(--bg);
+  border: 1px solid var(--line);
+  color: var(--muted);
+}
+
+.detail-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+}
+
+.detail-col {
+  background: var(--bg);
+  border-radius: 14px;
+  padding: 16px;
+  border: 1px solid var(--line);
+}
+
+.detail-col-title {
+  font-size: 14px;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-bottom: 10px;
+}
+
+.detail-item {
+  margin-bottom: 12px;
+}
+
+.detail-item:last-child {
+  margin-bottom: 0;
+}
+
+.detail-item-name {
+  font-weight: 700;
+  font-size: 13.5px;
+  color: var(--ink);
+  margin-bottom: 3px;
+}
+
+.detail-item-desc {
+  font-size: 12.5px;
+  color: var(--muted);
+  line-height: 1.45;
+}
+
+.tip-banner {
+  margin-top: 14px;
+  padding: 10px 14px;
+  border-radius: 10px;
+  background: var(--sun-soft);
+  color: var(--sun);
+  font-size: 12.5px;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+/* Mobile responsive */
+@media (max-width: 900px) {
+  .day-cell { min-height: 110px; padding: 6px 4px; }
+  .event-badge { font-size: 10px; padding: 2px 4px; }
+  .detail-grid { grid-template-columns: 1fr; }
+}
+
+@media (max-width: 600px) {
+  body { padding: 14px 10px 40px; }
+  .cal-header { padding: 18px 16px; }
+  .calendar-card { padding: 12px 8px; }
+  .weekday-head { font-size: 11px; }
+  .day-cell { min-height: 85px; gap: 3px; }
+  .day-num { font-size: 12px; }
+  .event-badge { font-size: 9.5px; white-space: normal; line-height: 1.15; -webkit-line-clamp: 2; display: -webkit-box; -webkit-box-orient: vertical; }
+}
+
+@media print {
+  .no-print { display: none !important; }
+  body { background: #fff; padding: 0; }
+  .wrap { max-width: 100%; }
+  .calendar-card, .detail-box { box-shadow: none; border-color: #ccc; break-inside: avoid; }
+}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <!-- Header -->
+  <header class="cal-header">
+    <div>
+      <span class="brand-badge">☀️ 150cm 穿搭實驗室</span>
+      <h1 class="cal-title">小熊 Bear ｜ 拍攝 ＆ 每日發文雙軌行事曆</h1>
+      <p class="cal-sub">掌握每日「該拍什麼鏡頭」＋「該發哪篇貼文」，雙軌同步零漏接！</p>
+    </div>
+    <div class="header-actions no-print">
+      <a class="btn" href="./index.html">← 返回品牌履歷</a>
+      <button class="btn btn-primary" onclick="window.print()">🖨️ 列印 / 存為 PDF</button>
+    </div>
+  </header>
+
+  <!-- Toolbar: Month Selector & Tag Filters -->
+  <div class="toolbar no-print">
+    <div class="month-tabs">
+      <button class="month-tab active" id="tabOct" onclick="switchMonth(10)">2026 年 10 月</button>
+      <button class="month-tab" id="tabNov" onclick="switchMonth(11)">2026 年 11 月</button>
+    </div>
+
+    <div class="filter-tags">
+      <button class="filter-tag active" onclick="filterEvents('all')">全部檢視</button>
+      <button class="filter-tag" onclick="filterEvents('shoot')">🎬 拍素材</button>
+      <button class="filter-tag" onclick="filterEvents('post')">🚀 每日發文</button>
+      <button class="filter-tag" onclick="filterEvents('groupbuy')">🔥 團購檔期</button>
+    </div>
+  </div>
+
+  <!-- Detail Box (Displays clicked day) -->
+  <div class="detail-box" id="detailBox">
+    <div class="detail-header">
+      <div>
+        <div class="detail-date" id="detailDate">📅 2026 年 10 月 22 日（週四）<span class="detail-badge" id="detailBadge">今日重點</span></div>
+        <div style="font-size:13px; color:var(--muted); margin-top:3px;" id="detailSummary">今日主打：藍海饌牛肉麵開拍、FaceColor 結案存檔</div>
+      </div>
+      <span class="brand-badge" style="background:var(--sage-soft); color:var(--sage);">點擊下方任一日查看詳情</span>
+    </div>
+
+    <div class="detail-grid">
+      <!-- Left: Shoot & Prep -->
+      <div class="detail-col">
+        <div class="detail-col-title" style="color:var(--accent);">
+          <span>🎬 今日拍什麼 ＆ 備忘道具</span>
+        </div>
+        <div id="detailShoot">
+          <div class="detail-item">
+            <div class="detail-item-name">🍜 藍海饌牛肉麵（雙拼滾水＋女友捧湯照）</div>
+            <div class="detail-item-desc">
+              1. 換裝變身：外出服沒電 ➔ 遮鏡頭變身居家鯊魚夾（3s 片頭）<br>
+              2. 滾水 ASMR：紅燒半筋半肉＋麻辣鴨血同鍋咕嚕咕嚕<br>
+              3. 特寫吃播：筷子夾軟 Q 牛筋特寫＋大咬鴨血滿足臉<br>
+              4. 靜態美照：針織毛衣雙手捧熱騰騰陶瓷碗微笑（11/6 立冬發文首圖）<br>
+              5. 常溫外盒隨手拍：房間桌角疊高高，點出不佔冷凍庫痛點
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Right: Post & Publish -->
+      <div class="detail-col">
+        <div class="detail-col-title" style="color:var(--sage);">
+          <span>🚀 今日發什麼 ＆ 發布平台</span>
+        </div>
+        <div id="detailPost">
+          <div class="detail-item">
+            <div class="detail-item-name">💇‍♀️ FaceColor 斐絲護髮（提前結案）</div>
+            <div class="detail-item-desc">
+              ・雙平台（IG 貼文/限動 ＋ Threads）已發布完成！<br>
+              ・官方 LINE 確認對稿通過正式結案（貼文公開保留至 2027/01/22）。<br>
+              ・今日專心拍攝牛肉麵與享用美味早午餐，無其他緊急發文。
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="tip-banner" id="detailTip">
+      💡 <b>經紀人備忘</b>：拍完剛好爽吃超奢華牛肉麵早午餐！素材存好，開團時直接套用文案！
+    </div>
+  </div>
+
+  <!-- Calendar Month View Container -->
+  <div class="calendar-card">
+    <div class="weekdays-grid">
+      <div class="weekday-head">週一 Mon</div>
+      <div class="weekday-head">週二 Tue</div>
+      <div class="weekday-head">週三 Wed</div>
+      <div class="weekday-head">週四 Thu</div>
+      <div class="weekday-head">週五 Fri</div>
+      <div class="weekday-head weekend">週六 Sat</div>
+      <div class="weekday-head weekend">週日 Sun</div>
+    </div>
+
+    <div class="days-grid" id="daysGrid">
+      <!-- Injected via JavaScript -->
+    </div>
+  </div>
+
+  <!-- Footer -->
+  <footer style="text-align:center; color:var(--muted); font-size:13px; margin-top:20px;">
+    © 2026 小熊 Bear (@bear__only150) ｜ 自媒體經紀人雙軌排程系統
+  </footer>
+
+</div>
+
+<script>
+// Calendar Data Object
+const calendarData = {
+  // October 2026 (Oct 1 is Thu)
+  10: [
+    { day: 28, other: true }, { day: 29, other: true }, { day: 30, other: true },
+    { day: 1, events: [] }, { day: 2, events: [] }, { day: 3, events: [] }, { day: 4, events: [] },
+    { day: 5, events: [] }, { day: 6, events: [] }, { day: 7, events: [] }, { day: 8, events: [] }, { day: 9, events: [] }, { day: 10, events: [] }, { day: 11, events: [] },
+    { day: 12, events: [] }, { day: 13, events: [] }, { day: 14, events: [] }, { day: 15, events: [{ type: 'done', text: '💇‍♀️ FaceColor 護髮體驗' }] }, { day: 16, events: [] }, { day: 17, events: [] }, { day: 18, events: [] },
+    { day: 19, events: [{ type: 'post', text: '💬 Yejin 提美金合作' }] },
+    { day: 20, events: [{ type: 'shoot', text: '📦 DEWYTREE 韓國發貨' }] },
+    { day: 21, events: [{ type: 'post', text: '💬 Yejin 確認 IG 輪播' }] },
+    { 
+      day: 22, today: true,
+      events: [
+        { type: 'shoot', text: '🎬【拍】藍海饌牛肉麵' },
+        { type: 'done', text: '✅ FaceColor 護髮結案' }
+      ],
+      summary: '今日主打：藍海饌牛肉麵開拍、FaceColor 提前 8 天結案存檔',
+      shoot: '<b>🍜 藍海饌牛肉麵（雙拼滾水＋女友捧湯照）</b><br>1. 外出服沒電 ➔ 遮鏡頭變身居家鯊魚夾（3s片頭）<br>2. 紅燒半筋半肉＋麻辣鴨血下鍋滾水咕嚕咕嚕（收錄ASMR）<br>3. 筷子夾晃動牛筋特寫＋大咬鴨血滿足臉<br>4. 雙手捧熱陶瓷大碗微笑（11/6立冬發文首圖）<br>5. 房間桌角常溫外盒疊高高隨手拍',
+      post: '<b>💇‍♀️ FaceColor 斐絲護髮（提前結案）</b><br>・雙平台已發布，官方確認結案！<br>・今日無其他發文壓力，專心吃麵拍攝。',
+      tip: '拍完剛好爽吃牛肉麵！素材存好，開團時文案早已寫好！'
+    },
+    { 
+      day: 23, 
+      events: [
+        { type: 'shoot', text: '📦 DEWYTREE 到貨追蹤' },
+        { type: 'shoot', text: '🧊 今晚洗面乳冰冰箱！' }
+      ],
+      summary: 'DEWYTREE 包裹到件追蹤 ＋ 今晚睡前把 LAGOM 水凝露冰冰箱！',
+      shoot: '<b>🧴 LAGOM 拍攝前置</b>：今晚睡前務必把潔顏水凝露冰進冰箱！明早拍晨間冰涼消水腫。<br><b>📦 DEWYTREE 包裹</b>：若到件拍照回傳窗口：「收到囉，48h內給初審」，鎖定神秘獎金！',
+      post: '日常 Threads 生活碎念或 IG 限動。',
+      tip: '洗面乳冰冰箱是 LAGOM 腳本靈魂亮點，今晚千萬別忘記！'
+    },
+    { 
+      day: 24, 
+      events: [
+        { type: 'shoot', text: '🎬【拍】LAGOM 早安水凝露' },
+        { type: 'post', text: '🚀【發】週末日雜穿搭' }
+      ],
+      summary: '早起拍 LAGOM 冰涼洗顏 ＋ 週末穿搭發文',
+      shoot: '<b>🧴 LAGOM 早安水凝露（晨間早起拍攝）</b><br>1. 剛起床暗沉素顏（Before 前 5s 必備鏡頭）<br>2. 冰箱拿出冰鎮水凝露抹臉「冰涼醒腦 0.5s 微表情」<br>3. 乾臉推開化水質地特寫<br>4. 洗後透亮水光＋妝前乳不搓泥實測',
+      post: '<b>IG / Threads</b>：發布小個子日雜感秋日穿搭圖文。',
+      tip: '洗面乳從冰箱拿出來臉上的驚艷表情是神鏡頭，自然捕捉即可！'
+    },
+    { 
+      day: 25, 
+      events: [
+        { type: 'shoot', text: '🎬【拍】LAGOM 補拍/DEWYTREE' },
+        { type: 'post', text: '🚀【發】週末日雜穿搭' }
+      ],
+      summary: '整理 LAGOM 寶雅門市素材 ＋ DEWYTREE 愛心泡泡拍攝',
+      shoot: '<b>🧴 DEWYTREE 韓國美妝（若包裹已抵達）</b><br>1. 雙手拿產品微笑介紹（前3s必標[AD]）<br>2. 卸妝乳質地特寫與臉部打圈<br>3. 臉頰塗泡泡愛心（縮圖首選）＋矽膠刷推勻<br>4. 左右半臉水光對比（Before/After）<br>5. 結尾 Olive Young 導購',
+      post: '週末放鬆日常，整理短影音素材。',
+      tip: 'DEWYTREE 泡泡愛心一定要拍照當封面縮圖！'
+    },
+    { 
+      day: 26, 
+      events: [
+        { type: 'shoot', text: '🎒【備】奧莫早八行前打包' },
+        { type: 'review', text: '📝 DEWYTREE 初剪送審' }
+      ],
+      summary: '晚間打包奧莫聖誕棚拍袋 ＋ DEWYTREE 初剪傳窗口審核',
+      shoot: '<b>🎒 奧莫行前必帶清單</b>：<br>・Nubra<br>・駝色毛毛鞋／勃肯拖鞋<br>・純白中筒襪<br>・自備手機腳架側拍 Reels 動態花絮',
+      post: '<b>📝 審稿</b>：提交 DEWYTREE 初剪爭取神秘加碼獎金。',
+      tip: '今晚少喝水防臉腫，睡飽充足迎戰明日早八聖誕棚拍！'
+    },
+    { 
+      day: 27, 
+      events: [
+        { type: 'shoot', text: '📸【拍】08:00 奧莫聖誕棚拍' },
+        { type: 'post', text: '🚀【發】棚拍花絮 Threads' }
+      ],
+      summary: '奧莫板橋店 08:00 聖誕棚拍！取 3 張精修，嚴禁遲到！',
+      shoot: '<b>📸 奧莫韓式照相館（板橋店）</b><br>・08:00 準時報到（逾 20 分罰 $500）<br>・專業聖誕造型拍攝取 3 張精修<br>・手機腳架側拍拆禮物、玩假雪花動態花絮',
+      post: '<b>Threads</b>：發布棚拍側拍自嘲碎念，預熱聖誕氛圍。',
+      tip: '現場堅守 0 元加購毛片底線，免費精修就足夠漂亮！'
+    },
+    { 
+      day: 28, 
+      events: [
+        { type: 'review', text: '📝 牛肉麵文案薛珮君校對' }
+      ],
+      summary: '牛肉麵團購文案傳品牌薛珮君確認滿額贈規則',
+      shoot: '整理牛肉麵拍攝成片，剪輯 10 秒短影音。',
+      post: '<b>📝 審稿</b>：傳審稿 Google Doc 確認雙 11 任選 3 盒 $1,111 免運活動。',
+      tip: '確認滿 $1,899 免費送鮑片粥的累贈機制無誤。'
+    },
+    { 
+      day: 29, 
+      events: [
+        { type: 'shoot', text: '🩺【諮】Unni Guide 醫美' }
+      ],
+      summary: 'Unni Guide 免露臉線上諮詢（LINE/WhatsApp）',
+      shoot: '<b>🩺 Unni Guide</b>：線上諮詢時截圖重要專業建議與護膚分析，整理個人乾肌心得。',
+      post: '日常互動貼文。',
+      tip: '諮詢免露臉，用通訊軟體輕鬆聊天即可！'
+    },
+    { 
+      day: 30, 
+      events: [
+        { type: 'review', text: '📝 18:00 前 LAGOM 送審' }
+      ],
+      summary: 'LAGOM 早安水凝露 60s 初剪傳 @lagom.taiwan 審核',
+      shoot: '確認片頭前 5s BA 圖與結尾寶雅陳列圖完整。',
+      post: '<b>📝 審稿</b>：18:00 前傳 IG 私訊小編對稿。',
+      tip: '確認無誤即可準備 11/3 正式協作發文！'
+    },
+    { 
+      day: 31, 
+      events: [
+        { type: 'post', text: '🎃 萬聖節日常貼文' },
+        { type: 'post', text: '📱 21:00 牛肉麵預熱限動' }
+      ],
+      summary: '萬聖節貼文 ＋ 21:00 藍海饌雙 11 開團預熱限動',
+      shoot: '檢查明日雙 11 開團素材準備就緒。',
+      post: '<b>📱 21:00 IG 限動預熱</b>：小湯鍋滾水煮麵 3 秒 ASMR ＋ 投票貼紙：半夜發這個會被打嗎 ( ˙꒳˙ )💦，為明天開團暖身！',
+      tip: '明晚 21:00 主力短影音首發，準備迎接爆單！'
+    }
+  ],
+
+  // November 2026 (Nov 1 is Sun)
+  11: [
+    { day: 26, other: true }, { day: 27, other: true }, { day: 28, other: true }, { day: 29, other: true }, { day: 30, other: true }, { day: 31, other: true },
+    { 
+      day: 1, 
+      events: [
+        { type: 'groupbuy', text: '🔥 牛肉麵雙11開團！' },
+        { type: 'post', text: '🚀 21:00 主力 Reels' },
+        { type: 'post', text: '📱 限動 3 連發' }
+      ],
+      summary: '00:00 牛肉麵開跑！21:00 主力短影音發布＋限動首發',
+      shoot: '開團首日，確認首頁個人檔案已更換為牛肉麵連結：gbf.tw/lxnex。',
+      post: '<b>🚀 21:00 主力短影音（IG Reels＋TikTok＋Threads）</b>：《152/45 下班 3 秒關機 vs 5 分鐘端出神仙雙拼》<br><b>📱 21:05 IG 限動 3 連發</b>：轉發短片＋牛筋特寫＋$1,111 免運整理掛連結！',
+      tip: '18% 分潤啟動！首波鎖定雙料金牌半筋半肉與麻辣鴨血！'
+    },
+    { 
+      day: 2, 
+      events: [
+        { type: 'groupbuy', text: '🔥 牛肉麵開團 Day 2' },
+        { type: 'post', text: '📱 訂單截圖限動' }
+      ],
+      summary: '轉發牛肉麵訂單截圖與粉絲私訊',
+      shoot: '日常工作。',
+      post: '<b>📱 IG 限動</b>：分享昨晚開團熱烈迴響與粉絲私訊包色/買 3 盒截圖。',
+      tip: '展示大家都在買，營造搶購從眾效應！'
+    },
+    { 
+      day: 3, 
+      events: [
+        { type: 'post', text: '🚀【發】LAGOM IG Reels' },
+        { type: 'groupbuy', text: '🔥 牛肉麵開團中' }
+      ],
+      summary: '發布 LAGOM 早安水凝露 60s Reels（與 @lagom.taiwan 協作）',
+      shoot: '確認發文封面上傳個人美照。',
+      post: '<b>🚀 IG Reels</b>：邀請 @lagom.taiwan 共同協作上傳！不可刪文、不可關閉瀏覽數。',
+      tip: '協作發文能同時吃雙方粉絲流量池！'
+    },
+    { 
+      day: 4, 
+      events: [
+        { type: 'groupbuy', text: '🔥 牛肉麵黃金衝刺' },
+        { type: 'post', text: '📱 21:00 宵夜限動' }
+      ],
+      summary: '週三晚間黃金時段牛肉麵宵夜痛點限動連發',
+      shoot: '日常工作。',
+      post: '<b>📱 21:00 IG 限動</b>：常溫免冰冰箱痛點＋大塊肉特寫，掛 gbf.tw/lxnex 連結。',
+      tip: '週三晚間 20:00–23:00 是小熊粉絲在線最高峰！'
+    },
+    { 
+      day: 5, 
+      events: [
+        { type: 'post', text: '🚀【發】奧莫聖誕寫真' },
+        { type: 'post', text: '🚀【發】Threads 紙箱穿搭' }
+      ],
+      summary: '發布奧莫聖誕寫真 IG 貼文 ＋ Threads 曬照掛蝦皮分潤',
+      shoot: '準備奧莫 3 張精修檔案。',
+      post: '<b>IG 貼文</b>：標記 @omo_studio_official 聖誕氛圍美照。<br><b>Threads</b>：紙箱自嘲穿搭文（掛蝦皮同款耳罩/毛衣分潤）。',
+      tip: '雙邊收穫：IG 展現精緻模特感，Threads 賺蝦皮分潤！'
+    },
+    { 
+      day: 6, 
+      events: [
+        { type: 'post', text: '🚀【發】牛肉麵日系圖文' },
+        { type: 'groupbuy', text: '🔥 立冬前夕衝刺' }
+      ],
+      summary: '20:30 發布牛肉麵冬日女友照 ＋ 5 口味開箱圖文輪播',
+      shoot: '準備針織毛衣捧熱湯日系美照。',
+      post: '<b>🚀 IG 多圖 Carousel ＋ Threads</b>：《明天立冬與其去夜市排隊吹冷風，不如躲在房間花 5 分鐘喝熱湯》，附「吃牛組」與「不吃牛組」任選 3 盒 $1,111 抄作業字卡！',
+      tip: '首圖極美保住 IG 九宮格，內頁乾貨衝刺不吃牛受眾！'
+    },
+    { 
+      day: 7, 
+      events: [
+        { type: 'shoot', text: '🎬【拍】山水吸塵器 POV' },
+        { type: 'post', text: '📱【立冬】進補限動' }
+      ],
+      summary: '立冬日！拍攝山水吸塵器冷面喜劇 ＋ 立冬進補限動',
+      shoot: '<b>🧹 山水 SANSUI 鵝黃色吸塵器（🌼）</b><br>朋友第一人稱 POV 出門冷面喜劇短影音：吃可頌吸大腿屑、車內下車吸坐墊，全片無台詞純 ASMR 幽默。',
+      post: '<b>📱 IG 限動</b>：立冬進補首選藥燉排骨麵線＋胡椒豬肚雞！',
+      tip: '立冬正日主推不吃牛進補組，轉換率超高！'
+    },
+    { 
+      day: 8, 
+      events: [
+        { type: 'shoot', text: '🎬【拍】山水大衣 OOTD' },
+        { type: 'groupbuy', text: '🔥 牛肉麵週末促購' }
+      ],
+      summary: '拍攝山水大衣除毛球 OOTD ＋ 牛肉麵週末限動',
+      shoot: '<b>🧹 山水吸塵器</b>：週末鵝黃色系穿搭 ＋ 出門前大衣除毛球圖文素材。',
+      post: '週末吃貨牛肉麵限動連發。',
+      tip: '山水吸塵器樣品已確認留用，拍出高質感日系居家風！'
+    },
+    { 
+      day: 9, 
+      events: [
+        { type: 'review', text: '📝 山水短影音成片確認' },
+        { type: 'groupbuy', text: '🔥 牛肉麵開團中' }
+      ],
+      summary: '山水短影音成片剪輯完成，核對 11/16 開團連結',
+      shoot: '剪輯山水冷面 POV 短影音。',
+      post: '牛肉麵團購日常限動。',
+      tip: '準備無縫接棒雙 11 牛肉麵大檔！'
+    },
+    { 
+      day: 10, 
+      events: [
+        { type: 'shoot', text: '🎬【拍】Masking 面膜' },
+        { type: 'groupbuy', text: '🔥 牛肉麵倒數 5 天' }
+      ],
+      summary: '拍攝 Masking 膜靚面膜 ＋ 牛肉麵倒數 5 天限動',
+      shoot: '<b>🧖‍♀️ Masking 膜靚面膜</b>：18% 杏仁酸晚安面膜乾肌敷 15 分鐘洗掉，隔天透亮水嫩實測。',
+      post: '牛肉麵倒數限動提醒。',
+      tip: 'Masking 完全免審稿，自由發揮真實生活保養體驗！'
+    },
+    { 
+      day: 11, 
+      events: [
+        { type: 'post', text: '🚀 雙 11 牛肉麵衝刺' },
+        { type: 'post', text: '🚀 Threads 宵夜碎念' },
+        { type: 'groupbuy', text: '🔥 雙 11 正日極限' }
+      ],
+      summary: '雙 11 正日！21:00 牛肉麵極限衝刺，主打湊 $1,899 送粥',
+      shoot: '準備最後倒數素材。',
+      post: '<b>🚀 21:00 IG 限動連發 ＋ Threads 碎念</b>：雙 11 正日倒數，買衣服之餘別忘記搶糧食！湊滿 $1,899 免費送鮑片雞蓉粥！',
+      tip: '一年一度雙 11 正日，粉絲消費力最強，全力收割！'
+    },
+    { 
+      day: 12, 
+      events: [
+        { type: 'post', text: '🚀【發】DEWYTREE 短影音' },
+        { type: 'groupbuy', text: '🔥 牛肉麵倒數 72h' }
+      ],
+      summary: 'DEWYTREE TikTok 原生發布並授權 Spark Ads 商業代碼',
+      shoot: '日常工作。',
+      post: '<b>TikTok</b>：發布 DEWYTREE 卸妝乳＋愛心泡泡短影音，首行標 [AD]。',
+      tip: '發布後回傳 Spark Ads 代碼給窗口領取 USD $45 ＋ 神秘獎金！'
+    },
+    { 
+      day: 13, 
+      events: [
+        { type: 'groupbuy', text: '🔥 牛肉麵最後 48h' },
+        { type: 'post', text: '📱 囤貨提醒限動' }
+      ],
+      summary: '牛肉麵最後 48 小時囤貨提醒',
+      shoot: '日常工作。',
+      post: '<b>📱 IG 限動</b>：提醒年曆即將贈完，常溫放房間隨時能煮。',
+      tip: '把握最後猶豫客群！'
+    },
+    { 
+      day: 14, 
+      events: [
+        { type: 'post', text: '🚨 牛肉麵最後倒數' },
+        { type: 'groupbuy', text: '🔥 最後 24 小時' }
+      ],
+      summary: '牛肉麵最後 24 小時倒數限動（房間常溫外盒疊高高）',
+      shoot: '拍房間桌角外盒疊高高。',
+      post: '<b>📱 IG 限動 ＋ Threads 留言頂置</b>：最後 24 小時倒數，常溫免搶冷凍庫，錯過不再有 $370 免運價！',
+      tip: '營造最後壓線絕版感！'
+    },
+    { 
+      day: 15, 
+      events: [
+        { type: 'groupbuy', text: '🚨 23:59 牛肉麵關單' },
+        { type: 'post', text: '📱 最後 6 小時倒數' }
+      ],
+      summary: '藍海饌雙 11 團購 23:59 正式關單！首頁下架連結！',
+      shoot: '對帳資料準備。',
+      post: '<b>📱 IG 限動</b>：倒數 6 小時 ➔ 倒數 1 小時 ➔ 23:59 準時感謝結團！',
+      tip: '圓滿完成 15 天雙 11 戰役，準備接棒山水吸塵器！'
+    },
+    { 
+      day: 16, 
+      events: [
+        { type: 'groupbuy', text: '🔥🔥 山水吸塵器開團' },
+        { type: 'post', text: '🚀 發布冷面 POV 短片' }
+      ],
+      summary: '山水 SANSUI 鵝黃色吸塵器黑五大檔開團！首頁更換連結！',
+      shoot: '更換個人首頁連結為山水吸塵器專屬下單網址（18%–25% 分潤）。',
+      post: '<b>🚀 IG Reels ＋ TikTok ＋ Threads</b>：發布朋友 POV 冷面吸塵器喜劇短影音！單機 $2,990、塵蟎組 $3,990 免運直寄！',
+      tip: '黑五大檔無縫接棒，主打單筆抽 $538–$718 高客單！'
+    },
+    { 
+      day: 17, 
+      events: [
+        { type: 'groupbuy', text: '🔥 吸塵器開團中' },
+        { type: 'post', text: '📱 除毛球功能限動' }
+      ],
+      summary: '山水吸塵器除毛球與換季除蟎限動分享',
+      shoot: '日常工作。',
+      post: '<b>📱 IG 限動</b>：展示大衣除毛球與一機多用實用功能。',
+      tip: '換季時節大衣除毛球極具打動力！'
+    },
+    { 
+      day: 18, 
+      events: [
+        { type: 'groupbuy', text: '🔥🔥 Masking 面膜開團' },
+        { type: 'post', text: '🚀 IG 換季保濕圖文' }
+      ],
+      summary: 'Masking 膜靚面膜秋冬換季保養開團！滿 $399 即免運！',
+      shoot: '更換限動精選與貼文連結。',
+      post: '<b>🚀 IG 貼文 ＋ 限動</b>：乾敏肌換季保養，18% 杏仁酸溫和煥膚實測，小額滿 $399 免運無痛入手（20%–30% 純分潤）！',
+      tip: '完全免審稿，自然分享真實護膚感受！'
+    },
+    { 
+      day: 19, 
+      events: [
+        { type: 'groupbuy', text: '🔥 吸塵器＋面膜雙檔' },
+        { type: 'post', text: '📱 車內吸坐墊限動' }
+      ],
+      summary: '山水吸塵器車內輕巧吸坐墊限動 ＋ 面膜補水分享',
+      shoot: '日常工作。',
+      post: '<b>📱 IG 限動</b>：車內無線吸塵實用場景，男粉女粉通吃！',
+      tip: '雙檔並行，滿足不同受眾需求！'
+    },
+    { 
+      day: 20, 
+      events: [
+        { type: 'groupbuy', text: '🔥 雙檔促購中' },
+        { type: 'post', text: '📱 乾敏肌實測限動' }
+      ],
+      summary: 'Masking 面膜保濕貼妝前後對比限動',
+      shoot: '日常工作。',
+      post: '<b>📱 IG 限動</b>：分享面膜敷完後底妝極致服貼實測。',
+      tip: '平價 $399 免運回購率極高！'
+    },
+    { 
+      day: 21, 
+      events: [
+        { type: 'post', text: '🚀 週末穿搭自嘲文' },
+        { type: 'groupbuy', text: '🔥 黑五雙檔搶購' }
+      ],
+      summary: '週末日雜秋日穿搭 ＋ 黑五檔期推進',
+      shoot: '日常工作。',
+      post: '<b>IG / Threads</b>：小個子秋冬疊穿穿搭，維持帳號美感！',
+      tip: '穿插日常穿搭，維持「接案不掉粉」人設平衡！'
+    },
+    { 
+      day: 22, 
+      events: [
+        { type: 'groupbuy', text: '🔥 黑五週末搶購' },
+        { type: 'post', text: '📱 居家好物限動' }
+      ],
+      summary: '週末居家療癒好物限動分享',
+      shoot: '日常工作。',
+      post: '<b>📱 IG 限動</b>：吸塵器＋保濕面膜雙開箱體驗。',
+      tip: '週末放鬆時段，導購轉化力強！'
+    },
+    { 
+      day: 23, 
+      events: [
+        { type: 'groupbuy', text: '🚨 吸塵器倒數 48h' },
+        { type: 'post', text: '📱 黑五倒數限動' }
+      ],
+      summary: '山水吸塵器黑五倒數 48 小時',
+      shoot: '日常工作。',
+      post: '<b>📱 IG 限動</b>：提醒黑五限定優惠即將截止。',
+      tip: '衝刺最後高客單分潤！'
+    },
+    { 
+      day: 24, 
+      events: [
+        { type: 'groupbuy', text: '🚨 吸塵器最後倒數' },
+        { type: 'post', text: '📱 現貨免運搶購' }
+      ],
+      summary: '山水吸塵器最後倒數 24 小時',
+      shoot: '日常工作。',
+      post: '<b>📱 IG 限動</b>：現貨免運直寄，最後把握機會！',
+      tip: '最後壓線單衝刺！'
+    },
+    { 
+      day: 25, 
+      events: [
+        { type: 'groupbuy', text: '🚨 23:59 吸塵器關單' },
+        { type: 'post', text: '🚀【發】Unni Guide' }
+      ],
+      summary: '山水吸塵器 23:59 關單！發布 Unni Guide 韓國醫美 IG 輪播',
+      shoot: '整理 Unni Guide 輪播圖文。',
+      post: '<b>🚀 IG Carousel</b>：發布 Unni Guide 韓國皮膚管理與透明比價指南（USD $50 入帳）！',
+      tip: '吸塵器關單後立刻發布國際合作圖文，身價再次提升！'
+    },
+    { 
+      day: 26, 
+      events: [
+        { type: 'groupbuy', text: '🔥 Masking 面膜開團中' },
+        { type: 'post', text: '📱 秋冬急救限動' }
+      ],
+      summary: 'Masking 面膜秋冬乾癢急救限動分享',
+      shoot: '日常工作。',
+      post: '<b>📱 IG 限動</b>：換季保濕必備，低門檻滿 $399 免運。',
+      tip: '主攻乾肌小資女！'
+    },
+    { 
+      day: 27, 
+      events: [
+        { type: 'groupbuy', text: '🔥 Masking 面膜倒數' },
+        { type: 'post', text: '📱 囤貨限動' }
+      ],
+      summary: 'Masking 面膜最後 48 小時倒數',
+      shoot: '日常工作。',
+      post: '<b>📱 IG 限動</b>：提醒優惠即將結束。',
+      tip: '囤貨單收割！'
+    },
+    { 
+      day: 28, 
+      events: [
+        { type: 'groupbuy', text: '🚨 23:59 面膜關單' },
+        { type: 'post', text: '🚀 週末修復日記' }
+      ],
+      summary: 'Masking 膜靚面膜 23:59 圓滿關單！',
+      shoot: '11 月三大團購大檔全部圓滿結案！',
+      post: '<b>IG / Threads</b>：發布日常修復日記，感謝粉絲支持。',
+      tip: '11 月團購大獲全勝，創下個人新高營收！'
+    },
+    { 
+      day: 29, 
+      events: [
+        { type: 'done', text: '☕️ 整理 12 月對帳單' }
+      ],
+      summary: '11 月三大檔期圓滿收尾，整理 12 月對帳單',
+      shoot: '休息充電。',
+      post: '日常生活分享。',
+      tip: '三大團購（藍海饌、山水、Masking）數據結算中！'
+    },
+    { 
+      day: 30, 
+      events: [
+        { type: 'done', text: '💰 11 月團購營收結算' }
+      ],
+      summary: '11 月自媒體總營收結算，迎接 12 月聖誕檔期！',
+      shoot: '迎戰 12 月！',
+      post: '感謝 11 月陪伴與收穫。',
+      tip: '預估 11 月總分潤與業配營收將創下歷史新高！'
+    }
+  ]
+};
+
+let currentMonth = 10;
+let currentFilter = 'all';
+
+function renderCalendar() {
+  const grid = document.getElementById('daysGrid');
+  grid.innerHTML = '';
+
+  const days = calendarData[currentMonth] || [];
+
+  days.forEach((dayData) => {
+    const cell = document.createElement('div');
+    cell.className = 'day-cell';
+    if (dayData.other) cell.classList.add('other-month');
+    if (dayData.today && currentMonth === 10) cell.classList.add('today');
+
+    // Day number
+    const num = document.createElement('div');
+    num.className = 'day-num';
+    num.textContent = dayData.day;
+    cell.appendChild(num);
+
+    // Filter events
+    const events = (dayData.events || []).filter(e => {
+      if (currentFilter === 'all') return true;
+      if (currentFilter === 'shoot' && e.type === 'shoot') return true;
+      if (currentFilter === 'post' && e.type === 'post') return true;
+      if (currentFilter === 'groupbuy' && e.type === 'groupbuy') return true;
+      return false;
+    });
+
+    events.forEach(e => {
+      const b = document.createElement('span');
+      b.className = 'event-badge badge-' + e.type;
+      b.textContent = e.text;
+      cell.appendChild(b);
+    });
+
+    // Click handler to update detail box
+    if (!dayData.other && dayData.summary) {
+      cell.onclick = () => showDetail(dayData);
+    }
+
+    grid.appendChild(cell);
+  });
+}
+
+function showDetail(data) {
+  document.getElementById('detailDate').innerHTML = `📅 2026 年 ${currentMonth} 月 ${data.day} 日 <span class="detail-badge">${data.today ? '📍 今日' : '行程詳情'}</span>`;
+  document.getElementById('detailSummary').textContent = data.summary || '今日日常工作';
+  document.getElementById('detailShoot').innerHTML = data.shoot || '<span style="color:var(--muted); font-size:12.5px;">今日無硬性拍攝任務，可專注日常穿搭或剪輯素材。</span>';
+  document.getElementById('detailPost').innerHTML = data.post || '<span style="color:var(--muted); font-size:12.5px;">今日維持正常社群互動或限動分享。</span>';
+  document.getElementById('detailTip').innerHTML = `💡 <b>經紀人備忘</b>：${data.tip || '保持平常心，按部就班執行即可！'}`;
+  
+  // Smooth scroll up to detail box on small screens
+  if (window.innerWidth < 768) {
+    document.getElementById('detailBox').scrollIntoView({ behavior: 'smooth' });
+  }
+}
+
+function switchMonth(m) {
+  currentMonth = m;
+  document.getElementById('tabOct').classList.toggle('active', m === 10);
+  document.getElementById('tabNov').classList.toggle('active', m === 11);
+  renderCalendar();
+  
+  // Select first significant event in that month
+  if (m === 10) {
+    const today = calendarData[10].find(d => d.day === 22 && !d.other);
+    if (today) showDetail(today);
+  } else {
+    const d1 = calendarData[11].find(d => d.day === 1 && !d.other);
+    if (d1) showDetail(d1);
+  }
+}
+
+function filterEvents(f) {
+  currentFilter = f;
+  const tags = document.querySelectorAll('.filter-tag');
+  tags.forEach(t => t.classList.remove('active'));
+  event.target.classList.add('active');
+  renderCalendar();
+}
+
+// Initial render
+renderCalendar();
+</script>
+</body>
+</html>
