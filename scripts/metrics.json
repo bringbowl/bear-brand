@@ -58,5 +58,22 @@
       "likes": 27,
       "comments": 0
     }
+  },
+  "public_threads": {
+    "buy_flower": {
+      "post_id": "DebMbsUgQL1",
+      "likes": "6.3K",
+      "replies": "230"
+    },
+    "grandma_dress": {
+      "post_id": "DdnPcbVjrQi",
+      "likes": "719",
+      "replies": "55"
+    },
+    "outlook": {
+      "post_id": "DeLOE8RFTvZ",
+      "likes": "120",
+      "replies": "11"
+    }
   }
 }
