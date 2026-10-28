@@ -1,10 +1,11 @@
 #!/usr/bin/env python3
 """
 Automated Social Metrics Sync Script for Bear (@bear__only150)
-100% Zero-API Public Web Scraping Engine:
-- Fetches live Instagram followers and Reel engagement (likes & comments) via public embed endpoints.
-- Fetches live Threads followers and individual post engagement (likes & replies) via public embed endpoints.
-- Updates metrics.json and injects live numbers into index.html.
+100% Zero-API Multi-Platform Scraping Engine (IG + Threads + TikTok):
+- Instagram: Live followers and Reel engagement (likes & comments) via public embed parser.
+- Threads: Live followers and post engagement (likes & replies) via public embed parser.
+- TikTok: Live followers and total hearts via live public counter API.
+- Automatically calculates total audience and updates index.html.
 """
 
 import os
@@ -21,14 +22,14 @@ INDEX_HTML = os.path.join(PROJECT_DIR, "index.html")
 
 USER_AGENT = "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36"
 
-# Featured Instagram Reels to track automatically
+# Featured Instagram Reels
 FEATURED_REELS = {
     "DeLN3-lJr_Z": "outlook",        # 當不了Luke 只有Outlook 黑西裝
     "DdnPGRkpgYI": "grandma_dress",  # 152/45 拯救阿嬤睡衣
     "DdIcdqApnra": "dear_dahlia"     # Dear Dahlia
 }
 
-# Featured Threads Posts to track automatically
+# Featured Threads Posts
 FEATURED_THREADS = {
     "DebMbsUgQL1": "buy_flower",     # 醫生叫我每天都要曬太陽D_157 (買花日記)
     "DdnPcbVjrQi": "grandma_dress",  # 152/45 拯救阿嬤睡衣
@@ -50,7 +51,7 @@ def save_metrics(data):
 
 
 def fetch_public_instagram_data(metrics):
-    print("📸 Fetching live Instagram data via public embed parser (Zero-API)...")
+    print("📸 [1/3] Fetching live Instagram data via public embed parser...")
     reels_stats = {}
     detected_ig_followers = None
 
@@ -72,7 +73,7 @@ def fetch_public_instagram_data(metrics):
                     "likes": l_count,
                     "comments": c_count
                 }
-                print(f"  👉 IG Reel [{label}] (shortcode: {sc}): {l_count} likes, {c_count} comments")
+                print(f"  👉 IG Reel [{label}]: {l_count} likes, {c_count} comments")
 
                 if followers and not detected_ig_followers:
                     detected_ig_followers = int(followers.group(1))
@@ -81,7 +82,7 @@ def fetch_public_instagram_data(metrics):
 
     if detected_ig_followers and detected_ig_followers >= 3500:
         metrics["followers"]["instagram"] = detected_ig_followers
-        print(f"  🏆 Live IG Followers detected: {detected_ig_followers}")
+        print(f"  🏆 Live IG Followers: {detected_ig_followers}")
 
     if "public_reels" not in metrics:
         metrics["public_reels"] = {}
@@ -90,8 +91,7 @@ def fetch_public_instagram_data(metrics):
 
 
 def fetch_public_threads_data(metrics):
-    print("🧵 Fetching live Threads data via public profile & post embed parser (Zero-API)...")
-    # 1. Profile Follower Badge
+    print("🧵 [2/3] Fetching live Threads data via public profile & post embed parser...")
     url = "https://www.threads.net/@bear__only150"
     req = urllib.request.Request(url, headers={"User-Agent": USER_AGENT})
     try:
@@ -105,7 +105,6 @@ def fetch_public_threads_data(metrics):
     except Exception as e:
         print(f"  ⚠️ Warning fetching Threads profile: {e}")
 
-    # 2. Individual Featured Threads Posts
     threads_stats = {}
     for post_id, label in FEATURED_THREADS.items():
         embed_url = f"https://www.threads.net/@bear__only150/post/{post_id}/embed"
@@ -114,7 +113,6 @@ def fetch_public_threads_data(metrics):
             with urllib.request.urlopen(req, timeout=8) as resp:
                 html = resp.read().decode("utf-8")
                 counts = re.findall(r"<span class=\"ActionBarCount\">([^<]+)</span>", html)
-                # counts are typically [likes, replies, reposts, shares]
                 l_str = counts[0] if len(counts) > 0 else "0"
                 r_str = counts[1] if len(counts) > 1 else "0"
                 threads_stats[label] = {
@@ -122,13 +120,34 @@ def fetch_public_threads_data(metrics):
                     "likes": l_str,
                     "replies": r_str
                 }
-                print(f"  👉 Threads [{label}] (post: {post_id}): {l_str} likes, {r_str} replies")
+                print(f"  👉 Threads [{label}]: {l_str} likes, {r_str} replies")
         except Exception as e:
             print(f"  ⚠️ Warning fetching Threads post {post_id}: {e}")
 
     if "public_threads" not in metrics:
         metrics["public_threads"] = {}
     metrics["public_threads"].update(threads_stats)
+    return metrics
+
+
+def fetch_public_tiktok_data(metrics):
+    print("🎵 [3/3] Fetching live TikTok data via public counter API...")
+    url = "https://countik.com/api/exist/bear_only150"
+    req = urllib.request.Request(url, headers={"User-Agent": USER_AGENT})
+    try:
+        with urllib.request.urlopen(req, timeout=8) as resp:
+            data = json.loads(resp.read().decode("utf-8"))
+            if data.get("status") == "success":
+                tt_followers = data.get("followerCount", 0)
+                tt_hearts = data.get("heartCount", 0)
+                if tt_followers > 2000:
+                    metrics["followers"]["tiktok"] = tt_followers
+                    print(f"  🏆 Live TikTok Followers: {tt_followers:,}")
+                if tt_hearts > 10000:
+                    metrics["tiktok"]["likes_total"] = f"{tt_hearts / 10000:.1f} 萬+"
+                    print(f"  🏆 Live TikTok Total Hearts: {tt_hearts:,} ({metrics['tiktok']['likes_total']})")
+    except Exception as e:
+        print(f"  ⚠️ Warning fetching TikTok data: {e}")
     return metrics
 
 
@@ -166,6 +185,14 @@ def apply_metrics_to_html(metrics):
     html = re.sub(
         r'(<span class="platform-name">🎵 TikTok</span>\s*<span class="platform-handle">@bear_only150</span>\s*</div>\s*<div class="platform-num">)[^<]+(<small>位粉絲</small></div>)',
         rf'\g<1>{tt_fans_fmt} \g<2>',
+        html
+    )
+
+    # Update TikTok detail likes if available
+    tt_likes = metrics.get("tiktok", {}).get("likes_total", "1.4 萬+")
+    html = re.sub(
+        r'(<div class="platform-detail">累計獲讚 <strong>)[^<]+(</strong>・單支最高破 <strong>1.5 萬觀看</strong></div>)',
+        rf'\g<1>{tt_likes}\g<2>',
         html
     )
 
@@ -216,18 +243,19 @@ def apply_metrics_to_html(metrics):
 
 
 def main():
-    print("=" * 65)
-    print("🚀 Bear Media Kit Zero-API Dual-Platform Sync Engine (IG + Threads)")
-    print("=" * 65)
+    print("=" * 68)
+    print("🚀 Bear Media Kit Zero-API Triple-Platform Sync Engine (IG + Threads + TikTok)")
+    print("=" * 68)
     metrics = load_metrics()
     metrics = fetch_public_instagram_data(metrics)
     metrics = fetch_public_threads_data(metrics)
+    metrics = fetch_public_tiktok_data(metrics)
     metrics["last_updated"] = datetime.now().strftime("%Y-%m-%d")
     save_metrics(metrics)
     apply_metrics_to_html(metrics)
-    print("=" * 65)
-    print("🎉 Both Instagram & Threads live metrics synced successfully!")
-    print("=" * 65)
+    print("=" * 68)
+    print("🎉 All 3 platforms (IG, Threads, TikTok) live metrics synced successfully!")
+    print("=" * 68)
 
 
 if __name__ == "__main__":
