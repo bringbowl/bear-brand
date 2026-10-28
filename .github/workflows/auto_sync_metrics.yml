@@ -21,10 +21,7 @@ jobs:
         with:
           python-version: '3.12'
 
-      - name: Run Automated Metrics Sync
-        env:
-          META_ACCESS_TOKEN: ${{ secrets.META_ACCESS_TOKEN }}
-          IG_USER_ID: ${{ secrets.IG_USER_ID }}
+      - name: Run Zero-API Public Metrics Sync Engine
         run: |
           python scripts/sync_metrics.py
 
