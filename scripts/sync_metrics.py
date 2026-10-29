@@ -24,6 +24,7 @@ USER_AGENT = "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36
 
 # Featured Instagram Reels
 FEATURED_REELS = {
+    "DfEFEc5NgyB": "windows_boot",   # 工程師說過：重新開機可以解決 99% 的問題 (Windows 開機穿搭)
     "DeLN3-lJr_Z": "outlook",        # 當不了Luke 只有Outlook 黑西裝
     "DdnPGRkpgYI": "grandma_dress",  # 152/45 拯救阿嬤睡衣
     "DdIcdqApnra": "dear_dahlia"     # Dear Dahlia
@@ -31,6 +32,7 @@ FEATURED_REELS = {
 
 # Featured Threads Posts
 FEATURED_THREADS = {
+    "DfEFKfVjl06": "windows_boot",   # 工程師說過：重新開機可以解決 99% 的問題 (Windows 開機穿搭)
     "DebMbsUgQL1": "buy_flower",     # 醫生叫我每天都要曬太陽D_157 (買花日記)
     "DdnPcbVjrQi": "grandma_dress",  # 152/45 拯救阿嬤睡衣
     "DeLOE8RFTvZ": "outlook"         # 當不了Luke 只有Outlook
