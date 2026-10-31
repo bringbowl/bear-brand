@@ -1,8 +1,8 @@
 {
-  "last_updated": "2026-10-30",
+  "last_updated": "2026-10-31",
   "followers": {
     "threads": 5141,
-    "instagram": 3833,
+    "instagram": 3834,
     "tiktok": 2615
   },
   "instagram": {
@@ -30,7 +30,7 @@
     "interactions_30d": 26792,
     "interaction_growth_pct": 78.8,
     "female_reach_ratio": 47.8,
-    "public_follower_badge": "5.1K"
+    "public_follower_badge": "5.2K"
   },
   "tiktok": {
     "likes_total": "1.4 萬+"
@@ -60,8 +60,8 @@
     },
     "windows_boot": {
       "shortcode": "DfEFEc5NgyB",
-      "likes": 79,
-      "comments": 1
+      "likes": 81,
+      "comments": 2
     }
   },
   "public_threads": {
@@ -82,7 +82,7 @@
     },
     "windows_boot": {
       "post_id": "DfEFKfVjl06",
-      "likes": "36",
+      "likes": "40",
       "replies": "10"
     }
   }
