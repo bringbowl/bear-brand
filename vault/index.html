@@ -942,8 +942,15 @@
 
       <div style="display:grid; grid-template-columns: 1fr 1fr; gap: 10px;">
         <div class="form-group">
-          <label for="itemCategoryInput">分類資料夾</label>
+          <label for="itemCategoryInput">
+            <span>分類資料夾</span>
+            <button type="button" class="card-action-btn" id="inlineAddCatBtn" style="color:var(--accent); padding:0 4px;">＋ 新增分類</button>
+          </label>
           <select id="itemCategoryInput" class="form-control"></select>
+          <div id="inlineNewCatBox" style="display:none; gap:6px; margin-top:4px;">
+            <input type="text" id="inlineNewCatInput" class="form-control" placeholder="新分類名稱，如：✈️ 蜜月" style="padding:6px 10px; font-size:14px;">
+            <button type="button" class="btn btn-primary" id="inlineConfirmCatBtn" style="padding:6px 12px; font-size:0.8rem;">建立</button>
+          </div>
         </div>
         <div class="form-group">
           <label for="itemPlatformInput">來源平台</label>
@@ -1598,11 +1605,32 @@
       const cats = getCategories();
       const prevQuick = quickCategorySelect.value;
       const prevModal = itemCategoryInput.value;
-      const optionsHtml = cats.map(c => `<option value="${escapeHtml(c)}">${escapeHtml(c)}</option>`).join('');
+      const optionsHtml =
+        cats.map(c => `<option value="${escapeHtml(c)}">${escapeHtml(c)}</option>`).join('') +
+        `<option value="__NEW__">➕ 新增分類資料夾...</option>`;
       quickCategorySelect.innerHTML = optionsHtml;
       itemCategoryInput.innerHTML = optionsHtml;
       if (cats.includes(prevQuick)) quickCategorySelect.value = prevQuick;
       if (cats.includes(prevModal)) itemCategoryInput.value = prevModal;
+    }
+
+    function createAndSelectCategory(rawName, targetSelectEl) {
+      const val = (rawName || '').trim();
+      if (!val) return false;
+      const cats = getCategories();
+      if (!cats.includes(val)) {
+        cats.push(val);
+        saveCategories(cats);
+      }
+      renderCategorySelects();
+      renderFilters();
+      if (targetSelectEl) {
+        targetSelectEl.value = val;
+      }
+      quickCategorySelect.value = val;
+      itemCategoryInput.value = val;
+      triggerCloudSyncInBackground();
+      return true;
     }
 
     function renderFilters() {
@@ -1623,9 +1651,13 @@
           <span>${escapeHtml(p.label)}</span>
           <span class="count">${p.count}</span>
         </button>
-      `).join('');
+      `).join('') + `
+        <button type="button" class="pill" id="quickAddCatPillBtn" style="color:var(--accent); border-style:dashed;">
+          <span>＋ 新分類</span>
+        </button>
+      `;
 
-      categoryFilterRow.querySelectorAll('.pill').forEach(btn => {
+      categoryFilterRow.querySelectorAll('.pill[data-cat]').forEach(btn => {
         btn.addEventListener('click', () => {
           activeCategory = btn.dataset.cat;
           if (activeCategory !== 'ALL') {
@@ -1635,6 +1667,16 @@
           renderCards();
         });
       });
+
+      const addPillBtn = document.getElementById('quickAddCatPillBtn');
+      if (addPillBtn) {
+        addPillBtn.addEventListener('click', () => {
+          const name = prompt('請輸入新分類資料夾名稱（例如：✈️ 蜜月旅行）：');
+          if (name && name.trim()) {
+            createAndSelectCategory(name.trim());
+          }
+        });
+      }
 
       const platCounts = { ALL: allItems.length };
       allItems.forEach(item => {
@@ -1896,6 +1938,51 @@
     const itemNoteInput = document.getElementById('itemNoteInput');
     const fetchStatusBanner = document.getElementById('fetchStatusBanner');
 
+    const inlineNewCatBox = document.getElementById('inlineNewCatBox');
+    const inlineNewCatInput = document.getElementById('inlineNewCatInput');
+
+    function showInlineNewCatBox() {
+      inlineNewCatBox.style.display = 'flex';
+      inlineNewCatInput.value = '';
+      setTimeout(() => inlineNewCatInput.focus(), 50);
+    }
+
+    document.getElementById('inlineAddCatBtn').addEventListener('click', showInlineNewCatBox);
+
+    itemCategoryInput.addEventListener('change', () => {
+      if (itemCategoryInput.value === '__NEW__') {
+        itemCategoryInput.value = getCategories()[0];
+        showInlineNewCatBox();
+      }
+    });
+
+    quickCategorySelect.addEventListener('change', () => {
+      if (quickCategorySelect.value === '__NEW__') {
+        const name = prompt('請輸入新分類資料夾名稱（例如：✈️ 蜜月旅行）：');
+        if (name && name.trim()) {
+          createAndSelectCategory(name.trim(), quickCategorySelect);
+        } else {
+          quickCategorySelect.value = getCategories()[0];
+        }
+      }
+    });
+
+    function submitInlineNewCat() {
+      const val = inlineNewCatInput.value.trim();
+      if (!val) return;
+      createAndSelectCategory(val, itemCategoryInput);
+      inlineNewCatBox.style.display = 'none';
+      inlineNewCatInput.value = '';
+    }
+
+    document.getElementById('inlineConfirmCatBtn').addEventListener('click', submitInlineNewCat);
+    inlineNewCatInput.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter') {
+        e.preventDefault();
+        submitInlineNewCat();
+      }
+    });
+
     function setModalPreviewImage(src) {
       currentEditingImageData = src || '';
       if (src) {
@@ -1913,9 +2000,13 @@
 
     function openAddModal(prefill = {}) {
       document.getElementById('itemDialogTitle').textContent = '✨ 新增靈感收藏';
+      inlineNewCatBox.style.display = 'none';
       itemIdInput.value = '';
       itemRawInput.value = prefill.url || '';
-      itemCategoryInput.value = prefill.category || quickCategorySelect.value || getCategories()[0];
+      const defaultCat = (quickCategorySelect.value && quickCategorySelect.value !== '__NEW__')
+        ? quickCategorySelect.value
+        : getCategories()[0];
+      itemCategoryInput.value = prefill.category || defaultCat;
       itemPlatformInput.value = prefill.platform || (prefill.url ? detectPlatform(prefill.url) : 'xhs');
       itemTitleInput.value = prefill.title || '';
       itemNoteInput.value = prefill.note || '';
@@ -1933,6 +2024,7 @@
       const item = allItems.find(x => x.id === id);
       if (!item) return;
       document.getElementById('itemDialogTitle').textContent = '✏️ 編輯 / 更換截圖';
+      inlineNewCatBox.style.display = 'none';
       itemIdInput.value = item.id;
       itemRawInput.value = item.url || '';
       renderCategorySelects();
