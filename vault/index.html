@@ -2,10 +2,13 @@
 <html lang="zh-Hant">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>77 的靈感收藏盒 ✨ 跨平台貼文 & 截圖收納</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="default">
+  <meta name="apple-mobile-web-app-title" content="靈感收藏盒">
+  <title>77 的靈感收藏盒 ✨</title>
   <link rel="manifest" href="./manifest.json">
-  <meta name="theme-color" content="#D48C70">
+  <meta name="theme-color" content="#FAF7F2">
   <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🧸</text></svg>">
   <style>
     :root {
@@ -24,98 +27,95 @@
       --radius-lg: 16px;
       --radius-md: 12px;
       --radius-sm: 8px;
-      --shadow-sm: 0 2px 8px rgba(44, 37, 35, 0.05);
+      --shadow-sm: 0 2px 10px rgba(44, 37, 35, 0.05);
       --shadow-md: 0 8px 24px rgba(44, 37, 35, 0.09);
+      --safe-top: env(safe-area-inset-top, 0px);
+      --safe-bottom: env(safe-area-inset-bottom, 0px);
     }
 
     * {
       box-sizing: border-box;
       margin: 0;
       padding: 0;
+      -webkit-tap-highlight-color: transparent;
     }
 
     body {
       font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang TC", "Microsoft JhengHei", sans-serif;
       background-color: var(--bg);
       color: var(--text);
-      line-height: 1.5;
+      line-height: 1.45;
       min-height: 100dvh;
-      padding-bottom: 88px;
+      padding-top: var(--safe-top);
+      padding-bottom: calc(84px + var(--safe-bottom));
     }
 
-    /* Top Navigation Bar */
-    .topbar {
+    /* Compact Sticky Header + Filter Bar */
+    .app-header {
       position: sticky;
       top: 0;
       z-index: 20;
-      background: rgba(250, 247, 242, 0.88);
-      backdrop-filter: blur(12px);
+      background: rgba(250, 247, 242, 0.92);
+      backdrop-filter: blur(14px);
+      -webkit-backdrop-filter: blur(14px);
       border-bottom: 1px solid var(--border);
-      padding: 14px 24px;
+      padding: 10px 16px 8px;
     }
 
-    .topbar-inner {
-      max-width: 1280px;
+    .header-inner {
+      max-width: 1200px;
       margin: 0 auto;
       display: flex;
-      flex-wrap: wrap;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .header-top-row {
+      display: flex;
       align-items: center;
       justify-content: space-between;
-      gap: 14px;
+      gap: 10px;
     }
 
     .brand {
       display: flex;
       align-items: center;
-      gap: 10px;
+      gap: 8px;
+      flex-shrink: 0;
     }
 
     .brand-logo {
-      width: 38px;
-      height: 38px;
-      border-radius: 11px;
+      width: 32px;
+      height: 32px;
+      border-radius: 9px;
       background: var(--accent);
       color: #fff;
       display: grid;
       place-items: center;
-      font-size: 20px;
-      box-shadow: var(--shadow-sm);
+      font-size: 17px;
     }
 
     .brand h1 {
-      font-size: 1.15rem;
-      font-weight: 700;
+      font-size: 1.02rem;
+      font-weight: 800;
       letter-spacing: -0.01em;
-    }
-
-    .brand p {
-      font-size: 0.78rem;
-      color: var(--text-muted);
-    }
-
-    .topbar-actions {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      flex-wrap: wrap;
     }
 
     .search-box {
       position: relative;
-      min-width: 200px;
       flex: 1;
+      max-width: 420px;
     }
 
     .search-box input {
       width: 100%;
-      padding: 9px 14px 9px 34px;
+      padding: 7px 12px 7px 30px;
       border-radius: 999px;
       border: 1px solid var(--border);
       background: var(--surface);
-      font-size: 0.9rem;
+      font-size: 0.85rem;
       color: var(--text);
       outline: none;
-      transition: border-color 0.15s;
     }
 
     .search-box input:focus {
@@ -124,161 +124,74 @@
 
     .search-box .search-icon {
       position: absolute;
-      left: 12px;
+      left: 10px;
       top: 50%;
       transform: translateY(-50%);
-      color: var(--text-muted);
-      font-size: 0.85rem;
+      font-size: 0.78rem;
       pointer-events: none;
     }
 
-    .btn {
+    .desktop-actions {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .sync-badge-btn {
       display: inline-flex;
       align-items: center;
-      justify-content: center;
-      gap: 6px;
-      padding: 9px 15px;
+      gap: 4px;
+      padding: 6px 11px;
       border-radius: 999px;
+      font-size: 0.76rem;
+      font-weight: 700;
       border: 1px solid var(--border);
-      background: var(--surface);
-      color: var(--text);
-      font-size: 0.86rem;
-      font-weight: 600;
       cursor: pointer;
-      transition: all 0.15s ease;
-      text-decoration: none;
       white-space: nowrap;
+      flex-shrink: 0;
     }
 
-    .btn:hover {
-      background: var(--surface-subtle);
-    }
-
-    .btn-primary {
-      background: var(--accent);
-      color: #fff;
-      border-color: var(--accent);
-    }
-
-    .btn-primary:hover {
-      background: var(--accent-hover);
-      border-color: var(--accent-hover);
-    }
-
-    .btn-sync-connected {
+    .sync-badge-btn.connected {
       background: var(--success-soft);
       color: var(--success);
       border-color: #C8E6C9;
     }
 
-    .btn-sync-disconnected {
+    .sync-badge-btn.disconnected {
       background: #FFF8E1;
       color: #B45309;
       border-color: #FDE68A;
     }
 
-    /* Quick Paste Bar */
-    .main-container {
-      max-width: 1280px;
-      margin: 0 auto;
-      padding: 20px 24px;
-    }
-
-    .quick-capture {
-      background: var(--surface);
-      border: 1px solid var(--border);
-      border-radius: var(--radius-lg);
-      padding: 16px 20px;
-      box-shadow: var(--shadow-sm);
-      margin-bottom: 22px;
-      display: flex;
-      flex-wrap: wrap;
-      align-items: center;
-      gap: 12px;
-    }
-
-    .quick-capture-input {
-      flex: 1;
-      min-width: 240px;
-      border: 1px solid var(--border);
-      background: var(--bg);
-      border-radius: var(--radius-md);
-      padding: 11px 14px;
-      font-size: 0.95rem;
-      color: var(--text);
-      outline: none;
-    }
-
-    .quick-capture-input:focus {
-      border-color: var(--accent);
-      background: var(--surface);
-    }
-
-    .quick-capture-controls {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      flex-wrap: wrap;
-    }
-
-    .select-pill {
-      padding: 10px 14px;
-      border-radius: var(--radius-md);
-      border: 1px solid var(--border);
-      background: var(--surface);
-      color: var(--text);
-      font-size: 0.88rem;
-      font-weight: 500;
-      cursor: pointer;
-    }
-
-    .drop-hint {
-      width: 100%;
-      font-size: 0.78rem;
-      color: var(--text-muted);
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      flex-wrap: wrap;
-      gap: 8px;
-    }
-
-    /* Filter Bar (Categories & Platforms) */
-    .filter-section {
-      display: flex;
-      flex-direction: column;
-      gap: 12px;
-      margin-bottom: 24px;
-    }
-
+    /* Horizontal Scrollable Category & Platform Pills */
     .pill-row {
       display: flex;
       align-items: center;
-      gap: 8px;
+      gap: 6px;
       overflow-x: auto;
-      padding-bottom: 4px;
-      scrollbar-width: thin;
+      scrollbar-width: none;
+      -ms-overflow-style: none;
+      padding-bottom: 2px;
+    }
+
+    .pill-row::-webkit-scrollbar {
+      display: none;
     }
 
     .pill {
       display: inline-flex;
       align-items: center;
-      gap: 6px;
-      padding: 7px 14px;
+      gap: 5px;
+      padding: 5px 12px;
       border-radius: 999px;
       border: 1px solid var(--border);
       background: var(--surface);
       color: var(--text-muted);
-      font-size: 0.86rem;
+      font-size: 0.8rem;
       font-weight: 600;
       cursor: pointer;
       white-space: nowrap;
       transition: all 0.15s;
-    }
-
-    .pill:hover {
-      border-color: var(--accent);
-      color: var(--text);
     }
 
     .pill.active {
@@ -288,10 +201,10 @@
     }
 
     .pill .count {
-      font-size: 0.74rem;
-      opacity: 0.75;
+      font-size: 0.7rem;
+      opacity: 0.8;
       background: rgba(120, 110, 105, 0.14);
-      padding: 1px 7px;
+      padding: 0 6px;
       border-radius: 99px;
     }
 
@@ -299,11 +212,110 @@
       background: rgba(255, 255, 255, 0.22);
     }
 
-    /* Card Grid using Modern CSS Subgrid & Container Queries */
+    /* Main Content Container */
+    .main-container {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 14px 16px;
+    }
+
+    /* Mobile One-Tap Action Strip + Desktop Quick Input */
+    .quick-action-strip {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-lg);
+      padding: 10px 12px;
+      box-shadow: var(--shadow-sm);
+      margin-bottom: 14px;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .quick-input-row {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .quick-capture-input {
+      flex: 1;
+      min-width: 0;
+      border: 1px solid var(--border);
+      background: var(--bg);
+      border-radius: 10px;
+      padding: 9px 12px;
+      font-size: 0.88rem;
+      color: var(--text);
+      outline: none;
+    }
+
+    .quick-capture-input:focus {
+      border-color: var(--accent);
+      background: var(--surface);
+    }
+
+    .quick-buttons-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 5px;
+      padding: 8px 14px;
+      border-radius: 999px;
+      border: 1px solid var(--border);
+      background: var(--surface);
+      color: var(--text);
+      font-size: 0.84rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.15s ease;
+      text-decoration: none;
+      white-space: nowrap;
+    }
+
+    .btn:active {
+      transform: scale(0.97);
+    }
+
+    .btn-primary {
+      background: var(--accent);
+      color: #fff;
+      border-color: var(--accent);
+    }
+
+    .select-pill {
+      padding: 7px 10px;
+      border-radius: 10px;
+      border: 1px solid var(--border);
+      background: var(--surface-subtle);
+      color: var(--text);
+      font-size: 0.82rem;
+      font-weight: 600;
+      cursor: pointer;
+    }
+
+    /* Platform sub-filter strip */
+    .subfilter-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+      margin-bottom: 12px;
+    }
+
+    /* Cards Grid: 2 Columns on Mobile (Xiaohongshu/Pinterest feel), 4 on Desktop */
     .cards-grid {
       display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(270px, 1fr));
-      gap: 20px;
+      grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+      gap: 16px;
       align-items: start;
     }
 
@@ -311,20 +323,20 @@
       container-type: inline-size;
       background: var(--surface);
       border: 1px solid var(--border);
-      border-radius: var(--radius-lg);
+      border-radius: 14px;
       overflow: hidden;
       box-shadow: var(--shadow-sm);
       display: grid;
       grid-row: span 4;
       grid-template-rows: subgrid;
       gap: 0;
-      transition: transform 0.18s ease, box-shadow 0.18s ease, border-color 0.18s ease;
+      transition: transform 0.18s ease, box-shadow 0.18s ease;
     }
 
     /* Direct child media element per modern-web-guidance `card` */
     article.card > img {
       width: 100%;
-      aspect-ratio: 4 / 3;
+      aspect-ratio: 4 / 4.5;
       object-fit: cover;
       display: block;
       background: var(--surface-subtle);
@@ -332,28 +344,28 @@
     }
 
     article.card > header {
-      padding: 14px 16px 6px;
+      padding: 10px 12px 4px;
       display: flex;
       flex-direction: column;
-      gap: 6px;
+      gap: 5px;
     }
 
     .card-meta-top {
       display: flex;
       align-items: center;
       justify-content: space-between;
-      gap: 8px;
-      font-size: 0.76rem;
+      gap: 4px;
+      flex-wrap: wrap;
     }
 
     .platform-badge {
       display: inline-flex;
       align-items: center;
-      gap: 4px;
-      padding: 2px 8px;
-      border-radius: 6px;
-      font-weight: 600;
-      font-size: 0.74rem;
+      gap: 3px;
+      padding: 2px 6px;
+      border-radius: 5px;
+      font-weight: 700;
+      font-size: 0.68rem;
     }
 
     .platform-ig { background: #FCE7F3; color: #BE185D; }
@@ -366,16 +378,20 @@
     .category-tag {
       color: var(--accent);
       background: var(--accent-soft);
-      padding: 2px 9px;
+      padding: 2px 7px;
       border-radius: 99px;
       font-weight: 600;
-      font-size: 0.74rem;
+      font-size: 0.68rem;
+      max-width: 100%;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
     }
 
     article.card > header h3 {
-      font-size: 0.98rem;
+      font-size: 0.88rem;
       font-weight: 700;
-      line-height: 1.4;
+      line-height: 1.35;
       display: -webkit-box;
       -webkit-line-clamp: 2;
       -webkit-box-orient: vertical;
@@ -425,16 +441,15 @@
     article.card:has(.card-link:hover) {
       transform: translateY(-2px);
       box-shadow: var(--shadow-md);
-      border-color: #D5C7BC;
     }
 
     .card-content {
-      padding: 4px 16px 12px;
+      padding: 2px 12px 8px;
       display: flex;
       flex-direction: column;
-      gap: 8px;
+      gap: 4px;
       color: var(--text-muted);
-      font-size: 0.85rem;
+      font-size: 0.76rem;
     }
 
     .card-note {
@@ -442,43 +457,34 @@
       -webkit-line-clamp: 2;
       -webkit-box-orient: vertical;
       overflow: hidden;
-      min-height: 1.3em;
-    }
-
-    .card-domain {
-      font-size: 0.75rem;
-      color: #9A8F89;
-      overflow: hidden;
-      text-overflow: ellipsis;
-      white-space: nowrap;
     }
 
     article.card > footer {
-      padding: 10px 16px;
+      padding: 6px 10px;
       border-top: 1px solid var(--surface-subtle);
       display: flex;
       align-items: center;
       justify-content: space-between;
-      gap: 6px;
+      gap: 2px;
       background: #FDFCFB;
     }
 
     .card-action-btn {
-      padding: 5px 10px;
-      border-radius: var(--radius-sm);
-      border: 1px solid transparent;
+      padding: 5px 7px;
+      border-radius: 6px;
+      border: none;
       background: transparent;
       color: var(--text-muted);
-      font-size: 0.78rem;
+      font-size: 0.74rem;
       font-weight: 600;
       cursor: pointer;
       display: inline-flex;
       align-items: center;
-      gap: 4px;
-      transition: all 0.15s;
+      gap: 3px;
     }
 
-    .card-action-btn:hover {
+    .card-action-btn:hover,
+    .card-action-btn:active {
       background: var(--surface-subtle);
       color: var(--text);
     }
@@ -491,24 +497,76 @@
     /* Empty State */
     .empty-state {
       text-align: center;
-      padding: 60px 20px;
+      padding: 48px 16px;
       background: var(--surface);
       border-radius: var(--radius-lg);
       border: 1px dashed var(--border);
       color: var(--text-muted);
     }
 
-    /* Dialog Styles per modern-web-guidance `light-dismiss-a-dialog` */
+    /* Mobile Bottom Tab Bar (App-like navigation) */
+    .mobile-tabbar {
+      position: fixed;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      z-index: 30;
+      background: rgba(255, 255, 255, 0.96);
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+      border-top: 1px solid var(--border);
+      padding: 6px 12px calc(6px + var(--safe-bottom));
+      display: none;
+      align-items: center;
+      justify-content: space-around;
+      box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.05);
+    }
+
+    .tab-btn {
+      flex: 1;
+      border: none;
+      background: none;
+      color: var(--text-muted);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 2px;
+      padding: 4px 0;
+      font-size: 0.68rem;
+      font-weight: 600;
+      cursor: pointer;
+    }
+
+    .tab-btn .tab-icon {
+      font-size: 1.2rem;
+      line-height: 1.1;
+    }
+
+    .tab-btn-add {
+      background: var(--accent);
+      color: #fff !important;
+      border-radius: 999px;
+      padding: 8px 16px;
+      flex: 0 0 auto;
+      flex-direction: row;
+      gap: 4px;
+      font-size: 0.82rem;
+      font-weight: 700;
+      box-shadow: 0 4px 12px rgba(200, 125, 101, 0.4);
+    }
+
+    /* Dialogs: Center on Desktop, Slide-up Bottom Sheet on Mobile */
     dialog {
       margin: auto;
       border: 1px solid var(--border);
       border-radius: var(--radius-lg);
       padding: 0;
-      width: min(560px, 92vw);
-      max-height: 90dvh;
+      width: min(540px, 94vw);
+      max-height: 88dvh;
       background: var(--surface);
       color: var(--text);
-      box-shadow: 0 20px 50px rgba(0, 0, 0, 0.18);
+      box-shadow: 0 20px 50px rgba(0, 0, 0, 0.22);
     }
 
     dialog::backdrop {
@@ -517,11 +575,11 @@
     }
 
     .dialog-inner {
-      padding: 22px 24px;
+      padding: 20px 20px calc(20px + var(--safe-bottom));
       display: flex;
       flex-direction: column;
-      gap: 16px;
-      max-height: 90dvh;
+      gap: 14px;
+      max-height: 88dvh;
       overflow-y: auto;
     }
 
@@ -533,7 +591,7 @@
     }
 
     .dialog-header h2 {
-      font-size: 1.15rem;
+      font-size: 1.05rem;
       font-weight: 700;
     }
 
@@ -544,10 +602,11 @@
       height: 32px;
       border-radius: 99px;
       cursor: pointer;
-      font-size: 1rem;
+      font-size: 0.95rem;
       display: grid;
       place-items: center;
       color: var(--text-muted);
+      flex-shrink: 0;
     }
 
     .form-group {
@@ -557,7 +616,7 @@
     }
 
     .form-group label {
-      font-size: 0.84rem;
+      font-size: 0.82rem;
       font-weight: 600;
       color: var(--text);
       display: flex;
@@ -571,7 +630,7 @@
       border-radius: var(--radius-sm);
       border: 1px solid var(--border);
       background: var(--bg);
-      font-size: 0.92rem;
+      font-size: 16px; /* Prevents iOS Safari auto-zoom on focus! */
       color: var(--text);
       font-family: inherit;
     }
@@ -589,20 +648,17 @@
       text-align: center;
       background: var(--bg);
       cursor: pointer;
-      transition: border-color 0.15s;
       display: flex;
       flex-direction: column;
       align-items: center;
       gap: 8px;
-    }
-
-    .thumbnail-uploader:hover {
-      border-color: var(--accent);
+      font-size: 0.84rem;
+      color: var(--text-muted);
     }
 
     .thumbnail-preview {
       width: 100%;
-      max-height: 220px;
+      max-height: 200px;
       object-fit: contain;
       border-radius: var(--radius-sm);
       display: none;
@@ -610,8 +666,8 @@
     }
 
     .status-banner {
-      font-size: 0.82rem;
-      padding: 9px 12px;
+      font-size: 0.8rem;
+      padding: 8px 12px;
       border-radius: var(--radius-sm);
       background: var(--accent-soft);
       color: var(--accent-hover);
@@ -619,14 +675,14 @@
     }
 
     .step-card {
-      padding: 14px 16px;
+      padding: 12px 14px;
       background: var(--bg);
       border-radius: var(--radius-md);
       border: 1px solid var(--border);
       display: flex;
       flex-direction: column;
       gap: 8px;
-      font-size: 0.88rem;
+      font-size: 0.85rem;
     }
 
     .qr-box {
@@ -634,7 +690,7 @@
       flex-direction: column;
       align-items: center;
       gap: 10px;
-      padding: 16px;
+      padding: 14px;
       background: #fff;
       border-radius: var(--radius-md);
       border: 1px solid var(--border);
@@ -650,118 +706,160 @@
       background: var(--accent);
       color: #fff;
       font-weight: 700;
-      font-size: 0.88rem;
+      font-size: 0.86rem;
       text-decoration: none;
-      cursor: grab;
-      box-shadow: var(--shadow-sm);
     }
 
-    /* Floating Action Button on Mobile */
-    .fab {
-      position: fixed;
-      right: 20px;
-      bottom: 22px;
-      z-index: 30;
-      padding: 14px 20px;
-      border-radius: 999px;
-      background: var(--accent);
-      color: #fff;
-      border: none;
-      font-size: 0.95rem;
-      font-weight: 700;
-      box-shadow: 0 10px 25px rgba(200, 125, 101, 0.45);
-      cursor: pointer;
-      display: flex;
-      align-items: center;
-      gap: 8px;
-    }
-
-    @media (max-width: 640px) {
-      .topbar { padding: 12px 16px; }
-      .main-container { padding: 16px; }
-      .cards-grid { grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); gap: 12px; }
-      article.card > header { padding: 10px 12px 4px; }
-      article.card > header h3 { font-size: 0.88rem; }
-      .card-content { padding: 4px 12px 10px; font-size: 0.78rem; }
-      article.card > footer { padding: 8px 12px; }
+    /* Mobile Responsive Overrides */
+    @media (max-width: 680px) {
+      .desktop-actions {
+        display: none;
+      }
+      .mobile-tabbar {
+        display: flex;
+      }
+      .cards-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 10px;
+      }
+      .main-container {
+        padding: 10px 12px;
+      }
+      .quick-action-strip {
+        padding: 10px;
+        margin-bottom: 10px;
+      }
+      .quick-capture-input {
+        font-size: 16px; /* Prevents iOS zoom */
+        padding: 8px 10px;
+      }
+      article.card > header {
+        padding: 8px 10px 4px;
+      }
+      article.card > header h3 {
+        font-size: 0.82rem;
+      }
+      .card-content {
+        padding: 2px 10px 6px;
+        font-size: 0.72rem;
+      }
+      article.card > footer {
+        padding: 5px 8px;
+      }
+      /* Bottom sheet modal on mobile */
+      dialog {
+        margin: auto 0 0 0;
+        width: 100vw;
+        max-width: 100vw;
+        max-height: 92dvh;
+        border-radius: 20px 20px 0 0;
+        border-bottom: none;
+      }
     }
   </style>
 </head>
 <body>
 
-  <!-- Top Navigation -->
-  <header class="topbar">
-    <div class="topbar-inner">
-      <div class="brand">
-        <div class="brand-logo" aria-hidden="true">🧸</div>
-        <div>
-          <h1>77 的靈感收藏盒</h1>
-          <p>Pinterest・小紅書・IG・Threads・手機截圖 一鍵分類</p>
+  <!-- Compact Sticky App Header -->
+  <header class="app-header">
+    <div class="header-inner">
+      <div class="header-top-row">
+        <div class="brand">
+          <div class="brand-logo" aria-hidden="true">🧸</div>
+          <h1>77 靈感盒</h1>
+        </div>
+
+        <div class="search-box">
+          <span class="search-icon">🔍</span>
+          <input type="search" id="searchInput" placeholder="搜尋穿搭、婚禮、小紅書..." aria-label="搜尋收藏">
+        </div>
+
+        <button type="button" class="sync-badge-btn disconnected" id="openSyncDialogBtn">☁️ 同步</button>
+
+        <div class="desktop-actions">
+          <button type="button" class="btn" id="openShareGuideBtn">⚡ 一鍵分享教學</button>
+          <button type="button" class="btn" id="manageCatBtn">🗂️ 分類</button>
+          <button type="button" class="btn btn-primary" id="openAddModalBtn">＋ 新增收藏</button>
         </div>
       </div>
 
-      <div class="search-box">
-        <span class="search-icon">🔍</span>
-        <input type="search" id="searchInput" placeholder="搜尋標題、筆記、分類或平台..." aria-label="搜尋收藏">
-      </div>
-
-      <div class="topbar-actions">
-        <button type="button" class="btn btn-sync-disconnected" id="openSyncDialogBtn">☁️ 啟動雲端同步</button>
-        <button type="button" class="btn" id="openShareGuideBtn">⚡ 一鍵分享設定</button>
-        <button type="button" class="btn" id="manageCatBtn">🗂️ 分類</button>
-        <button type="button" class="btn btn-primary" id="openAddModalBtn">＋ 新增收藏</button>
-      </div>
+      <!-- Category Filter Row (Sticky inside header for quick thumb switching!) -->
+      <div class="pill-row" id="categoryFilterRow"></div>
     </div>
   </header>
 
   <main class="main-container">
-    <!-- Quick One-Step Paste & Screenshot Bar -->
-    <section class="quick-capture" aria-label="快速收藏區">
-      <input
-        type="text"
-        id="quickUrlInput"
-        class="quick-capture-input"
-        placeholder="直接貼上 IG / 小紅書 / Pinterest / Threads 分享文字或網址（或按 Ctrl+V / Cmd+V 直接貼上截圖）..."
-      >
-      <div class="quick-capture-controls">
-        <select id="quickCategorySelect" class="select-pill" aria-label="選擇分類"></select>
-        <button type="button" class="btn btn-primary" id="quickSaveBtn">⚡ 抓縮圖並存入</button>
-        <label class="btn" for="quickScreenshotInput" style="cursor:pointer;">
-          📷 存手機截圖
-          <input type="file" id="quickScreenshotInput" accept="image/*" multiple hidden>
-        </label>
+    <!-- Mobile-Friendly Quick Capture Box -->
+    <section class="quick-action-strip" aria-label="快速收藏區">
+      <div class="quick-input-row">
+        <input
+          type="text"
+          id="quickUrlInput"
+          class="quick-capture-input"
+          placeholder="貼上小紅書 / IG / Pinterest 連結或分享文字..."
+        >
+        <button type="button" class="btn btn-primary" id="quickSaveBtn">存入</button>
       </div>
-      <div class="drop-hint">
-        <span id="syncHintText">💡 支援直接貼上小紅書整串分享文字（自動拆出標題與網址），若 IG 鎖圖也可點卡片「換圖」直接貼截圖！</span>
-        <span id="totalCountLabel">共 0 筆收藏</span>
+      <div class="quick-buttons-row">
+        <div style="display:flex; align-items:center; gap:6px; flex:1;">
+          <span style="font-size:0.76rem; color:var(--text-muted); white-space:nowrap;">存入分類：</span>
+          <select id="quickCategorySelect" class="select-pill" style="flex:1; max-width:160px;" aria-label="選擇分類"></select>
+        </div>
+        <div style="display:flex; align-items:center; gap:6px;">
+          <button type="button" class="btn" id="pasteClipboardBtn" style="padding:6px 11px; font-size:0.78rem;">📋 貼上剪貼簿</button>
+          <label class="btn" for="quickScreenshotInput" style="padding:6px 11px; font-size:0.78rem; cursor:pointer;">
+            📷 存截圖
+            <input type="file" id="quickScreenshotInput" accept="image/*" multiple hidden>
+          </label>
+        </div>
       </div>
     </section>
 
-    <!-- Category & Platform Filters -->
-    <section class="filter-section" aria-label="分類與平台篩選">
-      <div class="pill-row" id="categoryFilterRow"></div>
-      <div class="pill-row" id="platformFilterRow"></div>
-    </section>
+    <!-- Platform Filter Row & Count -->
+    <div class="subfilter-row">
+      <div class="pill-row" id="platformFilterRow" style="flex:1;"></div>
+      <span id="totalCountLabel" style="font-size:0.74rem; color:var(--text-muted); white-space:nowrap;">0 筆</span>
+    </div>
 
-    <!-- Cards Grid -->
+    <!-- 2-Column Mobile / Multi-Column Desktop Cards Grid -->
     <section id="cardsGrid" class="cards-grid" aria-live="polite"></section>
   </main>
 
-  <!-- Floating Action Button -->
-  <button type="button" class="fab" id="fabAddBtn">＋ 新增靈感</button>
+  <!-- Native-like Bottom Navigation Bar on Mobile -->
+  <nav class="mobile-tabbar" aria-label="手機底部導覽列">
+    <button type="button" class="tab-btn" id="mobileTabPasteBtn">
+      <span class="tab-icon">📋</span>
+      <span>貼上連結</span>
+    </button>
+    <label class="tab-btn" for="quickScreenshotInput" style="cursor:pointer;">
+      <span class="tab-icon">📷</span>
+      <span>存截圖</span>
+    </label>
+    <button type="button" class="tab-btn tab-btn-add" id="fabAddBtn">
+      <span>＋ 新增靈感</span>
+    </button>
+    <button type="button" class="tab-btn" id="mobileTabCatBtn">
+      <span class="tab-icon">🗂️</span>
+      <span>分類</span>
+    </button>
+    <button type="button" class="tab-btn" id="mobileTabSyncBtn">
+      <span class="tab-icon">☁️</span>
+      <span>雲端同步</span>
+    </button>
+  </nav>
 
-  <!-- GitHub Cloud Sync Dialog (Option 3) -->
+  <!-- GitHub Cloud Sync Dialog -->
   <dialog id="syncDialog" closedby="any" aria-labelledby="syncDialogTitle">
     <div class="dialog-inner">
       <div class="dialog-header">
-        <h2 id="syncDialogTitle">☁️ GitHub 私人雲端同步設定（手機 & 電腦即時互通）</h2>
+        <h2 id="syncDialogTitle">☁️ 手機 & 電腦雲端同步設定</h2>
         <button type="button" class="close-btn" onclick="document.getElementById('syncDialog').close()" aria-label="關閉">✕</button>
       </div>
 
       <div class="step-card">
-        <strong>步驟 1：花 10 秒鐘複製你的 GitHub 專屬金鑰</strong>
-        <p style="color:var(--text-muted); font-size:0.83rem;">
-          點擊下方按鈕會直接打開 GitHub（已幫你填好名稱並勾好 <code>gist</code> 私密雲端權限）。滑到最下面點綠色的 <strong>「Generate token」</strong>，把那串 <code>ghp_...</code> 複製起來：
+        <strong>步驟 1：產生 GitHub 私密同步金鑰（只需做一次）</strong>
+        <p style="color:var(--text-muted); font-size:0.8rem;">
+          點下方按鈕會開啟 GitHub（已幫你勾好 <code>gist</code> 權限），滑到底點綠色 <strong>「Generate token」</strong>，複製 <code>ghp_...</code> 金鑰：
         </p>
         <div>
           <a
@@ -769,50 +867,44 @@
             target="_blank"
             rel="noopener noreferrer"
             class="btn btn-primary"
-          >🔑 1. 點此去 GitHub 產生金鑰（已預勾好權限）↗</a>
+            style="width:100%;"
+          >🔑 點此去 GitHub 產生金鑰 ↗</a>
         </div>
       </div>
 
       <div class="step-card">
         <strong>步驟 2：貼上金鑰並啟動同步</strong>
-        <p style="color:var(--text-muted); font-size:0.83rem;">
-          你的收藏與壓縮截圖會自動存進你 GitHub 帳號下的<strong>私密資料庫（Secret Gist）</strong>，別人看不到，且永久免費不休眠。
-        </p>
         <div style="display:flex; gap:8px; flex-wrap:wrap;">
           <input
             type="password"
             id="githubTokenInput"
             class="form-control"
-            style="flex:1; min-width:200px;"
+            style="flex:1; min-width:180px;"
             placeholder="貼上 ghp_ 開頭的金鑰..."
           >
-          <button type="button" class="btn btn-primary" id="saveTokenAndSyncBtn">⚡ 連結並立即同步</button>
+          <button type="button" class="btn btn-primary" id="saveTokenAndSyncBtn">⚡ 連結並同步</button>
         </div>
         <div id="syncModalStatus" class="status-banner"></div>
       </div>
 
-      <!-- Appears automatically once connected: QR Code for instant phone pairing! -->
       <div id="phonePairSection" class="step-card" style="display:none;">
-        <strong>📱 步驟 3：手機免打字！直接掃描或複製配對連結</strong>
-        <p style="color:var(--text-muted); font-size:0.83rem;">
-          電腦綁定成功後，直接拿 iPhone 相機掃描下方 QR Code（或把專屬配對連結傳給自己的 LINE），手機打開就會<strong>自動綁好同一個雲端資料庫並同步所有收藏</strong>！
-        </p>
+        <strong>📱 另一台裝置免打字！直接掃描或複製配對連結</strong>
         <div class="qr-box">
-          <img id="pairQrImg" alt="手機一鍵配對 QR Code" style="width:180px; height:180px; border-radius:8px;">
+          <img id="pairQrImg" alt="手機一鍵配對 QR Code" style="width:160px; height:160px; border-radius:8px;">
           <div style="display:flex; gap:8px; flex-wrap:wrap; justify-content:center;">
-            <button type="button" class="btn" id="copyPairLinkBtn">📋 複製手機一鍵配對連結</button>
-            <button type="button" class="btn" id="manualSyncNowBtn">🔄 立即手動同步一次</button>
-            <button type="button" class="btn" id="disconnectSyncBtn" style="color:var(--danger);">中斷連結</button>
+            <button type="button" class="btn" id="copyPairLinkBtn">📋 複製手機配對連結</button>
+            <button type="button" class="btn" id="manualSyncNowBtn">🔄 立即同步</button>
+            <button type="button" class="btn" id="disconnectSyncBtn" style="color:var(--danger);">中斷</button>
           </div>
         </div>
       </div>
 
-      <div style="display:flex; justify-content:space-between; align-items:center; padding-top:4px; border-top:1px solid var(--border); font-size:0.82rem; color:var(--text-muted);">
-        <span>也可以隨時下載離線備份檔：</span>
+      <div style="display:flex; justify-content:space-between; align-items:center; padding-top:6px; border-top:1px solid var(--border); font-size:0.8rem; color:var(--text-muted); flex-wrap:wrap; gap:8px;">
+        <button type="button" class="card-action-btn" id="openShareGuideFromSyncBtn" style="color:var(--accent);">⚡ 查看手機一鍵分享教學</button>
         <div style="display:flex; gap:6px;">
-          <button type="button" class="card-action-btn" id="downloadBackupBtn">⬇️ 匯出 JSON</button>
+          <button type="button" class="card-action-btn" id="downloadBackupBtn">⬇️ 匯出備份</button>
           <label class="card-action-btn" for="restoreBackupInput" style="cursor:pointer;">
-            ⬆️ 匯入 JSON
+            ⬆️ 匯入備份
             <input type="file" id="restoreBackupInput" accept=".json" hidden>
           </label>
         </div>
@@ -833,13 +925,13 @@
       <div class="form-group">
         <label for="itemRawInput">
           <span>貼文網址或分享文字（純存截圖可留空）</span>
-          <button type="button" class="card-action-btn" id="fetchMetaBtn" style="color:var(--accent);">🔄 重新抓縮圖</button>
+          <button type="button" class="card-action-btn" id="fetchMetaBtn" style="color:var(--accent);">🔄 抓縮圖</button>
         </label>
         <input type="text" id="itemRawInput" class="form-control" placeholder="貼上 Pinterest / 小紅書 / IG / Threads 網址...">
         <div id="fetchStatusBanner" class="status-banner">正在自動抓取貼文縮圖與標題...</div>
       </div>
 
-      <div style="display:grid; grid-template-columns: 1fr 1fr; gap: 12px;">
+      <div style="display:grid; grid-template-columns: 1fr 1fr; gap: 10px;">
         <div class="form-group">
           <label for="itemCategoryInput">分類資料夾</label>
           <select id="itemCategoryInput" class="form-control"></select>
@@ -859,30 +951,30 @@
 
       <div class="form-group">
         <label for="itemTitleInput">標題（可自由修改）</label>
-        <input type="text" id="itemTitleInput" class="form-control" placeholder="輸入好找的標題，例如：150cm 秋冬風衣穿搭..." required>
+        <input type="text" id="itemTitleInput" class="form-control" placeholder="例如：150cm 秋冬風衣穿搭..." required>
       </div>
 
       <div class="form-group">
         <label>
-          <span>貼文縮圖 / 截圖（支援直接按 Cmd+V 貼上或點選相簿圖片）</span>
+          <span>縮圖 / 手機截圖</span>
           <button type="button" class="card-action-btn" id="clearImageBtn" style="display:none;">移除圖片</button>
         </label>
         <label class="thumbnail-uploader" for="itemImageFileInput">
           <img id="itemPreviewImg" class="thumbnail-preview" alt="縮圖預覽">
-          <span id="uploaderHintText">📷 點擊上傳手機截圖，或直接在此視窗按 Ctrl+V / Cmd+V 貼上圖片</span>
+          <span id="uploaderHintText">📷 點此從手機相簿選取截圖（或按 Cmd+V 貼上圖片）</span>
           <input type="file" id="itemImageFileInput" accept="image/*" hidden>
         </label>
-        <input type="url" id="itemImageUrlInput" class="form-control" placeholder="或直接貼上圖片網址 (https://...)" style="margin-top:4px; font-size:0.82rem;">
+        <input type="url" id="itemImageUrlInput" class="form-control" placeholder="或貼上圖片網址 (https://...)" style="margin-top:4px; font-size:14px;">
       </div>
 
       <div class="form-group">
-        <label for="itemNoteInput">備註 / 重點筆記（選填）</label>
-        <textarea id="itemNoteInput" class="form-control" rows="2" placeholder="記下為什麼想存這篇，例如：喜歡她的配色、婚禮捧花參考..."></textarea>
+        <label for="itemNoteInput">備註筆記（選填）</label>
+        <textarea id="itemNoteInput" class="form-control" rows="2" placeholder="記下為什麼想存這篇..."></textarea>
       </div>
 
-      <div style="display:flex; justify-content:flex-end; gap:10px; margin-top:6px;">
-        <button type="button" class="btn" id="cancelItemDialogBtn">取消</button>
-        <button type="submit" class="btn btn-primary">💾 儲存並同步</button>
+      <div style="display:flex; justify-content:flex-end; gap:10px; margin-top:4px;">
+        <button type="button" class="btn" id="cancelItemDialogBtn" style="flex:1;">取消</button>
+        <button type="submit" class="btn btn-primary" style="flex:2;">💾 儲存收藏</button>
       </div>
     </form>
   </dialog>
@@ -894,8 +986,8 @@
         <h2 id="lightboxTitle">圖片預覽</h2>
         <button type="button" class="close-btn" onclick="document.getElementById('lightboxDialog').close()" aria-label="關閉">✕</button>
       </div>
-      <img id="lightboxImg" src="" alt="放大預覽" style="width:100%; max-height:72dvh; object-fit:contain; border-radius:8px; background:#00000008;">
-      <p id="lightboxNote" style="font-size:0.9rem; color:var(--text-muted);"></p>
+      <img id="lightboxImg" src="" alt="放大預覽" style="width:100%; max-height:70dvh; object-fit:contain; border-radius:8px; background:#00000008;">
+      <p id="lightboxNote" style="font-size:0.88rem; color:var(--text-muted);"></p>
     </div>
   </dialog>
 
@@ -903,26 +995,27 @@
   <dialog id="shareGuideDialog" closedby="any" aria-labelledby="shareGuideTitle">
     <div class="dialog-inner">
       <div class="dialog-header">
-        <h2 id="shareGuideTitle">⚡ 手機 & 電腦「一鍵分享」設定教學</h2>
+        <h2 id="shareGuideTitle">⚡ 手機 & 電腦「一鍵分享」教學</h2>
         <button type="button" class="close-btn" onclick="document.getElementById('shareGuideDialog').close()" aria-label="關閉">✕</button>
       </div>
 
-      <div style="display:flex; flex-direction:column; gap:14px; font-size:0.9rem;">
-        <div style="padding:14px; background:var(--bg); border-radius:var(--radius-md); border:1px solid var(--border);">
-          <h3 style="font-size:0.96rem; margin-bottom:6px;">💻 電腦瀏覽器：一鍵書籤小工具（Bookmarklet）</h3>
-          <p style="color:var(--text-muted); margin-bottom:10px;">
-            把下面這顆橘色按鈕<strong>直接用滑鼠拖曳到你的 Chrome / Safari 書籤列</strong>。之後逛 Pinterest、IG、Threads 或任何網拍時，點一下書籤列就會一鍵跳進來並帶入網址！
+      <div style="display:flex; flex-direction:column; gap:12px; font-size:0.86rem;">
+        <div class="step-card">
+          <strong>📱 iPhone 桌面 App 模式（最推薦！）</strong>
+          <p style="color:var(--text-muted);">
+            1. 在 Safari 點底部中間的「<strong>分享</strong>」按鈕 ➔ 選「<strong>加入主畫面</strong>」。<br>
+            2. 在小紅書、IG、Pinterest、Threads 點「複製連結」後，打開主畫面的「<strong>靈感收藏盒</strong>」，點左下角「<strong>📋 貼上連結</strong>」就能一鍵抓圖歸類！
           </p>
-          <a id="bookmarkletLink" class="bookmarklet-chip" href="#">➕ 收入 77 靈感盒</a>
         </div>
 
-        <div style="padding:14px; background:var(--bg); border-radius:var(--radius-md); border:1px solid var(--border);">
-          <h3 style="font-size:0.96rem; margin-bottom:6px;">📱 手機端（IG / 小紅書 / Pinterest / Threads）怎麼一鍵存？</h3>
-          <ul style="padding-left:18px; color:var(--text-muted); display:flex; flex-direction:column; gap:6px;">
-            <li><strong>方法 A（主畫面 App 模式）</strong>：在手機 Safari 點「分享 ➔ 加入主畫面」。之後在別的 App 複製分享連結，點開主畫面的「靈感收藏盒」貼上即可自動拆解標題與網址！</li>
-            <li><strong>方法 B（iPhone 分享選單一鍵送入）</strong>：在 iPhone 內建「捷徑 (Shortcuts)」App 新增一個捷徑，加入動作「打開網址」並填入：<br><code>https://bringbowl.github.io/bear-brand/vault/?text=[捷徑輸入]</code><br>開啟「在分享表單中顯示」，就能在 IG / Threads / Pinterest 按分享直接一鍵跳轉存入！</li>
-            <li><strong>方法 C（手機截圖直接存）</strong>：點首頁的「📷 存手機截圖」可一次多選手機相簿裡的穿搭或婚禮截圖，自動壓縮並同步上雲端！</li>
-          </ul>
+        <div class="step-card">
+          <strong>💻 電腦瀏覽器：一鍵書籤小工具</strong>
+          <p style="color:var(--text-muted); margin-bottom:6px;">
+            把下面這顆橘色按鈕拖曳到電腦 Chrome / Safari 書籤列，逛任何網頁點一下就自動帶入：
+          </p>
+          <div>
+            <a id="bookmarkletLink" class="bookmarklet-chip" href="#">➕ 收入 77 靈感盒</a>
+          </div>
         </div>
       </div>
     </div>
@@ -936,7 +1029,7 @@
         <button type="button" class="close-btn" onclick="document.getElementById('catDialog').close()" aria-label="關閉">✕</button>
       </div>
       <div style="display:flex; gap:8px;">
-        <input type="text" id="newCatInput" class="form-control" placeholder="輸入新分類名稱，例如：✈️ 蜜月旅行">
+        <input type="text" id="newCatInput" class="form-control" placeholder="輸入新分類，例如：✈️ 蜜月旅行">
         <button type="button" class="btn btn-primary" id="addCatBtn">新增</button>
       </div>
       <div id="catListContainer" style="display:flex; flex-direction:column; gap:8px;"></div>
@@ -965,7 +1058,7 @@
     });
 
     // =========================================================================
-    // 2. IndexedDB + Deleted Tombstones Tracking for Clean Multi-Device Sync
+    // 2. IndexedDB + Deleted Tombstones Tracking for Multi-Device Sync
     // =========================================================================
     const DB_NAME = 'WinnieInspirationVaultDB';
     const DB_VERSION = 1;
@@ -1068,32 +1161,31 @@
       triggerCloudSyncInBackground();
     }
 
-    // Generate clean SVG cover placeholder when a post has no image yet
     function makeCoverDataUrl(title, platform, bgHex = '#F3E5DE', accentHex = '#B36850') {
-      const safeTitle = (title || '靈感筆記').slice(0, 18).replace(/[<>&"']/g, '');
+      const safeTitle = (title || '靈感筆記').slice(0, 16).replace(/[<>&"']/g, '');
       const labelMap = {
-        ig: 'Instagram 貼文',
+        ig: 'Instagram',
         xhs: '小紅書筆記',
-        pinterest: 'Pinterest 靈感',
-        threads: 'Threads 串文',
+        pinterest: 'Pinterest',
+        threads: 'Threads',
         screenshot: '手機截圖',
         web: '網頁收藏'
       };
       const sub = labelMap[platform] || '靈感收藏';
-      const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="600" height="450" viewBox="0 0 600 450">
+      const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="500" height="560" viewBox="0 0 500 560">
         <defs>
           <linearGradient id="g" x1="0" y1="0" x2="1" y2="1">
             <stop offset="0%" stop-color="${bgHex}"/>
             <stop offset="100%" stop-color="#FAF7F2"/>
           </linearGradient>
         </defs>
-        <rect width="600" height="450" fill="url(#g)"/>
-        <circle cx="510" cy="80" r="110" fill="${accentHex}" opacity="0.08"/>
-        <circle cx="90" cy="380" r="130" fill="${accentHex}" opacity="0.06"/>
-        <rect x="48" y="64" width="140" height="34" rx="17" fill="${accentHex}" opacity="0.15"/>
-        <text x="118" y="86" font-family="-apple-system, sans-serif" font-size="15" font-weight="700" fill="${accentHex}" text-anchor="middle">${sub}</text>
-        <text x="48" y="185" font-family="-apple-system, sans-serif" font-size="30" font-weight="700" fill="#2C2523">${safeTitle}</text>
-        <text x="48" y="385" font-family="-apple-system, sans-serif" font-size="14" fill="#786E69">點擊卡片直接開啟原貼文 · 點下方「換圖」可貼上截圖</text>
+        <rect width="500" height="560" fill="url(#g)"/>
+        <circle cx="420" cy="90" r="100" fill="${accentHex}" opacity="0.08"/>
+        <circle cx="80" cy="460" r="120" fill="${accentHex}" opacity="0.06"/>
+        <rect x="40" y="60" width="130" height="34" rx="17" fill="${accentHex}" opacity="0.15"/>
+        <text x="105" y="82" font-family="-apple-system, sans-serif" font-size="15" font-weight="700" fill="${accentHex}" text-anchor="middle">${sub}</text>
+        <text x="40" y="230" font-family="-apple-system, sans-serif" font-size="28" font-weight="700" fill="#2C2523">${safeTitle}</text>
+        <text x="40" y="490" font-family="-apple-system, sans-serif" font-size="14" fill="#786E69">點卡片回原貼文 · 點「換圖」貼截圖</text>
       </svg>`;
       return 'data:image/svg+xml;utf8,' + encodeURIComponent(svg);
     }
@@ -1147,7 +1239,7 @@
     }
 
     // =========================================================================
-    // 3. GitHub Cloud Sync Engine (Secret Gist auto-discovery + two-way merge)
+    // 3. GitHub Cloud Sync Engine
     // =========================================================================
     const GIST_DESC = '77-Inspiration-Vault-Sync-DB';
     const GIST_FILENAME = 'winnie_inspiration_vault.json';
@@ -1171,11 +1263,11 @@
       const btn = document.getElementById('openSyncDialogBtn');
       const token = getGithubToken();
       if (!token) {
-        btn.className = 'btn btn-sync-disconnected';
-        btn.textContent = '☁️ 啟動雲端同步';
+        btn.className = 'sync-badge-btn disconnected';
+        btn.textContent = '☁️ 未同步';
       } else {
-        btn.className = 'btn btn-sync-connected';
-        btn.textContent = stateText || '☁️ 已雲端同步';
+        btn.className = 'sync-badge-btn connected';
+        btn.textContent = stateText || '☁️ 已同步';
       }
     }
 
@@ -1188,15 +1280,12 @@
 
       if (cachedId) {
         const checkRes = await fetch(`https://api.github.com/gists/${cachedId}`, { headers });
-        if (checkRes.ok) {
-          return await checkRes.json();
-        }
+        if (checkRes.ok) return await checkRes.json();
       }
 
-      // Search user's gists for GIST_DESC
       const listRes = await fetch('https://api.github.com/gists?per_page=100', { headers });
       if (!listRes.ok) {
-        throw new Error('GitHub 金鑰驗證失敗，請確認金鑰是否正確且已勾選 gist 權限');
+        throw new Error('GitHub 金鑰驗證失敗，請確認金鑰正確且有勾選 gist 權限');
       }
       const gists = await listRes.json();
       const found = gists.find(g => g.description === GIST_DESC || (g.files && g.files[GIST_FILENAME]));
@@ -1206,7 +1295,6 @@
         return await detailRes.json();
       }
 
-      // Create new Secret Gist
       const createRes = await fetch('https://api.github.com/gists', {
         method: 'POST',
         headers: { ...headers, 'Content-Type': 'application/json' },
@@ -1226,7 +1314,7 @@
         })
       });
       if (!createRes.ok) {
-        throw new Error('無法建立私密 Gist，請確認產生金鑰時有勾選 gist 權限');
+        throw new Error('無法建立私密 Gist，請確認金鑰有勾選 gist 權限');
       }
       const created = await createRes.json();
       localStorage.setItem('winnie_gh_gist_id', created.id);
@@ -1237,11 +1325,11 @@
       const token = getGithubToken();
       if (!token || isSyncing) return false;
       isSyncing = true;
-      updateSyncButtonUI('⏳ 雲端同步中...');
+      updateSyncButtonUI('⏳ 同步中');
       const modalBanner = document.getElementById('syncModalStatus');
       if (showStatusInModal && modalBanner) {
         modalBanner.style.display = 'block';
-        modalBanner.textContent = '⏳ 正在連線至 GitHub 私密雲端資料庫...';
+        modalBanner.textContent = '⏳ 正在與 GitHub 私密雲端同步...';
       }
 
       try {
@@ -1260,13 +1348,11 @@
           }
         }
 
-        // Merge deleted tombstones
         const localDeleted = getDeletedIds();
         const remoteDeleted = remoteData.deletedIds || {};
         const mergedDeleted = { ...remoteDeleted, ...localDeleted };
         localStorage.setItem('winnie_vault_deleted_ids', JSON.stringify(mergedDeleted));
 
-        // Merge items by id using updatedAt timestamp
         const localItems = await getAllItems();
         const remoteItems = Array.isArray(remoteData.items) ? remoteData.items : [];
         const itemMap = new Map();
@@ -1285,7 +1371,6 @@
           }
         }
 
-        // Apply merged items to local IndexedDB
         const mergedItems = Array.from(itemMap.values()).sort((a, b) => b.createdAt - a.createdAt);
         for (const lItem of localItems) {
           if (mergedDeleted[lItem.id]) {
@@ -1296,7 +1381,6 @@
           await putItemLocal(mItem);
         }
 
-        // Merge categories
         const localCatsUpdated = Number(localStorage.getItem('winnie_vault_cats_updated_at') || 0);
         const remoteCatsUpdated = Number(remoteData.catsUpdatedAt || 0);
         let finalCats = getCategories();
@@ -1311,7 +1395,6 @@
           localStorage.setItem('winnie_vault_categories', JSON.stringify(finalCats));
         }
 
-        // Push merged state back to GitHub Gist
         const payload = {
           updatedAt: Date.now(),
           catsUpdatedAt: Math.max(localCatsUpdated, remoteCatsUpdated, Date.now()),
@@ -1337,21 +1420,20 @@
         });
 
         await refreshApp();
-        const timeStr = new Date().toLocaleTimeString('zh-TW', { hour: '2-digit', minute: '2-digit' });
-        updateSyncButtonUI(`☁️ 已同步 (${timeStr})`);
+        updateSyncButtonUI('☁️ 已同步');
         if (showStatusInModal && modalBanner) {
           modalBanner.style.display = 'block';
-          modalBanner.textContent = `✅ 雲端同步成功！（共 ${mergedItems.length} 筆收藏已雙向同步）`;
+          modalBanner.textContent = `✅ 同步成功！（共 ${mergedItems.length} 筆收藏已雙向同步）`;
         }
         renderPhonePairingQR();
         isSyncing = false;
         return true;
       } catch (err) {
         console.error(err);
-        updateSyncButtonUI('⚠️ 同步失敗 (點此重試)');
+        updateSyncButtonUI('⚠️ 同步失敗');
         if (showStatusInModal && modalBanner) {
           modalBanner.style.display = 'block';
-          modalBanner.textContent = `❌ ${err.message || '同步失敗，請檢查金鑰'}`;
+          modalBanner.textContent = `❌ ${err.message || '同步失敗'}`;
         }
         isSyncing = false;
         return false;
@@ -1377,16 +1459,16 @@
       pairSection.style.display = 'flex';
       const baseUrl = 'https://bringbowl.github.io/bear-brand/vault/';
       const pairUrl = `${baseUrl}#sync_token=${encodeURIComponent(token)}`;
-      const qrApi = `https://api.qrserver.com/v1/create-qr-code/?size=220x220&margin=8&data=${encodeURIComponent(pairUrl)}`;
+      const qrApi = `https://api.qrserver.com/v1/create-qr-code/?size=200x200&margin=8&data=${encodeURIComponent(pairUrl)}`;
       document.getElementById('pairQrImg').src = qrApi;
       document.getElementById('copyPairLinkBtn').onclick = () => {
         navigator.clipboard.writeText(pairUrl);
-        alert('✅ 已複製手機一鍵配對連結！傳到你的手機點開就會自動完成雲端綁定。');
+        alert('✅ 已複製手機一鍵配對連結！傳到手機點開就會自動完成綁定。');
       };
     }
 
     // =========================================================================
-    // 4. Smart Platform & Share-Text Parser (Xiaohongshu / IG / Pinterest / Threads)
+    // 4. Smart Platform & Share-Text Parser
     // =========================================================================
     function parseSharedInput(rawText) {
       const trimmed = (rawText || '').trim();
@@ -1422,12 +1504,12 @@
     }
 
     const PLATFORM_INFO = {
-      ig: { label: 'Instagram', icon: '📸', cls: 'platform-ig' },
+      ig: { label: 'IG', icon: '📸', cls: 'platform-ig' },
       xhs: { label: '小紅書', icon: '📕', cls: 'platform-xhs' },
       pinterest: { label: 'Pinterest', icon: '📌', cls: 'platform-pinterest' },
       threads: { label: 'Threads', icon: '🧵', cls: 'platform-threads' },
-      screenshot: { label: '手機截圖', icon: '📱', cls: 'platform-screenshot' },
-      web: { label: '網頁連結', icon: '🌐', cls: 'platform-web' }
+      screenshot: { label: '截圖', icon: '📱', cls: 'platform-screenshot' },
+      web: { label: '網頁', icon: '🌐', cls: 'platform-web' }
     };
 
     async function fetchUrlMetadata(url) {
@@ -1444,13 +1526,10 @@
             image: (json.data.image && json.data.image.url) || (json.data.logo && json.data.logo.url) || ''
           };
         }
-      } catch (err) {
-        console.warn('Metadata fetch fallback:', err);
-      }
+      } catch (err) {}
       return null;
     }
 
-    // Compress uploaded/pasted image via Canvas so cloud sync stays fast
     function compressImageFile(file, maxWidth = 860, quality = 0.78) {
       return new Promise((resolve, reject) => {
         const reader = new FileReader();
@@ -1516,7 +1595,7 @@
       });
 
       const allCatPills = [
-        { key: 'ALL', label: '✨ 全部收藏', count: allItems.length },
+        { key: 'ALL', label: '✨ 全部', count: allItems.length },
         ...cats.map(c => ({ key: c, label: c, count: catCounts[c] || 0 }))
       ];
 
@@ -1530,6 +1609,9 @@
       categoryFilterRow.querySelectorAll('.pill').forEach(btn => {
         btn.addEventListener('click', () => {
           activeCategory = btn.dataset.cat;
+          if (activeCategory !== 'ALL') {
+            quickCategorySelect.value = activeCategory;
+          }
           renderFilters();
           renderCards();
         });
@@ -1541,13 +1623,13 @@
       });
 
       const platPills = [
-        { key: 'ALL', label: '🌐 所有來源' },
-        { key: 'ig', label: '📸 IG' },
+        { key: 'ALL', label: '全部來源' },
         { key: 'xhs', label: '📕 小紅書' },
+        { key: 'ig', label: '📸 IG' },
         { key: 'pinterest', label: '📌 Pinterest' },
         { key: 'threads', label: '🧵 Threads' },
-        { key: 'screenshot', label: '📱 手機截圖' },
-        { key: 'web', label: '🔗 網頁' }
+        { key: 'screenshot', label: '📱 截圖' },
+        { key: 'web', label: '🌐 網頁' }
       ];
 
       platformFilterRow.innerHTML = platPills.map(p => `
@@ -1578,14 +1660,14 @@
         return true;
       });
 
-      totalCountLabel.textContent = `顯示 ${filtered.length} / 共 ${allItems.length} 筆收藏`;
+      totalCountLabel.textContent = `${filtered.length} 筆`;
 
       if (filtered.length === 0) {
         cardsGrid.innerHTML = `
           <div class="empty-state" style="grid-column: 1 / -1;">
-            <p style="font-size: 2rem; margin-bottom: 8px;">🧸</p>
-            <p style="font-weight: 700; color: var(--text); margin-bottom: 4px;">這個分類還沒有收藏喔！</p>
-            <p style="font-size: 0.86rem;">在上方貼上網址、或直接按 Ctrl+V / Cmd+V 貼上截圖就能馬上收進來。</p>
+            <p style="font-size: 2rem; margin-bottom: 6px;">🧸</p>
+            <p style="font-weight: 700; color: var(--text); margin-bottom: 4px;">這個分類還沒有收藏</p>
+            <p style="font-size: 0.82rem;">點下方「📋 貼上連結」或「📷 存截圖」馬上收進來！</p>
           </div>
         `;
         return;
@@ -1596,7 +1678,6 @@
       cardsGrid.innerHTML = filtered.map(item => {
         const pInfo = PLATFORM_INFO[item.platform] || PLATFORM_INFO.web;
         const coverSrc = item.image || makeCoverDataUrl(item.title, item.platform);
-        const domainText = getDomainLabel(item.url, item.platform);
 
         const primaryHeadingLink = item.url
           ? `<a class="card-link" href="${escapeHtml(item.url)}" target="_blank" rel="noopener noreferrer">${escapeHtml(item.title)}</a>`
@@ -1613,13 +1694,12 @@
               <h3>${primaryHeadingLink}</h3>
             </header>
             <div class="card-content">
-              <p class="card-note">${escapeHtml(item.note || '（無備註）')}</p>
-              <span class="card-domain">${escapeHtml(domainText)}</span>
+              <p class="card-note">${escapeHtml(item.note || '')}</p>
             </div>
             <footer>
-              <div style="display:flex; gap:4px;">
-                <button type="button" class="card-action-btn" data-edit-id="${escapeHtml(item.id)}" title="編輯標題、分類或更換截圖">✏️ 編輯/換圖</button>
-                <button type="button" class="card-action-btn" data-lightbox-id="${escapeHtml(item.id)}" title="放大檢視縮圖或截圖">🔍 看大圖</button>
+              <div style="display:flex; gap:2px;">
+                <button type="button" class="card-action-btn" data-edit-id="${escapeHtml(item.id)}" title="換圖或改標題">✏️ 換圖</button>
+                <button type="button" class="card-action-btn" data-lightbox-id="${escapeHtml(item.id)}" title="放大看圖">🔍</button>
               </div>
               <button type="button" class="card-action-btn danger" data-delete-id="${escapeHtml(item.id)}" title="刪除">🗑️</button>
             </footer>
@@ -1635,22 +1715,12 @@
       });
       cardsGrid.querySelectorAll('[data-delete-id]').forEach(btn => {
         btn.addEventListener('click', async () => {
-          if (confirm('確定要刪除這筆收藏嗎？（雲端也會同步刪除）')) {
+          if (confirm('確定要刪除這筆收藏嗎？')) {
             await deleteItemById(btn.dataset.deleteId);
             await refreshApp();
           }
         });
       });
-    }
-
-    function getDomainLabel(url, platform) {
-      if (!url) return '📷 本機/雲端截圖收藏（點擊放大檢視）';
-      try {
-        const u = new URL(url);
-        return `🔗 點擊回到 ${u.hostname.replace(/^www\./, '')}`;
-      } catch (e) {
-        return url;
-      }
     }
 
     function escapeHtml(str) {
@@ -1663,21 +1733,21 @@
     }
 
     // =========================================================================
-    // 6. Quick Save Bar & Modal Interactions
+    // 6. Quick Save & One-Tap Mobile Clipboard Paste
     // =========================================================================
     const quickUrlInput = document.getElementById('quickUrlInput');
     const quickSaveBtn = document.getElementById('quickSaveBtn');
     const quickScreenshotInput = document.getElementById('quickScreenshotInput');
 
-    async function handleQuickSave() {
-      const raw = quickUrlInput.value.trim();
+    async function handleQuickSave(overrideRawText) {
+      const raw = (typeof overrideRawText === 'string' ? overrideRawText : quickUrlInput.value).trim();
       if (!raw) {
         openAddModal();
         return;
       }
       const { url, extractedTitle, platform } = parseSharedInput(raw);
       quickSaveBtn.disabled = true;
-      quickSaveBtn.textContent = '⏳ 抓取中...';
+      quickSaveBtn.textContent = '⏳';
 
       let title = extractedTitle || '';
       let image = '';
@@ -1711,17 +1781,36 @@
       await putItem(newItem);
       quickUrlInput.value = '';
       quickSaveBtn.disabled = false;
-      quickSaveBtn.textContent = '⚡ 抓縮圖並存入';
+      quickSaveBtn.textContent = '存入';
       await refreshApp();
     }
 
-    quickSaveBtn.addEventListener('click', handleQuickSave);
+    quickSaveBtn.addEventListener('click', () => handleQuickSave());
     quickUrlInput.addEventListener('keydown', (e) => {
       if (e.key === 'Enter') {
         e.preventDefault();
         handleQuickSave();
       }
     });
+
+    async function handleOneTapPaste() {
+      try {
+        if (navigator.clipboard && navigator.clipboard.readText) {
+          const text = await navigator.clipboard.readText();
+          if (text && text.trim()) {
+            quickUrlInput.value = text.trim();
+            await handleQuickSave(text.trim());
+            return;
+          }
+        }
+      } catch (e) {}
+      // Fallback if iOS Safari blocks direct clipboard read without input focus
+      quickUrlInput.focus();
+      openAddModal();
+    }
+
+    document.getElementById('pasteClipboardBtn').addEventListener('click', handleOneTapPaste);
+    document.getElementById('mobileTabPasteBtn').addEventListener('click', handleOneTapPaste);
 
     quickScreenshotInput.addEventListener('change', async (e) => {
       const files = Array.from(e.target.files || []);
@@ -1747,7 +1836,6 @@
       triggerCloudSyncInBackground();
     });
 
-    // Global Paste Listener (Ctrl+V / Cmd+V image screenshot anywhere on page!)
     window.addEventListener('paste', async (e) => {
       const items = e.clipboardData && e.clipboardData.items;
       if (!items) return;
@@ -1794,12 +1882,12 @@
       if (src) {
         itemPreviewImg.src = src;
         itemPreviewImg.style.display = 'block';
-        uploaderHintText.textContent = '✅ 已載入縮圖（點擊可更換圖片，或直接按 Cmd+V 貼上新截圖）';
+        uploaderHintText.textContent = '✅ 已載入圖片（點此可更換相簿圖片）';
         clearImageBtn.style.display = 'inline-flex';
       } else {
         itemPreviewImg.src = '';
         itemPreviewImg.style.display = 'none';
-        uploaderHintText.textContent = '📷 點擊上傳手機截圖，或直接在此視窗按 Ctrl+V / Cmd+V 貼上圖片';
+        uploaderHintText.textContent = '📷 點此從手機相簿選取截圖（或按 Cmd+V 貼上圖片）';
         clearImageBtn.style.display = 'none';
       }
     }
@@ -1809,7 +1897,7 @@
       itemIdInput.value = '';
       itemRawInput.value = prefill.url || '';
       itemCategoryInput.value = prefill.category || quickCategorySelect.value || getCategories()[0];
-      itemPlatformInput.value = prefill.platform || (prefill.url ? detectPlatform(prefill.url) : 'ig');
+      itemPlatformInput.value = prefill.platform || (prefill.url ? detectPlatform(prefill.url) : 'xhs');
       itemTitleInput.value = prefill.title || '';
       itemNoteInput.value = prefill.note || '';
       itemImageUrlInput.value = '';
@@ -1825,7 +1913,7 @@
     function openEditModal(id) {
       const item = allItems.find(x => x.id === id);
       if (!item) return;
-      document.getElementById('itemDialogTitle').textContent = '✏️ 編輯收藏 / 更換縮圖';
+      document.getElementById('itemDialogTitle').textContent = '✏️ 編輯 / 更換截圖';
       itemIdInput.value = item.id;
       itemRawInput.value = item.url || '';
       renderCategorySelects();
@@ -1867,10 +1955,10 @@
           itemNoteInput.value = meta.description.slice(0, 120);
         }
         fetchStatusBanner.textContent = meta.image
-          ? '✅ 已自動抓到貼文資訊！'
-          : '💡 已辨識連結！若該平台鎖住縮圖，可直接按 Cmd+V 貼上截圖或選取相簿圖片。';
+          ? '✅ 已自動抓到貼文縮圖與標題！'
+          : '💡 已辨識連結！若平台鎖圖，可點下方選取手機截圖。';
       } else {
-        fetchStatusBanner.textContent = '💡 已辨識連結！若 IG / 小紅書鎖住自動抓圖，可直接在下方選取或貼上截圖。';
+        fetchStatusBanner.textContent = '💡 已辨識連結！若平台鎖圖，可點下方選取手機截圖。';
       }
     }
 
@@ -1975,10 +2063,13 @@
       });
     }
 
-    document.getElementById('manageCatBtn').addEventListener('click', () => {
+    function openCatManager() {
       renderCategoryManager();
       catDialog.showModal();
-    });
+    }
+
+    document.getElementById('manageCatBtn').addEventListener('click', openCatManager);
+    document.getElementById('mobileTabCatBtn').addEventListener('click', openCatManager);
 
     document.getElementById('addCatBtn').addEventListener('click', () => {
       const input = document.getElementById('newCatInput');
@@ -1995,16 +2086,18 @@
       triggerCloudSyncInBackground();
     });
 
-    // Cloud Sync Modal events
     const syncDialog = document.getElementById('syncDialog');
     const githubTokenInput = document.getElementById('githubTokenInput');
 
-    document.getElementById('openSyncDialogBtn').addEventListener('click', () => {
+    function openSyncModal() {
       githubTokenInput.value = getGithubToken();
       document.getElementById('syncModalStatus').style.display = 'none';
       renderPhonePairingQR();
       syncDialog.showModal();
-    });
+    }
+
+    document.getElementById('openSyncDialogBtn').addEventListener('click', openSyncModal);
+    document.getElementById('mobileTabSyncBtn').addEventListener('click', openSyncModal);
 
     document.getElementById('saveTokenAndSyncBtn').addEventListener('click', async () => {
       const val = githubTokenInput.value.trim();
@@ -2018,7 +2111,7 @@
     });
 
     document.getElementById('disconnectSyncBtn').addEventListener('click', () => {
-      if (confirm('確定要中斷這台裝置的雲端同步嗎？（本機收藏不會被刪除）')) {
+      if (confirm('確定要中斷這台裝置的雲端同步嗎？')) {
         setGithubToken('');
         githubTokenInput.value = '';
         renderPhonePairingQR();
@@ -2026,15 +2119,19 @@
       }
     });
 
-    // Share Guide & Dynamic Bookmarklet setup
-    document.getElementById('openShareGuideBtn').addEventListener('click', () => {
+    function openShareGuide() {
       const baseUrl = window.location.href.split('?')[0].split('#')[0];
       const bmCode = `javascript:(function(){window.open('${baseUrl}?url='+encodeURIComponent(location.href)+'&title='+encodeURIComponent(document.title),'_blank');})();`;
       document.getElementById('bookmarkletLink').setAttribute('href', bmCode);
       document.getElementById('shareGuideDialog').showModal();
+    }
+
+    document.getElementById('openShareGuideBtn').addEventListener('click', openShareGuide);
+    document.getElementById('openShareGuideFromSyncBtn').addEventListener('click', () => {
+      syncDialog.close();
+      openShareGuide();
     });
 
-    // Offline JSON Backup & Restore
     document.getElementById('downloadBackupBtn').addEventListener('click', async () => {
       const items = await getAllItems();
       const payload = {
@@ -2068,7 +2165,7 @@
           triggerCloudSyncInBackground();
           alert('✅ 備份匯入成功！');
         } catch (err) {
-          alert('匯入失敗，請確認檔案格式是否正確');
+          alert('匯入失敗，請確認檔案格式');
         }
       };
       reader.readAsText(file);
@@ -2078,7 +2175,6 @@
     // 9. Handle Incoming Pairing Hash (#sync_token=...) & Share Params (?url=...)
     // =========================================================================
     async function checkIncomingParamsAndHash() {
-      // 1. Check #sync_token=... from QR Code pairing
       if (window.location.hash && window.location.hash.includes('sync_token=')) {
         const hashParams = new URLSearchParams(window.location.hash.slice(1));
         const incomingToken = hashParams.get('sync_token');
@@ -2090,7 +2186,6 @@
         }
       }
 
-      // 2. Check ?url=&title=&text= from Share Target / Bookmarklet / iOS Shortcut
       const params = new URLSearchParams(window.location.search);
       const sharedUrl = params.get('url') || '';
       const sharedText = params.get('text') || '';
@@ -2109,7 +2204,6 @@
       }
     }
 
-    // Auto-sync when switching back to the app on phone or desktop
     document.addEventListener('visibilitychange', () => {
       if (document.visibilityState === 'visible' && getGithubToken()) {
         syncWithGithubCloud(false);
@@ -2120,7 +2214,6 @@
       navigator.serviceWorker.register('./sw.js').catch(() => {});
     }
 
-    // Boot
     (async () => {
       await seedDemoDataIfEmpty();
       updateSyncButtonUI();
