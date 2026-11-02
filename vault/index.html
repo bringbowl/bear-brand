@@ -18,6 +18,8 @@
       --accent: #C87D65;
       --accent-hover: #B36850;
       --accent-soft: #F9EBE6;
+      --success: #2E7D32;
+      --success-soft: #E8F5E9;
       --danger: #D9534F;
       --radius-lg: 16px;
       --radius-md: 12px;
@@ -94,13 +96,13 @@
     .topbar-actions {
       display: flex;
       align-items: center;
-      gap: 10px;
+      gap: 8px;
       flex-wrap: wrap;
     }
 
     .search-box {
       position: relative;
-      min-width: 220px;
+      min-width: 200px;
       flex: 1;
     }
 
@@ -135,12 +137,12 @@
       align-items: center;
       justify-content: center;
       gap: 6px;
-      padding: 9px 16px;
+      padding: 9px 15px;
       border-radius: 999px;
       border: 1px solid var(--border);
       background: var(--surface);
       color: var(--text);
-      font-size: 0.88rem;
+      font-size: 0.86rem;
       font-weight: 600;
       cursor: pointer;
       transition: all 0.15s ease;
@@ -161,6 +163,18 @@
     .btn-primary:hover {
       background: var(--accent-hover);
       border-color: var(--accent-hover);
+    }
+
+    .btn-sync-connected {
+      background: var(--success-soft);
+      color: var(--success);
+      border-color: #C8E6C9;
+    }
+
+    .btn-sync-disconnected {
+      background: #FFF8E1;
+      color: #B45309;
+      border-color: #FDE68A;
     }
 
     /* Quick Paste Bar */
@@ -490,7 +504,7 @@
       border: 1px solid var(--border);
       border-radius: var(--radius-lg);
       padding: 0;
-      width: min(540px, 92vw);
+      width: min(560px, 92vw);
       max-height: 90dvh;
       background: var(--surface);
       color: var(--text);
@@ -596,12 +610,35 @@
     }
 
     .status-banner {
-      font-size: 0.8rem;
-      padding: 8px 12px;
+      font-size: 0.82rem;
+      padding: 9px 12px;
       border-radius: var(--radius-sm);
       background: var(--accent-soft);
       color: var(--accent-hover);
       display: none;
+    }
+
+    .step-card {
+      padding: 14px 16px;
+      background: var(--bg);
+      border-radius: var(--radius-md);
+      border: 1px solid var(--border);
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      font-size: 0.88rem;
+    }
+
+    .qr-box {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 10px;
+      padding: 16px;
+      background: #fff;
+      border-radius: var(--radius-md);
+      border: 1px solid var(--border);
+      text-align: center;
     }
 
     .bookmarklet-chip {
@@ -669,9 +706,9 @@
       </div>
 
       <div class="topbar-actions">
+        <button type="button" class="btn btn-sync-disconnected" id="openSyncDialogBtn">☁️ 啟動雲端同步</button>
         <button type="button" class="btn" id="openShareGuideBtn">⚡ 一鍵分享設定</button>
-        <button type="button" class="btn" id="manageCatBtn">🗂️ 管理分類</button>
-        <button type="button" class="btn" id="exportBtn" title="匯出或匯入備份">💾 備份</button>
+        <button type="button" class="btn" id="manageCatBtn">🗂️ 分類</button>
         <button type="button" class="btn btn-primary" id="openAddModalBtn">＋ 新增收藏</button>
       </div>
     </div>
@@ -695,7 +732,7 @@
         </label>
       </div>
       <div class="drop-hint">
-        <span>💡 支援直接貼上小紅書整串分享文字（會自動拆出標題與網址），若 IG 鎖圖也可點卡片「換圖」直接貼截圖！</span>
+        <span id="syncHintText">💡 支援直接貼上小紅書整串分享文字（自動拆出標題與網址），若 IG 鎖圖也可點卡片「換圖」直接貼截圖！</span>
         <span id="totalCountLabel">共 0 筆收藏</span>
       </div>
     </section>
@@ -712,6 +749,76 @@
 
   <!-- Floating Action Button -->
   <button type="button" class="fab" id="fabAddBtn">＋ 新增靈感</button>
+
+  <!-- GitHub Cloud Sync Dialog (Option 3) -->
+  <dialog id="syncDialog" closedby="any" aria-labelledby="syncDialogTitle">
+    <div class="dialog-inner">
+      <div class="dialog-header">
+        <h2 id="syncDialogTitle">☁️ GitHub 私人雲端同步設定（手機 & 電腦即時互通）</h2>
+        <button type="button" class="close-btn" onclick="document.getElementById('syncDialog').close()" aria-label="關閉">✕</button>
+      </div>
+
+      <div class="step-card">
+        <strong>步驟 1：花 10 秒鐘複製你的 GitHub 專屬金鑰</strong>
+        <p style="color:var(--text-muted); font-size:0.83rem;">
+          點擊下方按鈕會直接打開 GitHub（已幫你填好名稱並勾好 <code>gist</code> 私密雲端權限）。滑到最下面點綠色的 <strong>「Generate token」</strong>，把那串 <code>ghp_...</code> 複製起來：
+        </p>
+        <div>
+          <a
+            href="https://github.com/settings/tokens/new?description=77-Inspiration-Vault&scopes=gist,repo"
+            target="_blank"
+            rel="noopener noreferrer"
+            class="btn btn-primary"
+          >🔑 1. 點此去 GitHub 產生金鑰（已預勾好權限）↗</a>
+        </div>
+      </div>
+
+      <div class="step-card">
+        <strong>步驟 2：貼上金鑰並啟動同步</strong>
+        <p style="color:var(--text-muted); font-size:0.83rem;">
+          你的收藏與壓縮截圖會自動存進你 GitHub 帳號下的<strong>私密資料庫（Secret Gist）</strong>，別人看不到，且永久免費不休眠。
+        </p>
+        <div style="display:flex; gap:8px; flex-wrap:wrap;">
+          <input
+            type="password"
+            id="githubTokenInput"
+            class="form-control"
+            style="flex:1; min-width:200px;"
+            placeholder="貼上 ghp_ 開頭的金鑰..."
+          >
+          <button type="button" class="btn btn-primary" id="saveTokenAndSyncBtn">⚡ 連結並立即同步</button>
+        </div>
+        <div id="syncModalStatus" class="status-banner"></div>
+      </div>
+
+      <!-- Appears automatically once connected: QR Code for instant phone pairing! -->
+      <div id="phonePairSection" class="step-card" style="display:none;">
+        <strong>📱 步驟 3：手機免打字！直接掃描或複製配對連結</strong>
+        <p style="color:var(--text-muted); font-size:0.83rem;">
+          電腦綁定成功後，直接拿 iPhone 相機掃描下方 QR Code（或把專屬配對連結傳給自己的 LINE），手機打開就會<strong>自動綁好同一個雲端資料庫並同步所有收藏</strong>！
+        </p>
+        <div class="qr-box">
+          <img id="pairQrImg" alt="手機一鍵配對 QR Code" style="width:180px; height:180px; border-radius:8px;">
+          <div style="display:flex; gap:8px; flex-wrap:wrap; justify-content:center;">
+            <button type="button" class="btn" id="copyPairLinkBtn">📋 複製手機一鍵配對連結</button>
+            <button type="button" class="btn" id="manualSyncNowBtn">🔄 立即手動同步一次</button>
+            <button type="button" class="btn" id="disconnectSyncBtn" style="color:var(--danger);">中斷連結</button>
+          </div>
+        </div>
+      </div>
+
+      <div style="display:flex; justify-content:space-between; align-items:center; padding-top:4px; border-top:1px solid var(--border); font-size:0.82rem; color:var(--text-muted);">
+        <span>也可以隨時下載離線備份檔：</span>
+        <div style="display:flex; gap:6px;">
+          <button type="button" class="card-action-btn" id="downloadBackupBtn">⬇️ 匯出 JSON</button>
+          <label class="card-action-btn" for="restoreBackupInput" style="cursor:pointer;">
+            ⬆️ 匯入 JSON
+            <input type="file" id="restoreBackupInput" accept=".json" hidden>
+          </label>
+        </div>
+      </div>
+    </div>
+  </dialog>
 
   <!-- Add / Edit Bookmark Modal (using modern-web-guidance light-dismiss-a-dialog) -->
   <dialog id="itemDialog" closedby="any" aria-labelledby="itemDialogTitle">
@@ -775,7 +882,7 @@
 
       <div style="display:flex; justify-content:flex-end; gap:10px; margin-top:6px;">
         <button type="button" class="btn" id="cancelItemDialogBtn">取消</button>
-        <button type="submit" class="btn btn-primary">💾 儲存收藏</button>
+        <button type="submit" class="btn btn-primary">💾 儲存並同步</button>
       </div>
     </form>
   </dialog>
@@ -812,9 +919,9 @@
         <div style="padding:14px; background:var(--bg); border-radius:var(--radius-md); border:1px solid var(--border);">
           <h3 style="font-size:0.96rem; margin-bottom:6px;">📱 手機端（IG / 小紅書 / Pinterest / Threads）怎麼一鍵存？</h3>
           <ul style="padding-left:18px; color:var(--text-muted); display:flex; flex-direction:column; gap:6px;">
-            <li><strong>方法 A（主畫面 App 模式）</strong>：在手機 Safari 點「分享 ➔ 加入主畫面」，或 Android Chrome 點「安裝應用程式」。之後在別的 App 複製分享連結，點開主畫面的「靈感收藏盒」貼上即可自動拆解標題與網址！</li>
-            <li><strong>方法 B（iPhone 分享選單一鍵送入）</strong>：當我們把這個網頁放到免費公開網址（如 Vercel / GitHub Pages）後，可以在 iPhone「捷徑 (Shortcuts)」建一個 1 步驟動作：<code>打開網址：你的網址/?text=[分享的輸入]</code>，開啟「在分享表單中顯示」，就能在 IG / 小紅書按分享直接一鍵送進來！</li>
-            <li><strong>方法 C（手機截圖直接存）</strong>：點首頁的「📷 存手機截圖」可一次多選手機相簿裡的穿搭或婚禮截圖，自動壓縮並分類收好！</li>
+            <li><strong>方法 A（主畫面 App 模式）</strong>：在手機 Safari 點「分享 ➔ 加入主畫面」。之後在別的 App 複製分享連結，點開主畫面的「靈感收藏盒」貼上即可自動拆解標題與網址！</li>
+            <li><strong>方法 B（iPhone 分享選單一鍵送入）</strong>：在 iPhone 內建「捷徑 (Shortcuts)」App 新增一個捷徑，加入動作「打開網址」並填入：<br><code>https://bringbowl.github.io/bear-brand/vault/?text=[捷徑輸入]</code><br>開啟「在分享表單中顯示」，就能在 IG / Threads / Pinterest 按分享直接一鍵跳轉存入！</li>
+            <li><strong>方法 C（手機截圖直接存）</strong>：點首頁的「📷 存手機截圖」可一次多選手機相簿裡的穿搭或婚禮截圖，自動壓縮並同步上雲端！</li>
           </ul>
         </div>
       </div>
@@ -833,26 +940,6 @@
         <button type="button" class="btn btn-primary" id="addCatBtn">新增</button>
       </div>
       <div id="catListContainer" style="display:flex; flex-direction:column; gap:8px;"></div>
-    </div>
-  </dialog>
-
-  <!-- Backup / Restore Dialog -->
-  <dialog id="backupDialog" closedby="any" aria-labelledby="backupDialogTitle">
-    <div class="dialog-inner">
-      <div class="dialog-header">
-        <h2 id="backupDialogTitle">💾 備份與還原收藏資料</h2>
-        <button type="button" class="close-btn" onclick="document.getElementById('backupDialog').close()" aria-label="關閉">✕</button>
-      </div>
-      <p style="font-size:0.88rem; color:var(--text-muted);">
-        目前你的收藏與截圖儲存在這台裝置的瀏覽器資料庫（IndexedDB）中，容量大且不會外流。你可以隨時匯出 JSON 備份檔，或匯入到手機/其他電腦。
-      </p>
-      <div style="display:flex; gap:10px; flex-wrap:wrap;">
-        <button type="button" class="btn btn-primary" id="downloadBackupBtn">⬇️ 下載完整備份 (.json)</button>
-        <label class="btn" for="restoreBackupInput" style="cursor:pointer;">
-          ⬆️ 匯入備份檔
-          <input type="file" id="restoreBackupInput" accept=".json" hidden>
-        </label>
-      </div>
     </div>
   </dialog>
 
@@ -878,7 +965,7 @@
     });
 
     // =========================================================================
-    // 2. IndexedDB Wrapper + Default Seed Data for 77
+    // 2. IndexedDB + Deleted Tombstones Tracking for Clean Multi-Device Sync
     // =========================================================================
     const DB_NAME = 'WinnieInspirationVaultDB';
     const DB_VERSION = 1;
@@ -903,6 +990,21 @@
 
     function saveCategories(cats) {
       localStorage.setItem('winnie_vault_categories', JSON.stringify(cats));
+      localStorage.setItem('winnie_vault_cats_updated_at', String(Date.now()));
+    }
+
+    function getDeletedIds() {
+      try {
+        return JSON.parse(localStorage.getItem('winnie_vault_deleted_ids')) || {};
+      } catch (e) {
+        return {};
+      }
+    }
+
+    function markDeletedId(id) {
+      const map = getDeletedIds();
+      map[id] = Date.now();
+      localStorage.setItem('winnie_vault_deleted_ids', JSON.stringify(map));
     }
 
     function openDB() {
@@ -933,7 +1035,8 @@
       });
     }
 
-    async function putItem(item) {
+    async function putItemLocal(item) {
+      item.updatedAt = item.updatedAt || Date.now();
       const db = await openDB();
       return new Promise((resolve, reject) => {
         const tx = db.transaction(STORE_ITEMS, 'readwrite');
@@ -943,7 +1046,13 @@
       });
     }
 
-    async function deleteItemById(id) {
+    async function putItem(item) {
+      item.updatedAt = Date.now();
+      await putItemLocal(item);
+      triggerCloudSyncInBackground();
+    }
+
+    async function deleteItemByIdLocal(id) {
       const db = await openDB();
       return new Promise((resolve, reject) => {
         const tx = db.transaction(STORE_ITEMS, 'readwrite');
@@ -951,6 +1060,12 @@
         tx.oncomplete = () => resolve();
         tx.onerror = () => reject(tx.error);
       });
+    }
+
+    async function deleteItemById(id) {
+      markDeletedId(id);
+      await deleteItemByIdLocal(id);
+      triggerCloudSyncInBackground();
     }
 
     // Generate clean SVG cover placeholder when a post has no image yet
@@ -999,7 +1114,8 @@
           category: '👗 150穿搭',
           note: '短版上衣紮進去視覺直接 +5cm，下次拍 Reels 可以試這個配色！',
           image: makeCoverDataUrl('小個子秋冬美拉德穿搭', 'xhs', '#FCE8E6', '#C94A4A'),
-          createdAt: Date.now() - 3600000 * 5
+          createdAt: Date.now() - 3600000 * 5,
+          updatedAt: Date.now() - 3600000 * 5
         },
         {
           id: 'demo-2',
@@ -1009,7 +1125,8 @@
           category: '💍 婚禮靈感',
           note: '2026/12/12 婚禮報紙的字體大小跟黑白照片濾鏡可以參考這組',
           image: makeCoverDataUrl('法式復古婚禮報紙排版', 'pinterest', '#F9EBE6', '#C87D65'),
-          createdAt: Date.now() - 3600000 * 3
+          createdAt: Date.now() - 3600000 * 3,
+          updatedAt: Date.now() - 3600000 * 3
         },
         {
           id: 'demo-3',
@@ -1019,28 +1136,266 @@
           category: '🎬 拍片腳本',
           note: '前 2 秒先放全身對比照，留存率最高',
           image: makeCoverDataUrl('150cm 穿搭轉場節奏', 'ig', '#FCE7F3', '#BE185D'),
-          createdAt: Date.now() - 3600000 * 1
+          createdAt: Date.now() - 3600000 * 1,
+          updatedAt: Date.now() - 3600000 * 1
         }
       ];
       for (const item of demoItems) {
-        await putItem(item);
+        await putItemLocal(item);
       }
       localStorage.setItem('winnie_vault_seeded', '1');
     }
 
     // =========================================================================
-    // 3. Smart Platform & Share-Text Parser (Xiaohongshu / IG / Pinterest / Threads)
+    // 3. GitHub Cloud Sync Engine (Secret Gist auto-discovery + two-way merge)
+    // =========================================================================
+    const GIST_DESC = '77-Inspiration-Vault-Sync-DB';
+    const GIST_FILENAME = 'winnie_inspiration_vault.json';
+    let isSyncing = false;
+
+    function getGithubToken() {
+      return (localStorage.getItem('winnie_gh_token') || '').trim();
+    }
+
+    function setGithubToken(token) {
+      if (token) {
+        localStorage.setItem('winnie_gh_token', token.trim());
+      } else {
+        localStorage.removeItem('winnie_gh_token');
+        localStorage.removeItem('winnie_gh_gist_id');
+      }
+      updateSyncButtonUI();
+    }
+
+    function updateSyncButtonUI(stateText) {
+      const btn = document.getElementById('openSyncDialogBtn');
+      const token = getGithubToken();
+      if (!token) {
+        btn.className = 'btn btn-sync-disconnected';
+        btn.textContent = '☁️ 啟動雲端同步';
+      } else {
+        btn.className = 'btn btn-sync-connected';
+        btn.textContent = stateText || '☁️ 已雲端同步';
+      }
+    }
+
+    async function findOrCreateVaultGist(token) {
+      const cachedId = localStorage.getItem('winnie_gh_gist_id');
+      const headers = {
+        'Authorization': `Bearer ${token}`,
+        'Accept': 'application/vnd.github+json'
+      };
+
+      if (cachedId) {
+        const checkRes = await fetch(`https://api.github.com/gists/${cachedId}`, { headers });
+        if (checkRes.ok) {
+          return await checkRes.json();
+        }
+      }
+
+      // Search user's gists for GIST_DESC
+      const listRes = await fetch('https://api.github.com/gists?per_page=100', { headers });
+      if (!listRes.ok) {
+        throw new Error('GitHub 金鑰驗證失敗，請確認金鑰是否正確且已勾選 gist 權限');
+      }
+      const gists = await listRes.json();
+      const found = gists.find(g => g.description === GIST_DESC || (g.files && g.files[GIST_FILENAME]));
+      if (found) {
+        localStorage.setItem('winnie_gh_gist_id', found.id);
+        const detailRes = await fetch(`https://api.github.com/gists/${found.id}`, { headers });
+        return await detailRes.json();
+      }
+
+      // Create new Secret Gist
+      const createRes = await fetch('https://api.github.com/gists', {
+        method: 'POST',
+        headers: { ...headers, 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          description: GIST_DESC,
+          public: false,
+          files: {
+            [GIST_FILENAME]: {
+              content: JSON.stringify({
+                updatedAt: 0,
+                categories: getCategories(),
+                deletedIds: getDeletedIds(),
+                items: []
+              })
+            }
+          }
+        })
+      });
+      if (!createRes.ok) {
+        throw new Error('無法建立私密 Gist，請確認產生金鑰時有勾選 gist 權限');
+      }
+      const created = await createRes.json();
+      localStorage.setItem('winnie_gh_gist_id', created.id);
+      return created;
+    }
+
+    async function syncWithGithubCloud(showStatusInModal = false) {
+      const token = getGithubToken();
+      if (!token || isSyncing) return false;
+      isSyncing = true;
+      updateSyncButtonUI('⏳ 雲端同步中...');
+      const modalBanner = document.getElementById('syncModalStatus');
+      if (showStatusInModal && modalBanner) {
+        modalBanner.style.display = 'block';
+        modalBanner.textContent = '⏳ 正在連線至 GitHub 私密雲端資料庫...';
+      }
+
+      try {
+        const gist = await findOrCreateVaultGist(token);
+        const fileObj = gist.files && gist.files[GIST_FILENAME];
+        let remoteData = { updatedAt: 0, categories: [], deletedIds: {}, items: [] };
+
+        if (fileObj) {
+          let rawContent = fileObj.content;
+          if (fileObj.truncated && fileObj.raw_url) {
+            const rawRes = await fetch(fileObj.raw_url);
+            rawContent = await rawRes.text();
+          }
+          if (rawContent) {
+            try { remoteData = JSON.parse(rawContent); } catch (e) {}
+          }
+        }
+
+        // Merge deleted tombstones
+        const localDeleted = getDeletedIds();
+        const remoteDeleted = remoteData.deletedIds || {};
+        const mergedDeleted = { ...remoteDeleted, ...localDeleted };
+        localStorage.setItem('winnie_vault_deleted_ids', JSON.stringify(mergedDeleted));
+
+        // Merge items by id using updatedAt timestamp
+        const localItems = await getAllItems();
+        const remoteItems = Array.isArray(remoteData.items) ? remoteData.items : [];
+        const itemMap = new Map();
+
+        for (const rItem of remoteItems) {
+          if (rItem && rItem.id && !mergedDeleted[rItem.id]) {
+            itemMap.set(rItem.id, rItem);
+          }
+        }
+        for (const lItem of localItems) {
+          if (lItem && lItem.id && !mergedDeleted[lItem.id]) {
+            const existing = itemMap.get(lItem.id);
+            if (!existing || (lItem.updatedAt || lItem.createdAt || 0) >= (existing.updatedAt || existing.createdAt || 0)) {
+              itemMap.set(lItem.id, lItem);
+            }
+          }
+        }
+
+        // Apply merged items to local IndexedDB
+        const mergedItems = Array.from(itemMap.values()).sort((a, b) => b.createdAt - a.createdAt);
+        for (const lItem of localItems) {
+          if (mergedDeleted[lItem.id]) {
+            await deleteItemByIdLocal(lItem.id);
+          }
+        }
+        for (const mItem of mergedItems) {
+          await putItemLocal(mItem);
+        }
+
+        // Merge categories
+        const localCatsUpdated = Number(localStorage.getItem('winnie_vault_cats_updated_at') || 0);
+        const remoteCatsUpdated = Number(remoteData.catsUpdatedAt || 0);
+        let finalCats = getCategories();
+        if (remoteCatsUpdated > localCatsUpdated && Array.isArray(remoteData.categories) && remoteData.categories.length > 0) {
+          finalCats = remoteData.categories;
+          localStorage.setItem('winnie_vault_categories', JSON.stringify(finalCats));
+          localStorage.setItem('winnie_vault_cats_updated_at', String(remoteCatsUpdated));
+        } else if (Array.isArray(remoteData.categories)) {
+          for (const rc of remoteData.categories) {
+            if (!finalCats.includes(rc)) finalCats.push(rc);
+          }
+          localStorage.setItem('winnie_vault_categories', JSON.stringify(finalCats));
+        }
+
+        // Push merged state back to GitHub Gist
+        const payload = {
+          updatedAt: Date.now(),
+          catsUpdatedAt: Math.max(localCatsUpdated, remoteCatsUpdated, Date.now()),
+          categories: finalCats,
+          deletedIds: mergedDeleted,
+          items: mergedItems
+        };
+
+        await fetch(`https://api.github.com/gists/${gist.id}`, {
+          method: 'PATCH',
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Accept': 'application/vnd.github+json',
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({
+            files: {
+              [GIST_FILENAME]: {
+                content: JSON.stringify(payload)
+              }
+            }
+          })
+        });
+
+        await refreshApp();
+        const timeStr = new Date().toLocaleTimeString('zh-TW', { hour: '2-digit', minute: '2-digit' });
+        updateSyncButtonUI(`☁️ 已同步 (${timeStr})`);
+        if (showStatusInModal && modalBanner) {
+          modalBanner.style.display = 'block';
+          modalBanner.textContent = `✅ 雲端同步成功！（共 ${mergedItems.length} 筆收藏已雙向同步）`;
+        }
+        renderPhonePairingQR();
+        isSyncing = false;
+        return true;
+      } catch (err) {
+        console.error(err);
+        updateSyncButtonUI('⚠️ 同步失敗 (點此重試)');
+        if (showStatusInModal && modalBanner) {
+          modalBanner.style.display = 'block';
+          modalBanner.textContent = `❌ ${err.message || '同步失敗，請檢查金鑰'}`;
+        }
+        isSyncing = false;
+        return false;
+      }
+    }
+
+    let syncDebounceTimer = null;
+    function triggerCloudSyncInBackground() {
+      if (!getGithubToken()) return;
+      clearTimeout(syncDebounceTimer);
+      syncDebounceTimer = setTimeout(() => {
+        syncWithGithubCloud(false);
+      }, 600);
+    }
+
+    function renderPhonePairingQR() {
+      const token = getGithubToken();
+      const pairSection = document.getElementById('phonePairSection');
+      if (!token) {
+        pairSection.style.display = 'none';
+        return;
+      }
+      pairSection.style.display = 'flex';
+      const baseUrl = 'https://bringbowl.github.io/bear-brand/vault/';
+      const pairUrl = `${baseUrl}#sync_token=${encodeURIComponent(token)}`;
+      const qrApi = `https://api.qrserver.com/v1/create-qr-code/?size=220x220&margin=8&data=${encodeURIComponent(pairUrl)}`;
+      document.getElementById('pairQrImg').src = qrApi;
+      document.getElementById('copyPairLinkBtn').onclick = () => {
+        navigator.clipboard.writeText(pairUrl);
+        alert('✅ 已複製手機一鍵配對連結！傳到你的手機點開就會自動完成雲端綁定。');
+      };
+    }
+
+    // =========================================================================
+    // 4. Smart Platform & Share-Text Parser (Xiaohongshu / IG / Pinterest / Threads)
     // =========================================================================
     function parseSharedInput(rawText) {
       const trimmed = (rawText || '').trim();
       const urlMatch = trimmed.match(/https?:\/\/[^\s，。！!）】」"']+/i);
       const url = urlMatch ? urlMatch[0] : '';
 
-      // Extract surrounding text as candidate title (especially useful for Xiaohongshu share text!)
       let extractedTitle = '';
       if (url) {
         let rest = trimmed.replace(url, '').trim();
-        // Clean common Xiaohongshu boilerplate
         rest = rest
           .replace(/複製後打開【小紅書】查看筆記！?/g, '')
           .replace(/复制后打开【小红书】查看笔记！?/g, '')
@@ -1075,7 +1430,6 @@
       web: { label: '網頁連結', icon: '🌐', cls: 'platform-web' }
     };
 
-    // Fetch OpenGraph thumbnail & title via Microlink API
     async function fetchUrlMetadata(url) {
       if (!url) return null;
       try {
@@ -1096,8 +1450,8 @@
       return null;
     }
 
-    // Compress uploaded/pasted image via Canvas so hundreds of screenshots fit smoothly
-    function compressImageFile(file, maxWidth = 960, quality = 0.82) {
+    // Compress uploaded/pasted image via Canvas so cloud sync stays fast
+    function compressImageFile(file, maxWidth = 860, quality = 0.78) {
       return new Promise((resolve, reject) => {
         const reader = new FileReader();
         reader.onload = (e) => {
@@ -1120,7 +1474,7 @@
     }
 
     // =========================================================================
-    // 4. UI State & Rendering
+    // 5. UI State & Rendering
     // =========================================================================
     let allItems = [];
     let activeCategory = 'ALL';
@@ -1144,9 +1498,13 @@
 
     function renderCategorySelects() {
       const cats = getCategories();
+      const prevQuick = quickCategorySelect.value;
+      const prevModal = itemCategoryInput.value;
       const optionsHtml = cats.map(c => `<option value="${escapeHtml(c)}">${escapeHtml(c)}</option>`).join('');
       quickCategorySelect.innerHTML = optionsHtml;
       itemCategoryInput.innerHTML = optionsHtml;
+      if (cats.includes(prevQuick)) quickCategorySelect.value = prevQuick;
+      if (cats.includes(prevModal)) itemCategoryInput.value = prevModal;
     }
 
     function renderFilters() {
@@ -1269,7 +1627,6 @@
         `;
       }).join('');
 
-      // Bind card footer buttons
       cardsGrid.querySelectorAll('[data-edit-id]').forEach(btn => {
         btn.addEventListener('click', () => openEditModal(btn.dataset.editId));
       });
@@ -1278,7 +1635,7 @@
       });
       cardsGrid.querySelectorAll('[data-delete-id]').forEach(btn => {
         btn.addEventListener('click', async () => {
-          if (confirm('確定要刪除這筆收藏嗎？')) {
+          if (confirm('確定要刪除這筆收藏嗎？（雲端也會同步刪除）')) {
             await deleteItemById(btn.dataset.deleteId);
             await refreshApp();
           }
@@ -1287,7 +1644,7 @@
     }
 
     function getDomainLabel(url, platform) {
-      if (!url) return '📷 本機截圖收藏（點擊放大檢視）';
+      if (!url) return '📷 本機/雲端截圖收藏（點擊放大檢視）';
       try {
         const u = new URL(url);
         return `🔗 點擊回到 ${u.hostname.replace(/^www\./, '')}`;
@@ -1306,7 +1663,7 @@
     }
 
     // =========================================================================
-    // 5. Quick Save Bar & Modal Interactions
+    // 6. Quick Save Bar & Modal Interactions
     // =========================================================================
     const quickUrlInput = document.getElementById('quickUrlInput');
     const quickSaveBtn = document.getElementById('quickSaveBtn');
@@ -1347,7 +1704,8 @@
         category: quickCategorySelect.value || getCategories()[0],
         note,
         image: image || makeCoverDataUrl(title, platform),
-        createdAt: Date.now()
+        createdAt: Date.now(),
+        updatedAt: Date.now()
       };
 
       await putItem(newItem);
@@ -1365,7 +1723,6 @@
       }
     });
 
-    // Batch upload mobile screenshots directly
     quickScreenshotInput.addEventListener('change', async (e) => {
       const files = Array.from(e.target.files || []);
       if (!files.length) return;
@@ -1373,7 +1730,7 @@
       for (const file of files) {
         const dataUrl = await compressImageFile(file);
         const cleanName = file.name.replace(/\.[^.]+$/, '');
-        await putItem({
+        await putItemLocal({
           id: 'item-' + Date.now() + '-' + Math.random().toString(36).slice(2, 6),
           title: cleanName || '手機截圖靈感',
           url: '',
@@ -1381,11 +1738,13 @@
           category: targetCat,
           note: '從相簿匯入的截圖',
           image: dataUrl,
-          createdAt: Date.now()
+          createdAt: Date.now(),
+          updatedAt: Date.now()
         });
       }
       quickScreenshotInput.value = '';
       await refreshApp();
+      triggerCloudSyncInBackground();
     });
 
     // Global Paste Listener (Ctrl+V / Cmd+V image screenshot anywhere on page!)
@@ -1414,7 +1773,7 @@
     });
 
     // =========================================================================
-    // 6. Add / Edit Dialog Logic
+    // 7. Add / Edit Dialog Logic
     // =========================================================================
     const itemDialog = document.getElementById('itemDialog');
     const itemForm = document.getElementById('itemForm');
@@ -1561,7 +1920,8 @@
         category,
         note,
         image: finalImage,
-        createdAt: existingItem ? existingItem.createdAt : Date.now()
+        createdAt: existingItem ? existingItem.createdAt : Date.now(),
+        updatedAt: Date.now()
       });
 
       itemDialog.close();
@@ -1573,7 +1933,6 @@
     document.getElementById('closeItemDialogBtn').addEventListener('click', () => itemDialog.close());
     document.getElementById('cancelItemDialogBtn').addEventListener('click', () => itemDialog.close());
 
-    // Lightbox
     function openLightbox(id) {
       const item = allItems.find(x => x.id === id);
       if (!item) return;
@@ -1583,14 +1942,13 @@
       document.getElementById('lightboxDialog').showModal();
     }
 
-    // Search
     document.getElementById('searchInput').addEventListener('input', (e) => {
       searchQuery = e.target.value;
       renderCards();
     });
 
     // =========================================================================
-    // 7. Category Management, Share Guide & Backup
+    // 8. Category Management, Cloud Sync Dialog & Share Guide
     // =========================================================================
     const catDialog = document.getElementById('catDialog');
     const catListContainer = document.getElementById('catListContainer');
@@ -1612,6 +1970,7 @@
           saveCategories(updated);
           renderCategoryManager();
           refreshApp();
+          triggerCloudSyncInBackground();
         });
       });
     }
@@ -1633,20 +1992,49 @@
       input.value = '';
       renderCategoryManager();
       refreshApp();
+      triggerCloudSyncInBackground();
+    });
+
+    // Cloud Sync Modal events
+    const syncDialog = document.getElementById('syncDialog');
+    const githubTokenInput = document.getElementById('githubTokenInput');
+
+    document.getElementById('openSyncDialogBtn').addEventListener('click', () => {
+      githubTokenInput.value = getGithubToken();
+      document.getElementById('syncModalStatus').style.display = 'none';
+      renderPhonePairingQR();
+      syncDialog.showModal();
+    });
+
+    document.getElementById('saveTokenAndSyncBtn').addEventListener('click', async () => {
+      const val = githubTokenInput.value.trim();
+      if (!val) return alert('請先貼上 ghp_ 開頭的 GitHub 金鑰喔！');
+      setGithubToken(val);
+      await syncWithGithubCloud(true);
+    });
+
+    document.getElementById('manualSyncNowBtn').addEventListener('click', async () => {
+      await syncWithGithubCloud(true);
+    });
+
+    document.getElementById('disconnectSyncBtn').addEventListener('click', () => {
+      if (confirm('確定要中斷這台裝置的雲端同步嗎？（本機收藏不會被刪除）')) {
+        setGithubToken('');
+        githubTokenInput.value = '';
+        renderPhonePairingQR();
+        document.getElementById('syncModalStatus').style.display = 'none';
+      }
     });
 
     // Share Guide & Dynamic Bookmarklet setup
     document.getElementById('openShareGuideBtn').addEventListener('click', () => {
-      const baseUrl = window.location.href.split('?')[0];
+      const baseUrl = window.location.href.split('?')[0].split('#')[0];
       const bmCode = `javascript:(function(){window.open('${baseUrl}?url='+encodeURIComponent(location.href)+'&title='+encodeURIComponent(document.title),'_blank');})();`;
       document.getElementById('bookmarkletLink').setAttribute('href', bmCode);
       document.getElementById('shareGuideDialog').showModal();
     });
 
-    // Backup & Restore
-    const backupDialog = document.getElementById('backupDialog');
-    document.getElementById('exportBtn').addEventListener('click', () => backupDialog.showModal());
-
+    // Offline JSON Backup & Restore
     document.getElementById('downloadBackupBtn').addEventListener('click', async () => {
       const items = await getAllItems();
       const payload = {
@@ -1673,11 +2061,11 @@
           if (Array.isArray(data.categories)) saveCategories(data.categories);
           if (Array.isArray(data.items)) {
             for (const item of data.items) {
-              await putItem(item);
+              await putItemLocal(item);
             }
           }
-          backupDialog.close();
           await refreshApp();
+          triggerCloudSyncInBackground();
           alert('✅ 備份匯入成功！');
         } catch (err) {
           alert('匯入失敗，請確認檔案格式是否正確');
@@ -1687,9 +2075,22 @@
     });
 
     // =========================================================================
-    // 8. Handle Incoming Web Share Target / Bookmarklet URL Params (?url=&title=&text=)
+    // 9. Handle Incoming Pairing Hash (#sync_token=...) & Share Params (?url=...)
     // =========================================================================
-    async function checkIncomingShareParams() {
+    async function checkIncomingParamsAndHash() {
+      // 1. Check #sync_token=... from QR Code pairing
+      if (window.location.hash && window.location.hash.includes('sync_token=')) {
+        const hashParams = new URLSearchParams(window.location.hash.slice(1));
+        const incomingToken = hashParams.get('sync_token');
+        if (incomingToken) {
+          setGithubToken(incomingToken);
+          window.history.replaceState({}, document.title, window.location.pathname + window.location.search);
+          await syncWithGithubCloud(false);
+          alert('🎉 手機雲端同步配對成功！已自動載入你所有的收藏。');
+        }
+      }
+
+      // 2. Check ?url=&title=&text= from Share Target / Bookmarklet / iOS Shortcut
       const params = new URLSearchParams(window.location.search);
       const sharedUrl = params.get('url') || '';
       const sharedText = params.get('text') || '';
@@ -1698,7 +2099,6 @@
       if (sharedUrl || sharedText || sharedTitle) {
         const combined = [sharedTitle, sharedText, sharedUrl].filter(Boolean).join(' ');
         const { url, extractedTitle, platform } = parseSharedInput(combined);
-        // Clean query string so refreshing doesn't re-trigger
         window.history.replaceState({}, document.title, window.location.pathname);
         openAddModal({
           url: url || sharedUrl,
@@ -1709,7 +2109,13 @@
       }
     }
 
-    // Register Service Worker for PWA Share Target when served over http/https
+    // Auto-sync when switching back to the app on phone or desktop
+    document.addEventListener('visibilitychange', () => {
+      if (document.visibilityState === 'visible' && getGithubToken()) {
+        syncWithGithubCloud(false);
+      }
+    });
+
     if ('serviceWorker' in navigator && location.protocol.startsWith('http')) {
       navigator.serviceWorker.register('./sw.js').catch(() => {});
     }
@@ -1717,8 +2123,12 @@
     // Boot
     (async () => {
       await seedDemoDataIfEmpty();
+      updateSyncButtonUI();
       await refreshApp();
-      await checkIncomingShareParams();
+      await checkIncomingParamsAndHash();
+      if (getGithubToken()) {
+        await syncWithGithubCloud(false);
+      }
     })();
   </script>
 </body>
