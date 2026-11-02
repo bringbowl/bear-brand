@@ -789,6 +789,15 @@
   </header>
 
   <main class="main-container">
+    <!-- Android PWA Install Prompt Banner (Enables Native Share Sheet!) -->
+    <div id="installAppBanner" style="display:none; background:linear-gradient(135deg, #C87D65, #B36850); color:#fff; padding:12px 14px; border-radius:14px; margin-bottom:12px; align-items:center; justify-content:space-between; gap:10px; box-shadow:var(--shadow-sm);">
+      <div style="font-size:0.82rem; line-height:1.35;">
+        <strong>📲 開通手機「系統分享選單」功能</strong><br>
+        <span style="opacity:0.92;">點右邊安裝成 App 後，在 IG / 小紅書按分享就會直接出現「77 靈感盒」！</span>
+      </div>
+      <button type="button" id="installPwaBtn" class="btn" style="background:#fff; color:#B36850; border:none; font-weight:800; flex-shrink:0;">立即安裝</button>
+    </div>
+
     <!-- Mobile-Friendly Quick Capture Box -->
     <section class="quick-action-strip" aria-label="快速收藏區">
       <div class="quick-input-row">
@@ -1001,10 +1010,11 @@
 
       <div style="display:flex; flex-direction:column; gap:12px; font-size:0.86rem;">
         <div class="step-card">
-          <strong>📱 iPhone 桌面 App 模式（最推薦！）</strong>
+          <strong>📱 手機系統分享選單設定（讓「77 靈感盒」出現在分享列表！）</strong>
           <p style="color:var(--text-muted);">
-            1. 在 Safari 點底部中間的「<strong>分享</strong>」按鈕 ➔ 選「<strong>加入主畫面</strong>」。<br>
-            2. 在小紅書、IG、Pinterest、Threads 點「複製連結」後，打開主畫面的「<strong>靈感收藏盒</strong>」，點左下角「<strong>📋 貼上連結</strong>」就能一鍵抓圖歸類！
+            <strong>Android 手機（Chrome）</strong>：<br>
+            1. 點網址列右上角「<strong>⋮</strong>」選單 ➔ 點「<strong>加到主畫面</strong>」➔ 選擇「<strong>安裝（安裝應用程式）</strong>」（或直接點首頁頂部的橘色「<strong>立即安裝</strong>」橫幅）。<br>
+            2. 安裝完成後（約 5 秒），去 IG、Threads、小紅書、Pinterest 按「<strong>分享 ➔ 更多/全部應用程式</strong>」，列表裡就會直接出現「<strong>77 靈感盒</strong>」！（注意：要用「安裝應用程式」不能只建一般書籤捷徑喔！）
           </p>
         </div>
 
@@ -2234,6 +2244,35 @@
       if (document.visibilityState === 'visible' && getGithubToken()) {
         syncWithGithubCloud(false);
       }
+    });
+
+    // Android WebAPK Native Install Prompt (Required to register Web Share Target in Android Share Sheet)
+    let deferredInstallPrompt = null;
+    const installAppBanner = document.getElementById('installAppBanner');
+    const installPwaBtn = document.getElementById('installPwaBtn');
+
+    window.addEventListener('beforeinstallprompt', (e) => {
+      e.preventDefault();
+      deferredInstallPrompt = e;
+      if (installAppBanner) {
+        installAppBanner.style.display = 'flex';
+      }
+    });
+
+    if (installPwaBtn) {
+      installPwaBtn.addEventListener('click', async () => {
+        if (!deferredInstallPrompt) return;
+        deferredInstallPrompt.prompt();
+        const { outcome } = await deferredInstallPrompt.userChoice;
+        if (outcome === 'accepted') {
+          installAppBanner.style.display = 'none';
+        }
+        deferredInstallPrompt = null;
+      });
+    }
+
+    window.addEventListener('appinstalled', () => {
+      if (installAppBanner) installAppBanner.style.display = 'none';
     });
 
     if ('serviceWorker' in navigator && location.protocol.startsWith('http')) {
