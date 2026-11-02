@@ -1009,13 +1009,22 @@
         </div>
 
         <div class="step-card">
-          <strong>💻 電腦瀏覽器：一鍵書籤小工具</strong>
-          <p style="color:var(--text-muted); margin-bottom:6px;">
-            把下面這顆橘色按鈕拖曳到電腦 Chrome / Safari 書籤列，逛任何網頁點一下就自動帶入：
+          <strong>💻 電腦瀏覽器：一鍵書籤小工具（連網頁上的圖片都能直接抓！）</strong>
+          <p style="color:var(--text-muted); margin-bottom:8px;">
+            <strong>方法 1（直接拖曳）</strong>：請先按鍵盤 <code>Cmd + Shift + B</code> 確保瀏覽器頂部有顯示「書籤列」，再用滑鼠按住下面這顆橘色按鈕，往上拖到書籤列放開：
           </p>
-          <div>
-            <a id="bookmarkletLink" class="bookmarklet-chip" href="#">➕ 收入 77 靈感盒</a>
+          <div style="display:flex; align-items:center; gap:10px; flex-wrap:wrap; margin-bottom:8px;">
+            <a
+              id="bookmarkletLink"
+              class="bookmarklet-chip"
+              draggable="true"
+              href="javascript:(function(){var img=(document.querySelector('meta[property=&quot;og:image&quot;]')||{}).content||'';if(!img){var imgs=Array.from(document.images).filter(function(i){return i.width>180&&i.height>180;});if(imgs.length)img=imgs[0].src;}window.open('https://bringbowl.github.io/bear-brand/vault/?url='+encodeURIComponent(location.href)+'&title='+encodeURIComponent(document.title)+'&image='+encodeURIComponent(img),'_blank');})();"
+            >➕ 收入 77 靈感盒</a>
+            <button type="button" class="btn" id="copyBookmarkletBtn">📋 拖不動？點此複製代碼</button>
           </div>
+          <p style="color:var(--text-muted); font-size:0.78rem;">
+            <strong>方法 2（手動貼上 100% 成功）</strong>：點右邊「📋 拖不動？點此複製代碼」，然後在瀏覽器書籤列空白處<strong>按右鍵 ➔ 點「新增網頁...」</strong>，名稱打「收入靈感盒」，網址貼上剛剛複製的代碼就完成了！
+          </p>
         </div>
       </div>
     </div>
@@ -2119,10 +2128,25 @@
       }
     });
 
+    const BOOKMARKLET_CODE = `javascript:(function(){var img=(document.querySelector('meta[property="og:image"]')||{}).content||'';if(!img){var imgs=Array.from(document.images).filter(function(i){return i.width>180&&i.height>180;});if(imgs.length)img=imgs[0].src;}window.open('https://bringbowl.github.io/bear-brand/vault/?url='+encodeURIComponent(location.href)+'&title='+encodeURIComponent(document.title)+'&image='+encodeURIComponent(img),'_blank');})();`;
+
+    const bmLinkEl = document.getElementById('bookmarkletLink');
+    bmLinkEl.setAttribute('href', BOOKMARKLET_CODE);
+    bmLinkEl.addEventListener('dragstart', (e) => {
+      e.dataTransfer.setData('text/uri-list', BOOKMARKLET_CODE);
+      e.dataTransfer.setData('text/plain', BOOKMARKLET_CODE);
+    });
+    bmLinkEl.addEventListener('click', (e) => {
+      e.preventDefault();
+      alert('請用滑鼠「按住不放」把這顆橘色按鈕往上拖到書籤列，或點右邊的「📋 複製代碼」手動加入書籤喔！');
+    });
+
+    document.getElementById('copyBookmarkletBtn').addEventListener('click', () => {
+      navigator.clipboard.writeText(BOOKMARKLET_CODE);
+      alert('✅ 已複製書籤代碼！\n\n請在瀏覽器上方的「書籤列」空白處按右鍵 ➔ 點「新增網頁...」➔ 在「網址」欄位貼上即可！');
+    });
+
     function openShareGuide() {
-      const baseUrl = window.location.href.split('?')[0].split('#')[0];
-      const bmCode = `javascript:(function(){window.open('${baseUrl}?url='+encodeURIComponent(location.href)+'&title='+encodeURIComponent(document.title),'_blank');})();`;
-      document.getElementById('bookmarkletLink').setAttribute('href', bmCode);
       document.getElementById('shareGuideDialog').showModal();
     }
 
@@ -2190,6 +2214,7 @@
       const sharedUrl = params.get('url') || '';
       const sharedText = params.get('text') || '';
       const sharedTitle = params.get('title') || '';
+      const sharedImage = params.get('image') || '';
 
       if (sharedUrl || sharedText || sharedTitle) {
         const combined = [sharedTitle, sharedText, sharedUrl].filter(Boolean).join(' ');
@@ -2198,8 +2223,9 @@
         openAddModal({
           url: url || sharedUrl,
           title: sharedTitle || extractedTitle || '',
+          image: sharedImage,
           platform,
-          autoFetch: true
+          autoFetch: !sharedImage
         });
       }
     }
