@@ -1308,11 +1308,12 @@
     }
 
     // =========================================================================
-    // 3. GitHub Cloud Sync Engine
+    // 3. GitHub Cloud Sync Engine (No-Cache + Queued Sync + Auto Poll)
     // =========================================================================
     const GIST_DESC = '77-Inspiration-Vault-Sync-DB';
     const GIST_FILENAME = 'winnie_inspiration_vault.json';
     let isSyncing = false;
+    let pendingSyncRequest = false;
 
     function getGithubToken() {
       return (localStorage.getItem('winnie_gh_token') || '').trim();
@@ -1348,11 +1349,17 @@
       };
 
       if (cachedId) {
-        const checkRes = await fetch(`https://api.github.com/gists/${cachedId}`, { headers });
+        const checkRes = await fetch(`https://api.github.com/gists/${cachedId}?_t=${Date.now()}`, {
+          headers,
+          cache: 'no-store'
+        });
         if (checkRes.ok) return await checkRes.json();
       }
 
-      const listRes = await fetch('https://api.github.com/gists?per_page=100', { headers });
+      const listRes = await fetch(`https://api.github.com/gists?per_page=100&_t=${Date.now()}`, {
+        headers,
+        cache: 'no-store'
+      });
       if (!listRes.ok) {
         throw new Error('GitHub 金鑰驗證失敗，請確認金鑰正確且有勾選 gist 權限');
       }
@@ -1360,13 +1367,17 @@
       const found = gists.find(g => g.description === GIST_DESC || (g.files && g.files[GIST_FILENAME]));
       if (found) {
         localStorage.setItem('winnie_gh_gist_id', found.id);
-        const detailRes = await fetch(`https://api.github.com/gists/${found.id}`, { headers });
+        const detailRes = await fetch(`https://api.github.com/gists/${found.id}?_t=${Date.now()}`, {
+          headers,
+          cache: 'no-store'
+        });
         return await detailRes.json();
       }
 
       const createRes = await fetch('https://api.github.com/gists', {
         method: 'POST',
         headers: { ...headers, 'Content-Type': 'application/json' },
+        cache: 'no-store',
         body: JSON.stringify({
           description: GIST_DESC,
           public: false,
@@ -1392,8 +1403,13 @@
 
     async function syncWithGithubCloud(showStatusInModal = false) {
       const token = getGithubToken();
-      if (!token || isSyncing) return false;
+      if (!token) return false;
+      if (isSyncing) {
+        pendingSyncRequest = true;
+        return false;
+      }
       isSyncing = true;
+      pendingSyncRequest = false;
       updateSyncButtonUI('⏳ 同步中');
       const modalBanner = document.getElementById('syncModalStatus');
       if (showStatusInModal && modalBanner) {
@@ -1409,7 +1425,7 @@
         if (fileObj) {
           let rawContent = fileObj.content;
           if (fileObj.truncated && fileObj.raw_url) {
-            const rawRes = await fetch(fileObj.raw_url);
+            const rawRes = await fetch(fileObj.raw_url, { cache: 'no-store' });
             rawContent = await rawRes.text();
           }
           if (rawContent) {
@@ -1472,13 +1488,14 @@
           items: mergedItems
         };
 
-        await fetch(`https://api.github.com/gists/${gist.id}`, {
+        const patchRes = await fetch(`https://api.github.com/gists/${gist.id}`, {
           method: 'PATCH',
           headers: {
             'Authorization': `Bearer ${token}`,
             'Accept': 'application/vnd.github+json',
             'Content-Type': 'application/json'
           },
+          cache: 'no-store',
           body: JSON.stringify({
             files: {
               [GIST_FILENAME]: {
@@ -1488,14 +1505,23 @@
           })
         });
 
+        if (!patchRes.ok) {
+          throw new Error('寫入雲端失敗 (HTTP ' + patchRes.status + ')');
+        }
+
         await refreshApp();
-        updateSyncButtonUI('☁️ 已同步');
+        const timeStr = new Date().toLocaleTimeString('zh-TW', { hour: '2-digit', minute: '2-digit' });
+        updateSyncButtonUI(`☁️ 已同步 ${timeStr}`);
         if (showStatusInModal && modalBanner) {
           modalBanner.style.display = 'block';
           modalBanner.textContent = `✅ 同步成功！（共 ${mergedItems.length} 筆收藏已雙向同步）`;
         }
         renderPhonePairingQR();
         isSyncing = false;
+        if (pendingSyncRequest) {
+          pendingSyncRequest = false;
+          syncWithGithubCloud(false);
+        }
         return true;
       } catch (err) {
         console.error(err);
@@ -2429,6 +2455,18 @@
         syncWithGithubCloud(false);
       }
     });
+
+    window.addEventListener('focus', () => {
+      if (getGithubToken()) {
+        syncWithGithubCloud(false);
+      }
+    });
+
+    setInterval(() => {
+      if (document.visibilityState === 'visible' && getGithubToken()) {
+        syncWithGithubCloud(false);
+      }
+    }, 25000);
 
     // Android WebAPK Native Install Prompt (Required to register Web Share Target in Android Share Sheet)
     let deferredInstallPrompt = null;
