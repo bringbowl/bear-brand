@@ -1607,19 +1607,307 @@
       web: { label: '網頁', icon: '🌐', cls: 'platform-web' }
     };
 
+    function isGenericPlatformTitle(t) {
+      const s = String(t || '').trim();
+      if (!s) return true;
+      if (/^(instagram|threads|pinterest|小紅書|小红书)$/i.test(s)) return true;
+      if (/on instagram/i.test(s) || /instagram photos and videos/i.test(s) || /•\s*instagram/i.test(s)) return true;
+      return false;
+    }
+
+    function decodeHtmlEntities(str) {
+      const txt = document.createElement('textarea');
+      txt.innerHTML = str || '';
+      return txt.value;
+    }
+
+    function cleanEmbedHtmlToText(rawHtml) {
+      if (!rawHtml) return '';
+      let s = String(rawHtml)
+        .replace(/^<a[^>]*CaptionUsername[^>]*>[\s\S]*?<\/a>/i, '')
+        .replace(/<br\s*\/?>/gi, '\n')
+        .replace(/<[^>]+>/g, '');
+      s = decodeHtmlEntities(s);
+      return s
+        .split('\n')
+        .map(l => l.trim())
+        .filter(Boolean)
+        .join('\n');
+    }
+
+    async function proxyAndPersistImageUrl(rawImageUrl) {
+      if (!rawImageUrl) return '';
+      if (rawImageUrl.startsWith('data:')) return rawImageUrl;
+      const cleanUrl = decodeHtmlEntities(rawImageUrl.trim());
+      if (!cleanUrl.startsWith('http')) return '';
+
+      const needsProxy = /cdninstagram\.com|fbcdn\.net|instagram\.com|xhscdn\.com|xiaohongshu\.com/i.test(cleanUrl);
+      const wsrvUrl = `https://wsrv.nl/?url=${encodeURIComponent(cleanUrl)}&w=560&output=jpg&q=78`;
+
+      if (needsProxy) {
+        try {
+          const resp = await fetch(wsrvUrl);
+          if (resp.ok) {
+            const blob = await resp.blob();
+            if (blob && blob.size > 800 && blob.size < 220000) {
+              const dataUrl = await new Promise((resolve) => {
+                const reader = new FileReader();
+                reader.onloadend = () => resolve(reader.result || wsrvUrl);
+                reader.onerror = () => resolve(wsrvUrl);
+                reader.readAsDataURL(blob);
+              });
+              return dataUrl;
+            }
+          }
+        } catch (e) {}
+        return wsrvUrl;
+      }
+      return cleanUrl;
+    }
+
+    function parseJinaInstagramEmbed(md) {
+      if (!md) return null;
+      let username = '';
+      const userM1 = md.match(/Instagram post shared by @([A-Za-z0-9._]+)/i);
+      const userM2 = md.match(/\[([A-Za-z0-9._]+)\]\(https:\/\/www\.instagram\.com\/[A-Za-z0-9._]+\/\?utm_source=ig_embed/i);
+      if (userM1) username = userM1[1];
+      else if (userM2) username = userM2[1];
+
+      let rawImg = '';
+      const img2Match = md.match(/!\[Image 2:[^\]]*\]\((https:\/\/[^\s)]+)\)/i);
+      if (img2Match) {
+        rawImg = img2Match[1];
+      } else {
+        const allImgs = Array.from(md.matchAll(/!\[Image \d+[^\]]*\]\((https:\/\/[^\s)]+)\)/gi));
+        for (const m of allImgs) {
+          const u = m[1];
+          if (!u.includes('s150x150') && !u.includes('p240x240') && !u.includes('rsrc.php')) {
+            rawImg = u;
+            break;
+          }
+        }
+      }
+
+      let captionBlock = '';
+      const partsAfterLikes = md.split(/\[\d[\d,]*\s+likes?\]\([^)]+\)\s*\n+\[[A-Za-z0-9._]+\]\([^)]+\)\s*\n+/i);
+      if (partsAfterLikes.length > 1) {
+        captionBlock = partsAfterLikes[1].split(/\n+\[Add a comment|\n+\[_Instagram_|\n+\[View all/i)[0] || '';
+      } else {
+        const altParts = md.split(/\[View more on Instagram\]\([^)]+\)\s*\n+/i);
+        if (altParts.length > 1) {
+          let afterViewMore = altParts[1];
+          afterViewMore = afterViewMore
+            .replace(/^\[Like\][\s\S]*?\n+/i, '')
+            .replace(/^\[\d[\d,]*\s+likes?\]\([^)]+\)\s*\n+/i, '')
+            .replace(/^\[[A-Za-z0-9._]+\]\([^)]+\)\s*\n+/i, '');
+          captionBlock = afterViewMore.split(/\n+\[Add a comment|\n+\[_Instagram_|\n+\[View all/i)[0] || '';
+        }
+      }
+
+      captionBlock = captionBlock
+        .replace(/\[([#@][^\]]+)\]\([^)]+\)/g, '$1')
+        .replace(/\[([^\]]+)\]\([^)]+\)/g, '$1');
+
+      const lines = captionBlock
+        .split('\n')
+        .map(l => l.trim())
+        .filter(l => l && !/^(\d[\d,]*\s+likes?|Original audio|View profile|View more on Instagram)$/i.test(l));
+
+      const fullCaption = lines.join('\n');
+      const firstLine = lines[0] || (username ? `@${username} 的 IG Reels / 貼文` : '');
+
+      if (!rawImg && !firstLine) return null;
+      return {
+        title: firstLine ? (username && !firstLine.includes(username) ? `${firstLine} (@${username})` : firstLine) : '',
+        description: fullCaption,
+        rawImage: rawImg
+      };
+    }
+
+    function parseJinaThreadsEmbed(md) {
+      if (!md) return null;
+      let username = '';
+      const userM = md.match(/\[([A-Za-z0-9._]+)\]\(https:\/\/www\.threads\.(?:com|net)\/@[A-Za-z0-9._]+/i);
+      if (userM) username = userM[1];
+
+      let rawImg = '';
+      const allImgs = Array.from(md.matchAll(/!\[Image (\d+)[^\]]*\]\((https:\/\/[^\s)]+)\)/gi));
+      for (const m of allImgs) {
+        const idx = Number(m[1]);
+        const u = m[2];
+        if (idx >= 2 && !u.includes('s150x150') && !u.includes('rsrc.php')) {
+          rawImg = u;
+          break;
+        }
+      }
+
+      let bodyBlock = '';
+      const followSplit = md.split(/\[Follow\]\([^)]+\)\s*\n+/i);
+      if (followSplit.length > 1) {
+        bodyBlock = followSplit[1].split(/\n+!\[Image|\n+\d{1,2}:\d{2}\s*(?:AM|PM)|\n+View on Threads/i)[0] || '';
+      }
+      bodyBlock = bodyBlock.replace(/\[([^\]]+)\]\([^)]+\)/g, '$1').trim();
+      const lines = bodyBlock.split('\n').map(l => l.trim()).filter(Boolean);
+      const firstLine = lines[0] || (username ? `@${username} 的 Threads 貼文` : '');
+
+      if (!rawImg && !firstLine) return null;
+      return {
+        title: firstLine ? (username && !firstLine.includes(username) ? `${firstLine} (@${username})` : firstLine) : '',
+        description: lines.join('\n'),
+        rawImage: rawImg
+      };
+    }
+
+    async function fetchInstagramReelOrPostMetadata(shortcode) {
+      const embedUrl = `https://www.instagram.com/p/${shortcode}/embed/captioned/`;
+
+      // Strategy 1: r.jina.ai reader on public captioned embed (fast, CORS-enabled, no tight 429 limit)
+      try {
+        const jinaRes = await fetch(`https://r.jina.ai/${embedUrl}`);
+        if (jinaRes.ok) {
+          const md = await jinaRes.text();
+          const parsed = parseJinaInstagramEmbed(md);
+          if (parsed && (parsed.rawImage || parsed.title)) {
+            const finalImg = parsed.rawImage ? await proxyAndPersistImageUrl(parsed.rawImage) : '';
+            return {
+              title: parsed.title,
+              description: parsed.description,
+              image: finalImg
+            };
+          }
+        }
+      } catch (e) {}
+
+      // Strategy 2: Microlink with custom CSS selectors on public captioned embed
+      try {
+        const apiUrl =
+          `https://api.microlink.io/?url=${encodeURIComponent(embedUrl)}` +
+          `&data.caption.selector=.Caption` +
+          `&data.username.selector=.UsernameText` +
+          `&data.embedImg.selector=.EmbeddedMediaImage` +
+          `&data.embedImg.attr=src`;
+        const res = await fetch(apiUrl);
+        if (res.ok) {
+          const json = await res.json();
+          if (json && json.status === 'success' && json.data) {
+            const d = json.data;
+            const username = String(d.username || '').trim();
+            const captionText = cleanEmbedHtmlToText(d.caption || '');
+            const lines = captionText.split('\n').filter(Boolean);
+            const firstLine = lines[0] || (username ? `@${username} 的 IG Reels / 貼文` : '');
+            const rawEmbedImg = (typeof d.embedImg === 'string' ? d.embedImg : (d.embedImg && d.embedImg.url)) ||
+              (d.image && d.image.url && !d.image.url.includes('s150x150') ? d.image.url : '');
+            const finalImg = rawEmbedImg ? await proxyAndPersistImageUrl(rawEmbedImg) : '';
+            return {
+              title: firstLine ? (username && !firstLine.includes(username) ? `${firstLine} (@${username})` : firstLine) : '',
+              description: captionText,
+              image: finalImg
+            };
+          }
+        }
+      } catch (e) {}
+
+      return null;
+    }
+
+    async function fetchThreadsPostMetadata(shortcode) {
+      const embedUrl = `https://www.threads.net/t/${shortcode}/embed`;
+
+      // Strategy 1: r.jina.ai reader on Threads public embed
+      try {
+        const jinaRes = await fetch(`https://r.jina.ai/${embedUrl}`);
+        if (jinaRes.ok) {
+          const md = await jinaRes.text();
+          const parsed = parseJinaThreadsEmbed(md);
+          if (parsed && (parsed.rawImage || parsed.title)) {
+            const finalImg = parsed.rawImage ? await proxyAndPersistImageUrl(parsed.rawImage) : '';
+            return {
+              title: parsed.title,
+              description: parsed.description,
+              image: finalImg
+            };
+          }
+        }
+      } catch (e) {}
+
+      // Strategy 2: Microlink with custom selectors on Threads public embed
+      try {
+        const apiUrl =
+          `https://api.microlink.io/?url=${encodeURIComponent(embedUrl)}` +
+          `&data.caption.selector=.BodyTextContainer` +
+          `&data.username.selector=.AuthorIdentity` +
+          `&data.embedImg.selector=.MediaContainer%20img,.SingleInnerMediaContainer%20img` +
+          `&data.embedImg.attr=src`;
+        const res = await fetch(apiUrl);
+        if (res.ok) {
+          const json = await res.json();
+          if (json && json.status === 'success' && json.data) {
+            const d = json.data;
+            const username = cleanEmbedHtmlToText(d.username || '').split('\n')[0] || '';
+            const captionText = cleanEmbedHtmlToText(d.caption || '');
+            const firstLine = captionText.split('\n')[0] || (username ? `@${username} 的 Threads 貼文` : '');
+            const rawEmbedImg = (typeof d.embedImg === 'string' ? d.embedImg : (d.embedImg && d.embedImg.url)) || '';
+            const finalImg = rawEmbedImg ? await proxyAndPersistImageUrl(rawEmbedImg) : '';
+            return {
+              title: firstLine ? (username && !firstLine.includes(username) ? `${firstLine} (@${username})` : firstLine) : '',
+              description: captionText,
+              image: finalImg
+            };
+          }
+        }
+      } catch (e) {}
+
+      return null;
+    }
+
     async function fetchUrlMetadata(url) {
       if (!url) return null;
+
+      // 1. Instagram Reel / Post / TV public embed extraction (bypasses IG login wall & grabs Reel cover + caption)
+      const igMatch = url.match(/(?:instagram\.com|instagr\.am)\/(?:[^\/]+\/)?(?:reel|reels|p|tv)\/([A-Za-z0-9_-]+)/i);
+      if (igMatch && igMatch[1]) {
+        const igMeta = await fetchInstagramReelOrPostMetadata(igMatch[1]);
+        if (igMeta && (igMeta.title || igMeta.image)) {
+          return igMeta;
+        }
+      }
+
+      // 2. Threads Post public embed extraction
+      const thMatch = url.match(/threads\.(?:net|com)\/(?:@[^\/]+\/post|t)\/([A-Za-z0-9_-]+)/i);
+      if (thMatch && thMatch[1]) {
+        const thMeta = await fetchThreadsPostMetadata(thMatch[1]);
+        if (thMeta && (thMeta.title || thMeta.image)) {
+          return thMeta;
+        }
+      }
+
+      // 3. Standard Microlink extraction (Pinterest, Xiaohongshu, Web, or IG /share/ redirect links)
       try {
         const apiUrl = `https://api.microlink.io/?url=${encodeURIComponent(url)}`;
         const res = await fetch(apiUrl);
-        if (!res.ok) return null;
-        const json = await res.json();
-        if (json && json.status === 'success' && json.data) {
-          return {
-            title: json.data.title || '',
-            description: json.data.description || '',
-            image: (json.data.image && json.data.image.url) || (json.data.logo && json.data.logo.url) || ''
-          };
+        if (res.ok) {
+          const json = await res.json();
+          if (json && json.status === 'success' && json.data) {
+            const resolvedUrl = json.data.url || '';
+            // If an IG /share/reel/ link resolved to /reel/{shortcode}/, run the IG embed extractor!
+            if (!igMatch && resolvedUrl) {
+              const resolvedIg = resolvedUrl.match(/(?:instagram\.com|instagr\.am)\/(?:[^\/]+\/)?(?:reel|reels|p|tv)\/([A-Za-z0-9_-]+)/i);
+              if (resolvedIg && resolvedIg[1]) {
+                const igMeta2 = await fetchInstagramReelOrPostMetadata(resolvedIg[1]);
+                if (igMeta2 && (igMeta2.title || igMeta2.image)) {
+                  return igMeta2;
+                }
+              }
+            }
+            const rawImg = (json.data.image && json.data.image.url) || (json.data.logo && json.data.logo.url) || '';
+            const finalImg = rawImg ? await proxyAndPersistImageUrl(rawImg) : '';
+            const cleanTitle = isGenericPlatformTitle(json.data.title) ? '' : (json.data.title || '');
+            return {
+              title: cleanTitle,
+              description: json.data.description || '',
+              image: finalImg
+            };
+          }
         }
       } catch (err) {}
       return null;
@@ -2163,7 +2451,7 @@
         itemRawInput.value = url;
         itemPlatformInput.value = platform;
       }
-      if (extractedTitle && !itemTitleInput.value.trim()) {
+      if (extractedTitle && !isGenericPlatformTitle(extractedTitle) && isGenericPlatformTitle(itemTitleInput.value)) {
         itemTitleInput.value = extractedTitle;
       }
       if (!url) return;
@@ -2172,18 +2460,23 @@
       fetchStatusBanner.textContent = '⏳ 正在自動抓取貼文縮圖與標題...';
       const meta = await fetchUrlMetadata(url);
       if (meta) {
-        if (meta.title && !itemTitleInput.value.trim()) {
+        if (meta.title && isGenericPlatformTitle(itemTitleInput.value)) {
           itemTitleInput.value = meta.title;
         }
-        if (meta.image && !currentEditingImageData) {
+        const currentImgIsWeak =
+          !currentEditingImageData ||
+          currentEditingImageData.includes('s150x150') ||
+          currentEditingImageData.includes('rsrc.php') ||
+          (currentEditingImageData.startsWith('http') && /cdninstagram\.com|fbcdn\.net/i.test(currentEditingImageData));
+        if (meta.image && currentImgIsWeak) {
           setModalPreviewImage(meta.image);
-          itemImageUrlInput.value = meta.image;
+          itemImageUrlInput.value = meta.image.startsWith('http') ? meta.image : '';
         }
         if (meta.description && !itemNoteInput.value.trim()) {
-          itemNoteInput.value = meta.description.slice(0, 120);
+          itemNoteInput.value = meta.description.slice(0, 220);
         }
         fetchStatusBanner.textContent = meta.image
-          ? '✅ 已自動抓到貼文縮圖與標題！'
+          ? '✅ 已自動抓到貼文 / Reels 封面縮圖與標題！'
           : '💡 已辨識連結！若平台鎖圖，可點下方選取手機截圖。';
       } else {
         fetchStatusBanner.textContent = '💡 已辨識連結！若平台鎖圖，可點下方選取手機截圖。';
@@ -2348,7 +2641,7 @@
       }
     });
 
-    const BOOKMARKLET_CODE = `javascript:(function(){var img=(document.querySelector('meta[property="og:image"]')||{}).content||'';if(!img||img.indexOf('http')!==0){var imgs=Array.from(document.images).filter(function(i){return i.src&&i.src.indexOf('http')===0&&i.width>180&&i.height>180;});img=imgs.length?imgs[0].src:'';}var u='https://bringbowl.github.io/bear-brand/vault/?url='+encodeURIComponent(location.href)+'&title='+encodeURIComponent(document.title)+'&image='+encodeURIComponent(img);if(!window.open(u,'_blank'))location.href=u;})();`;
+    const BOOKMARKLET_CODE = `javascript:(function(){var v=document.querySelector('video[poster]');var img=(v&&v.poster&&v.poster.indexOf('http')===0)?v.poster:((document.querySelector('meta[property="og:image"]')||{}).content||'');if(!img||img.indexOf('http')!==0||img.indexOf('s150x150')>-1){var imgs=Array.from(document.images).filter(function(i){return i.src&&i.src.indexOf('http')===0&&i.src.indexOf('s150x150')===-1&&i.width>180&&i.height>180;});img=imgs.length?imgs[0].src:'';}var u='https://bringbowl.github.io/bear-brand/vault/?url='+encodeURIComponent(location.href)+'&title='+encodeURIComponent(document.title)+'&image='+encodeURIComponent(img);if(!window.open(u,'_blank'))location.href=u;})();`;
 
     const bmLinkEl = document.getElementById('bookmarkletLink');
     bmLinkEl.setAttribute('href', BOOKMARKLET_CODE);
@@ -2440,12 +2733,28 @@
         const combined = [sharedTitle, sharedText, sharedUrl].filter(Boolean).join(' ');
         const { url, extractedTitle, platform } = parseSharedInput(combined);
         window.history.replaceState({}, document.title, window.location.pathname);
+
+        const cleanTitle = !isGenericPlatformTitle(sharedTitle)
+          ? sharedTitle
+          : (!isGenericPlatformTitle(extractedTitle) ? extractedTitle : '');
+
+        let initialImg = sharedImage;
+        if (initialImg && /cdninstagram\.com|fbcdn\.net|xhscdn\.com/i.test(initialImg) && !initialImg.includes('wsrv.nl')) {
+          initialImg = `https://wsrv.nl/?url=${encodeURIComponent(initialImg)}&w=560&output=jpg&q=78`;
+        }
+
+        const shouldAutoFetch =
+          !sharedImage ||
+          platform === 'ig' ||
+          platform === 'threads' ||
+          isGenericPlatformTitle(sharedTitle);
+
         openAddModal({
           url: url || sharedUrl,
-          title: sharedTitle || extractedTitle || '',
-          image: sharedImage,
+          title: cleanTitle,
+          image: initialImg,
           platform,
-          autoFetch: !sharedImage
+          autoFetch: shouldAutoFetch
         });
       }
     }
