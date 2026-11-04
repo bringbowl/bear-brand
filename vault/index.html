@@ -1078,7 +1078,7 @@
               id="bookmarkletLink"
               class="bookmarklet-chip"
               draggable="true"
-              href="javascript:(function(){var img=(document.querySelector('meta[property=&quot;og:image&quot;]')||{}).content||'';if(!img){var imgs=Array.from(document.images).filter(function(i){return i.width>180&&i.height>180;});if(imgs.length)img=imgs[0].src;}window.open('https://bringbowl.github.io/bear-brand/vault/?url='+encodeURIComponent(location.href)+'&title='+encodeURIComponent(document.title)+'&image='+encodeURIComponent(img),'_blank');})();"
+              href="javascript:(function(){var img=(document.querySelector('meta[property=&quot;og:image&quot;]')||{}).content||'';if(!img||img.indexOf('http')!==0){var imgs=Array.from(document.images).filter(function(i){return i.src&&i.src.indexOf('http')===0&&i.width>180&&i.height>180;});img=imgs.length?imgs[0].src:'';}var u='https://bringbowl.github.io/bear-brand/vault/?url='+encodeURIComponent(location.href)+'&title='+encodeURIComponent(document.title)+'&image='+encodeURIComponent(img);if(!window.open(u,'_blank'))location.href=u;})();"
             >➕ 收入 77 靈感盒</a>
             <button type="button" class="btn" id="copyBookmarkletBtn">📋 拖不動？點此複製代碼</button>
           </div>
@@ -2322,7 +2322,7 @@
       }
     });
 
-    const BOOKMARKLET_CODE = `javascript:(function(){var img=(document.querySelector('meta[property="og:image"]')||{}).content||'';if(!img){var imgs=Array.from(document.images).filter(function(i){return i.width>180&&i.height>180;});if(imgs.length)img=imgs[0].src;}window.open('https://bringbowl.github.io/bear-brand/vault/?url='+encodeURIComponent(location.href)+'&title='+encodeURIComponent(document.title)+'&image='+encodeURIComponent(img),'_blank');})();`;
+    const BOOKMARKLET_CODE = `javascript:(function(){var img=(document.querySelector('meta[property="og:image"]')||{}).content||'';if(!img||img.indexOf('http')!==0){var imgs=Array.from(document.images).filter(function(i){return i.src&&i.src.indexOf('http')===0&&i.width>180&&i.height>180;});img=imgs.length?imgs[0].src:'';}var u='https://bringbowl.github.io/bear-brand/vault/?url='+encodeURIComponent(location.href)+'&title='+encodeURIComponent(document.title)+'&image='+encodeURIComponent(img);if(!window.open(u,'_blank'))location.href=u;})();`;
 
     const bmLinkEl = document.getElementById('bookmarkletLink');
     bmLinkEl.setAttribute('href', BOOKMARKLET_CODE);
