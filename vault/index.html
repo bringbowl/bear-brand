@@ -375,6 +375,13 @@
     .platform-screenshot { background: #FEF3C7; color: #B45309; }
     .platform-web { background: #E0F2FE; color: #0369A1; }
 
+    .category-tags-wrap {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 4px;
+      justify-content: flex-end;
+    }
+
     .category-tag {
       color: var(--accent);
       background: var(--accent-soft);
@@ -386,6 +393,43 @@
       overflow: hidden;
       text-overflow: ellipsis;
       white-space: nowrap;
+    }
+
+    /* Multi-select category choice pills per modern-web-guidance `card` */
+    .cat-multi-grid {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+    }
+
+    label.cat-choice-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      padding: 5px 10px;
+      border-radius: 999px;
+      border: 1.5px solid var(--border);
+      background: var(--bg);
+      color: var(--text-muted);
+      font-size: 0.78rem;
+      font-weight: 600;
+      cursor: pointer;
+      user-select: none;
+      transition: background-color 0.15s, border-color 0.15s, color 0.15s;
+    }
+
+    label.cat-choice-pill > input[type="checkbox"] {
+      accent-color: var(--accent);
+      width: 13px;
+      height: 13px;
+      margin: 0;
+      cursor: pointer;
+    }
+
+    label.cat-choice-pill:has(> :checked) {
+      border-color: var(--accent);
+      background: var(--accent-soft);
+      color: var(--accent-hover);
     }
 
     article.card > header h3 {
@@ -810,9 +854,9 @@
         <button type="button" class="btn btn-primary" id="quickSaveBtn">存入</button>
       </div>
       <div class="quick-buttons-row">
-        <div style="display:flex; align-items:center; gap:6px; flex:1;">
-          <span style="font-size:0.76rem; color:var(--text-muted); white-space:nowrap;">存入分類：</span>
-          <select id="quickCategorySelect" class="select-pill" style="flex:1; max-width:160px;" aria-label="選擇分類"></select>
+        <div style="display:flex; align-items:center; gap:6px; flex:1; flex-wrap:wrap;">
+          <span style="font-size:0.76rem; color:var(--text-muted); white-space:nowrap;">存入分類（可多選）：</span>
+          <div id="quickCategoryMultiRow" class="cat-multi-grid"></div>
         </div>
         <div style="display:flex; align-items:center; gap:6px;">
           <button type="button" class="btn" id="pasteClipboardBtn" style="padding:6px 11px; font-size:0.78rem;">📋 貼上剪貼簿</button>
@@ -940,29 +984,28 @@
         <div id="fetchStatusBanner" class="status-banner">正在自動抓取貼文縮圖與標題...</div>
       </div>
 
-      <div style="display:grid; grid-template-columns: 1fr 1fr; gap: 10px;">
-        <div class="form-group">
-          <label for="itemCategoryInput">
-            <span>分類資料夾</span>
-            <button type="button" class="card-action-btn" id="inlineAddCatBtn" style="color:var(--accent); padding:0 4px;">＋ 新增分類</button>
-          </label>
-          <select id="itemCategoryInput" class="form-control"></select>
-          <div id="inlineNewCatBox" style="display:none; gap:6px; margin-top:4px;">
-            <input type="text" id="inlineNewCatInput" class="form-control" placeholder="新分類名稱，如：✈️ 蜜月" style="padding:6px 10px; font-size:14px;">
-            <button type="button" class="btn btn-primary" id="inlineConfirmCatBtn" style="padding:6px 12px; font-size:0.8rem;">建立</button>
-          </div>
+      <div class="form-group">
+        <label>
+          <span>分類資料夾（可勾選多個分類）</span>
+          <button type="button" class="card-action-btn" id="inlineAddCatBtn" style="color:var(--accent); padding:0 4px;">＋ 新增分類</button>
+        </label>
+        <div id="modalCategoryMultiGrid" class="cat-multi-grid"></div>
+        <div id="inlineNewCatBox" style="display:none; gap:6px; margin-top:4px;">
+          <input type="text" id="inlineNewCatInput" class="form-control" placeholder="新分類名稱，如：✈️ 蜜月" style="padding:6px 10px; font-size:14px;">
+          <button type="button" class="btn btn-primary" id="inlineConfirmCatBtn" style="padding:6px 12px; font-size:0.8rem;">建立</button>
         </div>
-        <div class="form-group">
-          <label for="itemPlatformInput">來源平台</label>
-          <select id="itemPlatformInput" class="form-control">
-            <option value="ig">📸 Instagram</option>
-            <option value="xhs">📕 小紅書</option>
-            <option value="pinterest">📌 Pinterest</option>
-            <option value="threads">🧵 Threads</option>
-            <option value="screenshot">📱 手機截圖</option>
-            <option value="web">🌐 網頁 / 其他</option>
-          </select>
-        </div>
+      </div>
+
+      <div class="form-group">
+        <label for="itemPlatformInput">來源平台</label>
+        <select id="itemPlatformInput" class="form-control">
+          <option value="ig">📸 Instagram</option>
+          <option value="xhs">📕 小紅書</option>
+          <option value="pinterest">📌 Pinterest</option>
+          <option value="threads">🧵 Threads</option>
+          <option value="screenshot">📱 手機截圖</option>
+          <option value="web">🌐 網頁 / 其他</option>
+        </select>
       </div>
 
       <div class="form-group">
@@ -1579,20 +1622,32 @@
     }
 
     // =========================================================================
-    // 5. UI State & Rendering
+    // 5. UI State & Rendering (Supports Multiple Categories per Item!)
     // =========================================================================
     let allItems = [];
     let activeCategory = 'ALL';
     let activePlatform = 'ALL';
     let searchQuery = '';
     let currentEditingImageData = '';
+    let quickSelectedCategories = [];
+    let modalSelectedCategories = [];
 
     const cardsGrid = document.getElementById('cardsGrid');
     const categoryFilterRow = document.getElementById('categoryFilterRow');
     const platformFilterRow = document.getElementById('platformFilterRow');
-    const quickCategorySelect = document.getElementById('quickCategorySelect');
-    const itemCategoryInput = document.getElementById('itemCategoryInput');
+    const quickCategoryMultiRow = document.getElementById('quickCategoryMultiRow');
+    const modalCategoryMultiGrid = document.getElementById('modalCategoryMultiGrid');
     const totalCountLabel = document.getElementById('totalCountLabel');
+
+    function getItemCategories(item) {
+      if (Array.isArray(item.categories) && item.categories.length > 0) {
+        return item.categories;
+      }
+      if (item.category) {
+        return [item.category];
+      }
+      return [getCategories()[0]];
+    }
 
     async function refreshApp() {
       allItems = await getAllItems();
@@ -1603,18 +1658,61 @@
 
     function renderCategorySelects() {
       const cats = getCategories();
-      const prevQuick = quickCategorySelect.value;
-      const prevModal = itemCategoryInput.value;
-      const optionsHtml =
-        cats.map(c => `<option value="${escapeHtml(c)}">${escapeHtml(c)}</option>`).join('') +
-        `<option value="__NEW__">➕ 新增分類資料夾...</option>`;
-      quickCategorySelect.innerHTML = optionsHtml;
-      itemCategoryInput.innerHTML = optionsHtml;
-      if (cats.includes(prevQuick)) quickCategorySelect.value = prevQuick;
-      if (cats.includes(prevModal)) itemCategoryInput.value = prevModal;
+      quickSelectedCategories = quickSelectedCategories.filter(c => cats.includes(c));
+      if (quickSelectedCategories.length === 0 && cats.length > 0) {
+        quickSelectedCategories = [cats[0]];
+      }
+      modalSelectedCategories = modalSelectedCategories.filter(c => cats.includes(c));
+      if (modalSelectedCategories.length === 0 && cats.length > 0) {
+        modalSelectedCategories = [cats[0]];
+      }
+
+      // Render Quick Bar Multi-Select Choice Pills
+      quickCategoryMultiRow.innerHTML = cats.map(c => {
+        const checked = quickSelectedCategories.includes(c) ? 'checked' : '';
+        return `
+          <label class="cat-choice-pill">
+            <input type="checkbox" value="${escapeHtml(c)}" ${checked}>
+            <span>${escapeHtml(c)}</span>
+          </label>
+        `;
+      }).join('');
+
+      quickCategoryMultiRow.querySelectorAll('input[type="checkbox"]').forEach(cb => {
+        cb.addEventListener('change', () => {
+          const checkedVals = Array.from(quickCategoryMultiRow.querySelectorAll('input:checked')).map(el => el.value);
+          if (checkedVals.length === 0) {
+            cb.checked = true;
+            return;
+          }
+          quickSelectedCategories = checkedVals;
+        });
+      });
+
+      // Render Modal Multi-Select Choice Pills
+      modalCategoryMultiGrid.innerHTML = cats.map(c => {
+        const checked = modalSelectedCategories.includes(c) ? 'checked' : '';
+        return `
+          <label class="cat-choice-pill">
+            <input type="checkbox" value="${escapeHtml(c)}" ${checked}>
+            <span>${escapeHtml(c)}</span>
+          </label>
+        `;
+      }).join('');
+
+      modalCategoryMultiGrid.querySelectorAll('input[type="checkbox"]').forEach(cb => {
+        cb.addEventListener('change', () => {
+          const checkedVals = Array.from(modalCategoryMultiGrid.querySelectorAll('input:checked')).map(el => el.value);
+          if (checkedVals.length === 0) {
+            cb.checked = true;
+            return;
+          }
+          modalSelectedCategories = checkedVals;
+        });
+      });
     }
 
-    function createAndSelectCategory(rawName, targetSelectEl) {
+    function createAndSelectCategory(rawName, addToModal = true) {
       const val = (rawName || '').trim();
       if (!val) return false;
       const cats = getCategories();
@@ -1622,13 +1720,14 @@
         cats.push(val);
         saveCategories(cats);
       }
+      if (!quickSelectedCategories.includes(val)) {
+        quickSelectedCategories.push(val);
+      }
+      if (addToModal && !modalSelectedCategories.includes(val)) {
+        modalSelectedCategories.push(val);
+      }
       renderCategorySelects();
       renderFilters();
-      if (targetSelectEl) {
-        targetSelectEl.value = val;
-      }
-      quickCategorySelect.value = val;
-      itemCategoryInput.value = val;
       triggerCloudSyncInBackground();
       return true;
     }
@@ -1638,7 +1737,10 @@
       const catCounts = { ALL: allItems.length };
       cats.forEach(c => { catCounts[c] = 0; });
       allItems.forEach(item => {
-        catCounts[item.category] = (catCounts[item.category] || 0) + 1;
+        const itemCats = getItemCategories(item);
+        itemCats.forEach(c => {
+          catCounts[c] = (catCounts[c] || 0) + 1;
+        });
       });
 
       const allCatPills = [
@@ -1661,7 +1763,8 @@
         btn.addEventListener('click', () => {
           activeCategory = btn.dataset.cat;
           if (activeCategory !== 'ALL') {
-            quickCategorySelect.value = activeCategory;
+            quickSelectedCategories = [activeCategory];
+            renderCategorySelects();
           }
           renderFilters();
           renderCards();
@@ -1673,7 +1776,7 @@
         addPillBtn.addEventListener('click', () => {
           const name = prompt('請輸入新分類資料夾名稱（例如：✈️ 蜜月旅行）：');
           if (name && name.trim()) {
-            createAndSelectCategory(name.trim());
+            createAndSelectCategory(name.trim(), false);
           }
         });
       }
@@ -1712,10 +1815,11 @@
     function renderCards() {
       const q = searchQuery.trim().toLowerCase();
       const filtered = allItems.filter(item => {
-        if (activeCategory !== 'ALL' && item.category !== activeCategory) return false;
+        const itemCats = getItemCategories(item);
+        if (activeCategory !== 'ALL' && !itemCats.includes(activeCategory)) return false;
         if (activePlatform !== 'ALL' && item.platform !== activePlatform) return false;
         if (q) {
-          const hay = `${item.title} ${item.note || ''} ${item.category} ${item.url || ''}`.toLowerCase();
+          const hay = `${item.title} ${item.note || ''} ${itemCats.join(' ')} ${item.url || ''}`.toLowerCase();
           if (!hay.includes(q)) return false;
         }
         return true;
@@ -1739,6 +1843,8 @@
       cardsGrid.innerHTML = filtered.map(item => {
         const pInfo = PLATFORM_INFO[item.platform] || PLATFORM_INFO.web;
         const coverSrc = item.image || makeCoverDataUrl(item.title, item.platform);
+        const itemCats = getItemCategories(item);
+        const catTagsHtml = itemCats.map(c => `<span class="category-tag">${escapeHtml(c)}</span>`).join('');
 
         const primaryHeadingLink = item.url
           ? `<a class="card-link" href="${escapeHtml(item.url)}" target="_blank" rel="noopener noreferrer">${escapeHtml(item.title)}</a>`
@@ -1750,7 +1856,7 @@
             <header>
               <div class="card-meta-top">
                 <span class="platform-badge ${pInfo.cls}">${pInfo.icon} ${pInfo.label}</span>
-                <span class="category-tag">${escapeHtml(item.category)}</span>
+                <div class="category-tags-wrap">${catTagsHtml}</div>
               </div>
               <h3>${primaryHeadingLink}</h3>
             </header>
@@ -1759,7 +1865,7 @@
             </div>
             <footer>
               <div style="display:flex; gap:2px;">
-                <button type="button" class="card-action-btn" data-edit-id="${escapeHtml(item.id)}" title="換圖或改標題">✏️ 換圖</button>
+                <button type="button" class="card-action-btn" data-edit-id="${escapeHtml(item.id)}" title="換圖、改標題或調整多個分類">✏️ 編輯/分類</button>
                 <button type="button" class="card-action-btn" data-lightbox-id="${escapeHtml(item.id)}" title="放大看圖">🔍</button>
               </div>
               <button type="button" class="card-action-btn danger" data-delete-id="${escapeHtml(item.id)}" title="刪除">🗑️</button>
@@ -1827,12 +1933,15 @@
         title = url ? `${PLATFORM_INFO[platform].label} 收藏貼文` : raw.slice(0, 50);
       }
 
+      const chosenCats = quickSelectedCategories.length > 0 ? [...quickSelectedCategories] : [getCategories()[0]];
+
       const newItem = {
         id: 'item-' + Date.now(),
         title,
         url: url || '',
         platform,
-        category: quickCategorySelect.value || getCategories()[0],
+        category: chosenCats[0],
+        categories: chosenCats,
         note,
         image: image || makeCoverDataUrl(title, platform),
         createdAt: Date.now(),
@@ -1865,7 +1974,6 @@
           }
         }
       } catch (e) {}
-      // Fallback if iOS Safari blocks direct clipboard read without input focus
       quickUrlInput.focus();
       openAddModal();
     }
@@ -1876,7 +1984,7 @@
     quickScreenshotInput.addEventListener('change', async (e) => {
       const files = Array.from(e.target.files || []);
       if (!files.length) return;
-      const targetCat = quickCategorySelect.value || getCategories()[0];
+      const chosenCats = quickSelectedCategories.length > 0 ? [...quickSelectedCategories] : [getCategories()[0]];
       for (const file of files) {
         const dataUrl = await compressImageFile(file);
         const cleanName = file.name.replace(/\.[^.]+$/, '');
@@ -1885,7 +1993,8 @@
           title: cleanName || '手機截圖靈感',
           url: '',
           platform: 'screenshot',
-          category: targetCat,
+          category: chosenCats[0],
+          categories: chosenCats,
           note: '從相簿匯入的截圖',
           image: dataUrl,
           createdAt: Date.now(),
@@ -1949,28 +2058,10 @@
 
     document.getElementById('inlineAddCatBtn').addEventListener('click', showInlineNewCatBox);
 
-    itemCategoryInput.addEventListener('change', () => {
-      if (itemCategoryInput.value === '__NEW__') {
-        itemCategoryInput.value = getCategories()[0];
-        showInlineNewCatBox();
-      }
-    });
-
-    quickCategorySelect.addEventListener('change', () => {
-      if (quickCategorySelect.value === '__NEW__') {
-        const name = prompt('請輸入新分類資料夾名稱（例如：✈️ 蜜月旅行）：');
-        if (name && name.trim()) {
-          createAndSelectCategory(name.trim(), quickCategorySelect);
-        } else {
-          quickCategorySelect.value = getCategories()[0];
-        }
-      }
-    });
-
     function submitInlineNewCat() {
       const val = inlineNewCatInput.value.trim();
       if (!val) return;
-      createAndSelectCategory(val, itemCategoryInput);
+      createAndSelectCategory(val, true);
       inlineNewCatBox.style.display = 'none';
       inlineNewCatInput.value = '';
     }
@@ -2003,10 +2094,10 @@
       inlineNewCatBox.style.display = 'none';
       itemIdInput.value = '';
       itemRawInput.value = prefill.url || '';
-      const defaultCat = (quickCategorySelect.value && quickCategorySelect.value !== '__NEW__')
-        ? quickCategorySelect.value
-        : getCategories()[0];
-      itemCategoryInput.value = prefill.category || defaultCat;
+      modalSelectedCategories = Array.isArray(prefill.categories) && prefill.categories.length
+        ? [...prefill.categories]
+        : (prefill.category ? [prefill.category] : [...quickSelectedCategories]);
+      renderCategorySelects();
       itemPlatformInput.value = prefill.platform || (prefill.url ? detectPlatform(prefill.url) : 'xhs');
       itemTitleInput.value = prefill.title || '';
       itemNoteInput.value = prefill.note || '';
@@ -2023,12 +2114,12 @@
     function openEditModal(id) {
       const item = allItems.find(x => x.id === id);
       if (!item) return;
-      document.getElementById('itemDialogTitle').textContent = '✏️ 編輯 / 更換截圖';
+      document.getElementById('itemDialogTitle').textContent = '✏️ 編輯 / 多分類設定';
       inlineNewCatBox.style.display = 'none';
       itemIdInput.value = item.id;
       itemRawInput.value = item.url || '';
+      modalSelectedCategories = [...getItemCategories(item)];
       renderCategorySelects();
-      itemCategoryInput.value = item.category;
       itemPlatformInput.value = item.platform;
       itemTitleInput.value = item.title;
       itemNoteInput.value = item.note || '';
@@ -2105,7 +2196,7 @@
       const finalUrl = url || (raw.startsWith('http') ? raw : '');
       const platform = itemPlatformInput.value;
       const title = itemTitleInput.value.trim() || '未命名靈感';
-      const category = itemCategoryInput.value;
+      const chosenCats = modalSelectedCategories.length > 0 ? [...modalSelectedCategories] : [getCategories()[0]];
       const note = itemNoteInput.value.trim();
       const finalImage = currentEditingImageData || makeCoverDataUrl(title, platform);
 
@@ -2116,7 +2207,8 @@
         title,
         url: finalUrl,
         platform,
-        category,
+        category: chosenCats[0],
+        categories: chosenCats,
         note,
         image: finalImage,
         createdAt: existingItem ? existingItem.createdAt : Date.now(),
