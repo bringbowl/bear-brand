@@ -411,18 +411,79 @@
 
     .subcat-bar {
       background: var(--surface-subtle);
-      padding: 6px 10px;
-      border-radius: 10px;
-      border: 1px solid var(--border);
+      padding: 8px 10px;
+      border-radius: 12px;
+      border: 1.5px solid #E5D6CC;
+      display: flex;
+      flex-direction: column;
+      align-items: stretch;
+      gap: 6px;
+      overflow: visible;
+    }
+
+    .subcat-bar-top {
+      display: flex;
       align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 6px;
+    }
+
+    .subcat-pills-wrap {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: 6px;
     }
 
     .subcat-prefix {
-      font-size: 0.74rem;
+      font-size: 0.76rem;
       font-weight: 700;
       color: var(--accent-hover);
       white-space: nowrap;
-      padding-right: 4px;
+      padding-right: 2px;
+    }
+
+    .subcat-del-btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 16px;
+      height: 16px;
+      margin-left: 2px;
+      border-radius: 99px;
+      border: none;
+      background: rgba(185, 28, 28, 0.1);
+      color: var(--danger);
+      font-size: 0.66rem;
+      line-height: 1;
+      cursor: pointer;
+      padding: 0;
+      flex-shrink: 0;
+    }
+
+    .subcat-del-btn:hover {
+      background: var(--danger);
+      color: #fff;
+    }
+
+    .subcat-parent-group {
+      display: flex;
+      flex-direction: column;
+      gap: 5px;
+      width: 100%;
+      padding: 7px 9px;
+      background: var(--surface-subtle);
+      border: 1px solid #E5D6CC;
+      border-radius: 10px;
+    }
+
+    .subcat-parent-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 6px;
+      flex-wrap: wrap;
     }
 
     /* Multi-select category choice pills per modern-web-guidance `card` */
@@ -861,7 +922,7 @@
       <div class="pill-row" id="categoryFilterRow"></div>
 
       <!-- Subcategory Filter Row (Appears when a specific category like 👗 150穿搭 is selected!) -->
-      <div class="pill-row subcat-bar" id="subcategoryFilterRow" style="display:none;"></div>
+      <div class="subcat-bar" id="subcategoryFilterRow" style="display:none;"></div>
     </div>
   </header>
 
@@ -899,9 +960,14 @@
           </label>
         </div>
       </div>
-      <div id="quickSubcategoryRowWrap" style="display:none; align-items:center; gap:6px; flex-wrap:wrap; padding-top:4px; border-top:1px dashed var(--border);">
-        <span style="font-size:0.75rem; color:var(--accent-hover); font-weight:700; white-space:nowrap;">↳ 子分類（選填）：</span>
-        <div id="quickSubcategoryMultiRow" class="cat-multi-grid"></div>
+      <div id="quickSubcategoryRowWrap" style="display:none; flex-direction:column; gap:6px; padding-top:6px; border-top:1px dashed var(--border);">
+        <div id="quickSubcategoryMultiRow" style="display:flex; flex-direction:column; gap:6px; width:100%;"></div>
+        <div id="quickInlineNewSubcatBox" style="display:none; gap:6px; flex-wrap:wrap; align-items:center;">
+          <select id="quickInlineNewSubcatParentSelect" class="form-control" style="width:auto; padding:5px 8px; font-size:13px;"></select>
+          <input type="text" id="quickInlineNewSubcatInput" class="form-control" placeholder="新子分類名稱，如：🧥 秋冬穿搭" style="flex:1; min-width:130px; padding:5px 10px; font-size:14px;">
+          <button type="button" class="btn btn-primary" id="quickInlineConfirmSubcatBtn" style="padding:5px 12px; font-size:0.78rem;">建立</button>
+          <button type="button" class="btn" id="quickInlineCancelSubcatBtn" style="padding:5px 10px; font-size:0.78rem;">✕</button>
+        </div>
       </div>
     </section>
 
@@ -1203,24 +1269,83 @@
       '🍽️ 探店美食': ['☕ 咖啡廳甜點', '🍜 正餐聚餐', '🥂 約會餐廳']
     };
 
+    function getDeletedCats() {
+      try {
+        return JSON.parse(localStorage.getItem('winnie_vault_deleted_cats')) || {};
+      } catch (e) {
+        return {};
+      }
+    }
+
+    function setDeletedCatState(catName, isDeleted) {
+      const map = getDeletedCats();
+      map[catName] = { deleted: Boolean(isDeleted), updatedAt: Date.now() };
+      localStorage.setItem('winnie_vault_deleted_cats', JSON.stringify(map));
+    }
+
+    function getDeletedSubcats() {
+      try {
+        return JSON.parse(localStorage.getItem('winnie_vault_deleted_subcats')) || {};
+      } catch (e) {
+        return {};
+      }
+    }
+
+    function setDeletedSubcatState(subKey, isDeleted) {
+      const map = getDeletedSubcats();
+      map[subKey] = { deleted: Boolean(isDeleted), updatedAt: Date.now() };
+      localStorage.setItem('winnie_vault_deleted_subcats', JSON.stringify(map));
+    }
+
+    function isSubcatMarkedDeleted(subKey, delMap) {
+      const m = delMap || getDeletedSubcats();
+      const entry = m[subKey];
+      if (!entry) return false;
+      if (typeof entry === 'number') return entry > 0;
+      return Boolean(entry.deleted);
+    }
+
+    function isCatMarkedDeleted(catName, delMap) {
+      const m = delMap || getDeletedCats();
+      const entry = m[catName];
+      if (!entry) return false;
+      if (typeof entry === 'number') return entry > 0;
+      return Boolean(entry.deleted);
+    }
+
+    function getDefaultSubsForCategoryName(catName) {
+      const s = String(catName || '');
+      if (DEFAULT_SUBCATEGORIES[s]) return [...DEFAULT_SUBCATEGORIES[s]];
+      if (s.includes('150穿搭') || s.includes('穿搭')) return [...DEFAULT_SUBCATEGORIES['👗 150穿搭']];
+      if (s.includes('食譜')) return [...RECIPE_DEFAULT_SUBS];
+      if (s.includes('婚禮')) return [...DEFAULT_SUBCATEGORIES['💍 婚禮靈感']];
+      if (s.includes('腳本') || s.includes('拍片')) return [...DEFAULT_SUBCATEGORIES['🎬 拍片腳本']];
+      if (s.includes('探店') || s.includes('美食')) return [...DEFAULT_SUBCATEGORIES['🍽️ 探店美食']];
+      return [];
+    }
+
     function getCategories() {
+      const delCats = getDeletedCats();
       try {
         const saved = JSON.parse(localStorage.getItem('winnie_vault_categories'));
         if (Array.isArray(saved) && saved.length > 0) {
           if (!localStorage.getItem('winnie_vault_recipe_cat_seeded')) {
             const hasRecipe = saved.some(c => String(c).includes('食譜'));
-            if (!hasRecipe) {
+            if (!hasRecipe && !isCatMarkedDeleted('🍳 食譜', delCats)) {
               saved.splice(1, 0, '🍳 食譜');
               localStorage.setItem('winnie_vault_categories', JSON.stringify(saved));
             }
             localStorage.setItem('winnie_vault_recipe_cat_seeded', '1');
           }
-          return saved;
+          const filtered = saved.filter(c => !isCatMarkedDeleted(c, delCats));
+          if (filtered.length > 0) return filtered;
         }
       } catch (e) {}
-      localStorage.setItem('winnie_vault_categories', JSON.stringify(DEFAULT_CATEGORIES));
+      const defaults = DEFAULT_CATEGORIES.filter(c => !isCatMarkedDeleted(c, delCats));
+      const finalDefaults = defaults.length > 0 ? defaults : [DEFAULT_CATEGORIES[0]];
+      localStorage.setItem('winnie_vault_categories', JSON.stringify(finalDefaults));
       localStorage.setItem('winnie_vault_recipe_cat_seeded', '1');
-      return DEFAULT_CATEGORIES;
+      return finalDefaults;
     }
 
     function saveCategories(cats) {
@@ -1239,19 +1364,43 @@
       if (!map) {
         map = { ...DEFAULT_SUBCATEGORIES };
       }
-      // Ensure any category containing '食譜' or '150穿搭' gets initial default subcategories on first setup
-      if (!localStorage.getItem('winnie_vault_recipe_subs_seeded')) {
-        const cats = getCategories();
+
+      const delSubs = getDeletedSubcats();
+      const cats = getCategories();
+      let changed = false;
+
+      // Ensure default subcategories are seeded once for matching categories unless explicitly deleted
+      if (!localStorage.getItem('winnie_vault_subs_seeded_v2')) {
         cats.forEach(c => {
-          if (String(c).includes('食譜') && (!Array.isArray(map[c]) || map[c].length === 0)) {
-            map[c] = [...RECIPE_DEFAULT_SUBS];
-          }
-          if (String(c).includes('150穿搭') && (!Array.isArray(map[c]) || map[c].length === 0)) {
-            map[c] = [...DEFAULT_SUBCATEGORIES['👗 150穿搭']];
+          const defaults = getDefaultSubsForCategoryName(c);
+          if (defaults.length > 0) {
+            const current = Array.isArray(map[c]) ? [...map[c]] : [];
+            defaults.forEach(ds => {
+              const sk = makeSubKey(c, ds);
+              if (!current.includes(ds) && !isSubcatMarkedDeleted(sk, delSubs)) {
+                current.push(ds);
+                changed = true;
+              }
+            });
+            map[c] = current;
           }
         });
+        localStorage.setItem('winnie_vault_subs_seeded_v2', '1');
+      }
+
+      // Always filter out any subcategory marked deleted in tombstones
+      for (const [pCat, list] of Object.entries(map)) {
+        if (Array.isArray(list)) {
+          const cleanList = list.filter(s => !isSubcatMarkedDeleted(makeSubKey(pCat, s), delSubs));
+          if (cleanList.length !== list.length) {
+            map[pCat] = cleanList;
+            changed = true;
+          }
+        }
+      }
+
+      if (changed) {
         localStorage.setItem('winnie_vault_subcategories', JSON.stringify(map));
-        localStorage.setItem('winnie_vault_recipe_subs_seeded', '1');
       }
       return map;
     }
@@ -1263,7 +1412,9 @@
 
     function getSubcategoriesFor(parentCat) {
       const map = getSubcategoriesMap();
-      return Array.isArray(map[parentCat]) ? map[parentCat] : [];
+      const delSubs = getDeletedSubcats();
+      const list = Array.isArray(map[parentCat]) ? map[parentCat] : [];
+      return list.filter(s => !isSubcatMarkedDeleted(makeSubKey(parentCat, s), delSubs));
     }
 
     function makeSubKey(parentCat, subName) {
@@ -1581,6 +1732,33 @@
           }
         }
 
+        // Merge Deleted Categories & Deleted Subcategories Tombstones by updatedAt timestamp
+        const localDeletedCats = getDeletedCats();
+        const remoteDeletedCats = (remoteData.deletedCats && typeof remoteData.deletedCats === 'object') ? remoteData.deletedCats : {};
+        const mergedDeletedCats = { ...remoteDeletedCats };
+        for (const [k, v] of Object.entries(localDeletedCats)) {
+          const rEntry = mergedDeletedCats[k];
+          const lTime = (v && typeof v === 'object') ? (v.updatedAt || 0) : Number(v || 0);
+          const rTime = (rEntry && typeof rEntry === 'object') ? (rEntry.updatedAt || 0) : Number(rEntry || 0);
+          if (!rEntry || lTime >= rTime) {
+            mergedDeletedCats[k] = v;
+          }
+        }
+        localStorage.setItem('winnie_vault_deleted_cats', JSON.stringify(mergedDeletedCats));
+
+        const localDeletedSubcats = getDeletedSubcats();
+        const remoteDeletedSubcats = (remoteData.deletedSubcats && typeof remoteData.deletedSubcats === 'object') ? remoteData.deletedSubcats : {};
+        const mergedDeletedSubcats = { ...remoteDeletedSubcats };
+        for (const [k, v] of Object.entries(localDeletedSubcats)) {
+          const rEntry = mergedDeletedSubcats[k];
+          const lTime = (v && typeof v === 'object') ? (v.updatedAt || 0) : Number(v || 0);
+          const rTime = (rEntry && typeof rEntry === 'object') ? (rEntry.updatedAt || 0) : Number(rEntry || 0);
+          if (!rEntry || lTime >= rTime) {
+            mergedDeletedSubcats[k] = v;
+          }
+        }
+        localStorage.setItem('winnie_vault_deleted_subcats', JSON.stringify(mergedDeletedSubcats));
+
         const mergedItems = Array.from(itemMap.values()).sort((a, b) => b.createdAt - a.createdAt);
         for (const lItem of localItems) {
           if (mergedDeleted[lItem.id]) {
@@ -1588,47 +1766,56 @@
           }
         }
         for (const mItem of mergedItems) {
+          if (Array.isArray(mItem.subcategories)) {
+            mItem.subcategories = mItem.subcategories.filter(sk => !isSubcatMarkedDeleted(sk, mergedDeletedSubcats));
+          }
           await putItemLocal(mItem);
         }
 
         const localCatsUpdated = Number(localStorage.getItem('winnie_vault_cats_updated_at') || 0);
         const remoteCatsUpdated = Number(remoteData.catsUpdatedAt || 0);
+        const finalCatsUpdatedAt = Math.max(localCatsUpdated, remoteCatsUpdated);
         let finalCats = getCategories();
         if (remoteCatsUpdated > localCatsUpdated && Array.isArray(remoteData.categories) && remoteData.categories.length > 0) {
-          finalCats = remoteData.categories;
-          localStorage.setItem('winnie_vault_categories', JSON.stringify(finalCats));
-          localStorage.setItem('winnie_vault_cats_updated_at', String(remoteCatsUpdated));
+          finalCats = [...remoteData.categories];
+          for (const lc of getCategories()) {
+            if (!finalCats.includes(lc)) finalCats.push(lc);
+          }
         } else if (Array.isArray(remoteData.categories)) {
           for (const rc of remoteData.categories) {
             if (!finalCats.includes(rc)) finalCats.push(rc);
           }
-          localStorage.setItem('winnie_vault_categories', JSON.stringify(finalCats));
         }
+        finalCats = finalCats.filter(c => !isCatMarkedDeleted(c, mergedDeletedCats));
+        if (finalCats.length === 0) finalCats = [DEFAULT_CATEGORIES[0]];
+        localStorage.setItem('winnie_vault_categories', JSON.stringify(finalCats));
+        localStorage.setItem('winnie_vault_cats_updated_at', String(finalCatsUpdatedAt));
 
         const localSubMap = getSubcategoriesMap();
         const remoteSubMap = (remoteData.subcategories && typeof remoteData.subcategories === 'object') ? remoteData.subcategories : {};
-        const finalSubMap = { ...remoteSubMap };
-        for (const [pCat, sList] of Object.entries(localSubMap)) {
-          const existingList = Array.isArray(finalSubMap[pCat]) ? [...finalSubMap[pCat]] : [];
-          if (Array.isArray(sList)) {
-            for (const s of sList) {
-              if (!existingList.includes(s)) existingList.push(s);
+        const finalSubMap = {};
+        const allParentKeys = new Set([...Object.keys(remoteSubMap), ...Object.keys(localSubMap), ...finalCats]);
+        for (const pCat of allParentKeys) {
+          const combined = [];
+          const firstList = remoteCatsUpdated > localCatsUpdated ? (remoteSubMap[pCat] || []) : (localSubMap[pCat] || []);
+          const secondList = remoteCatsUpdated > localCatsUpdated ? (localSubMap[pCat] || []) : (remoteSubMap[pCat] || []);
+          for (const s of [...firstList, ...secondList]) {
+            const cleanS = String(s || '').trim();
+            if (cleanS && !combined.includes(cleanS) && !isSubcatMarkedDeleted(makeSubKey(pCat, cleanS), mergedDeletedSubcats)) {
+              combined.push(cleanS);
             }
           }
-          finalSubMap[pCat] = existingList;
-        }
-        if (remoteCatsUpdated > localCatsUpdated && remoteData.subcategories) {
-          for (const [pCat, rList] of Object.entries(remoteSubMap)) {
-            if (Array.isArray(rList)) finalSubMap[pCat] = rList;
-          }
+          finalSubMap[pCat] = combined;
         }
         localStorage.setItem('winnie_vault_subcategories', JSON.stringify(finalSubMap));
 
         const payload = {
           updatedAt: Date.now(),
-          catsUpdatedAt: Math.max(localCatsUpdated, remoteCatsUpdated, Date.now()),
+          catsUpdatedAt: finalCatsUpdatedAt,
           categories: finalCats,
           subcategories: finalSubMap,
+          deletedCats: mergedDeletedCats,
+          deletedSubcats: mergedDeletedSubcats,
           deletedIds: mergedDeleted,
           items: mergedItems
         };
@@ -1655,6 +1842,9 @@
         }
 
         await refreshApp();
+        if (typeof catDialog !== 'undefined' && catDialog && catDialog.open) {
+          renderCategoryManager();
+        }
         const timeStr = new Date().toLocaleTimeString('zh-TW', { hour: '2-digit', minute: '2-digit' });
         updateSyncButtonUI(`☁️ 已同步 ${timeStr}`);
         if (showStatusInModal && modalBanner) {
@@ -2157,6 +2347,7 @@
           const checkedVals = Array.from(quickCategoryMultiRow.querySelectorAll('input:checked')).map(el => el.value);
           if (checkedVals.length === 0) {
             cb.checked = true;
+            renderSubcategorySelects();
             return;
           }
           quickSelectedCategories = checkedVals;
@@ -2180,6 +2371,7 @@
           const checkedVals = Array.from(modalCategoryMultiGrid.querySelectorAll('input:checked')).map(el => el.value);
           if (checkedVals.length === 0) {
             cb.checked = true;
+            renderSubcategorySelects();
             return;
           }
           modalSelectedCategories = checkedVals;
@@ -2191,37 +2383,47 @@
     }
 
     function renderSubcategorySelects() {
-      // 1. Quick Save Bar Subcategory Pills (for all checked quickSelectedCategories)
-      const quickSubOptions = [];
+      // 1. Quick Save Bar Subcategory Groups (grouped clearly per checked category)
+      const allValidQuickSubKeys = new Set();
       quickSelectedCategories.forEach(pCat => {
-        const subs = getSubcategoriesFor(pCat);
-        subs.forEach(s => {
-          quickSubOptions.push({
-            parent: pCat,
-            sub: s,
-            key: makeSubKey(pCat, s),
-            label: quickSelectedCategories.length > 1 ? `${pCat} › ${s}` : s
-          });
+        getSubcategoriesFor(pCat).forEach(s => {
+          allValidQuickSubKeys.add(makeSubKey(pCat, s));
         });
       });
-      const validQuickSubKeys = new Set(quickSubOptions.map(o => o.key));
-      quickSelectedSubcategories = quickSelectedSubcategories.filter(k => validQuickSubKeys.has(k));
+      quickSelectedSubcategories = quickSelectedSubcategories.filter(k => allValidQuickSubKeys.has(k));
 
       if (quickSelectedCategories.length > 0) {
         quickSubcategoryRowWrap.style.display = 'flex';
-        quickSubcategoryMultiRow.innerHTML = quickSubOptions.map(o => {
-          const checked = quickSelectedSubcategories.includes(o.key) ? 'checked' : '';
+        quickSubcategoryMultiRow.innerHTML = quickSelectedCategories.map(pCat => {
+          const subs = getSubcategoriesFor(pCat);
+          const hasDefaults = getDefaultSubsForCategoryName(pCat).length > 0;
+          const pillsHtml = subs.length > 0
+            ? subs.map(s => {
+                const sk = makeSubKey(pCat, s);
+                const checked = quickSelectedSubcategories.includes(sk) ? 'checked' : '';
+                return `
+                  <label class="cat-choice-pill" style="font-size:0.75rem; padding:4px 9px;">
+                    <input type="checkbox" value="${escapeHtml(sk)}" ${checked}>
+                    <span>${escapeHtml(s)}</span>
+                    <button type="button" class="subcat-del-btn" data-inline-del-parent="${escapeHtml(pCat)}" data-inline-del-sub="${escapeHtml(s)}" title="刪除此子分類">✕</button>
+                  </label>
+                `;
+              }).join('')
+            : `<span style="font-size:0.74rem; color:var(--text-muted);">尚無子分類，點右方「＋ 新增子分類」建立</span>`;
+
           return `
-            <label class="cat-choice-pill" style="font-size:0.74rem; padding:3px 9px;">
-              <input type="checkbox" value="${escapeHtml(o.key)}" ${checked}>
-              <span>${escapeHtml(o.label)}</span>
-            </label>
+            <div class="subcat-parent-group">
+              <div class="subcat-parent-header">
+                <span class="subcat-prefix">↳ ${escapeHtml(pCat)} 的子分類（可勾選多個）：</span>
+                <div style="display:flex; gap:6px; align-items:center;">
+                  ${subs.length === 0 && hasDefaults ? `<button type="button" class="card-action-btn" data-restore-defaults-for="${escapeHtml(pCat)}" style="color:var(--accent); font-size:0.72rem; padding:2px 6px;">✨ 恢復預設</button>` : ''}
+                  <button type="button" class="card-action-btn" data-quick-open-sub-for="${escapeHtml(pCat)}" style="color:var(--accent); font-size:0.74rem; padding:2px 6px;">＋ 新增子分類</button>
+                </div>
+              </div>
+              <div class="cat-multi-grid">${pillsHtml}</div>
+            </div>
           `;
-        }).join('') + `
-          <button type="button" class="pill" id="quickBarAddSubcatBtn" style="font-size:0.72rem; padding:3px 9px; color:var(--accent); border-style:dashed;">
-            <span>＋ 子分類</span>
-          </button>
-        `;
+        }).join('');
 
         quickSubcategoryMultiRow.querySelectorAll('input[type="checkbox"]').forEach(cb => {
           cb.addEventListener('change', () => {
@@ -2229,53 +2431,116 @@
           });
         });
 
-        const quickAddSubBtn = document.getElementById('quickBarAddSubcatBtn');
-        if (quickAddSubBtn) {
-          quickAddSubBtn.addEventListener('click', () => {
-            const targetParent = activeCategory !== 'ALL' ? activeCategory : (quickSelectedCategories[0] || getCategories()[0]);
-            const name = prompt(`請輸入「${targetParent}」的新子分類名稱（例如：🧥 秋冬穿搭）：`);
-            if (name && name.trim()) {
-              createAndSelectSubcategory(targetParent, name.trim(), false);
+        quickSubcategoryMultiRow.querySelectorAll('[data-inline-del-sub]').forEach(btn => {
+          btn.addEventListener('click', (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            deleteSubcategory(btn.dataset.inlineDelParent, btn.dataset.inlineDelSub);
+          });
+        });
+
+        quickSubcategoryMultiRow.querySelectorAll('[data-restore-defaults-for]').forEach(btn => {
+          btn.addEventListener('click', (e) => {
+            e.preventDefault();
+            restoreDefaultSubcategoriesFor(btn.dataset.restoreDefaultsFor);
+          });
+        });
+
+        quickSubcategoryMultiRow.querySelectorAll('[data-quick-open-sub-for]').forEach(btn => {
+          btn.addEventListener('click', () => {
+            const pCat = btn.dataset.quickOpenSubFor;
+            const box = document.getElementById('quickInlineNewSubcatBox');
+            const sel = document.getElementById('quickInlineNewSubcatParentSelect');
+            const inp = document.getElementById('quickInlineNewSubcatInput');
+            if (box && sel && inp) {
+              sel.innerHTML = quickSelectedCategories.map(c => `<option value="${escapeHtml(c)}">${escapeHtml(c)}</option>`).join('');
+              sel.value = pCat;
+              box.style.display = 'flex';
+              inp.value = '';
+              setTimeout(() => inp.focus(), 40);
             }
           });
-        }
+        });
       } else {
         quickSubcategoryRowWrap.style.display = 'none';
       }
 
-      // 2. Modal Subcategory Pills (for all checked modalSelectedCategories)
-      const modalSubOptions = [];
+      // 2. Modal Subcategory Groups (grouped clearly per checked category in Add/Edit Modal)
+      const allValidModalSubKeys = new Set();
       modalSelectedCategories.forEach(pCat => {
-        const subs = getSubcategoriesFor(pCat);
-        subs.forEach(s => {
-          modalSubOptions.push({
-            parent: pCat,
-            sub: s,
-            key: makeSubKey(pCat, s),
-            label: modalSelectedCategories.length > 1 ? `${pCat} › ${s}` : s
-          });
+        getSubcategoriesFor(pCat).forEach(s => {
+          allValidModalSubKeys.add(makeSubKey(pCat, s));
         });
       });
-      const validModalSubKeys = new Set(modalSubOptions.map(o => o.key));
-      modalSelectedSubcategories = modalSelectedSubcategories.filter(k => validModalSubKeys.has(k));
+      modalSelectedSubcategories = modalSelectedSubcategories.filter(k => allValidModalSubKeys.has(k));
 
-      if (modalSubOptions.length > 0) {
-        modalSubcategoryMultiGrid.innerHTML = modalSubOptions.map(o => {
-          const checked = modalSelectedSubcategories.includes(o.key) ? 'checked' : '';
+      if (modalSelectedCategories.length > 0) {
+        modalSubcategoryMultiGrid.style.flexDirection = 'column';
+        modalSubcategoryMultiGrid.innerHTML = modalSelectedCategories.map(pCat => {
+          const subs = getSubcategoriesFor(pCat);
+          const hasDefaults = getDefaultSubsForCategoryName(pCat).length > 0;
+          const pillsHtml = subs.length > 0
+            ? subs.map(s => {
+                const sk = makeSubKey(pCat, s);
+                const checked = modalSelectedSubcategories.includes(sk) ? 'checked' : '';
+                return `
+                  <label class="cat-choice-pill">
+                    <input type="checkbox" value="${escapeHtml(sk)}" ${checked}>
+                    <span>${escapeHtml(s)}</span>
+                    <button type="button" class="subcat-del-btn" data-inline-del-parent="${escapeHtml(pCat)}" data-inline-del-sub="${escapeHtml(s)}" title="刪除此子分類">✕</button>
+                  </label>
+                `;
+              }).join('')
+            : `<span style="font-size:0.75rem; color:var(--text-muted);">尚無子分類，可點右方「＋ 新增子分類」建立</span>`;
+
           return `
-            <label class="cat-choice-pill">
-              <input type="checkbox" value="${escapeHtml(o.key)}" ${checked}>
-              <span>${escapeHtml(o.label)}</span>
-            </label>
+            <div class="subcat-parent-group">
+              <div class="subcat-parent-header">
+                <span class="subcat-prefix">↳ ${escapeHtml(pCat)} 的子分類（可勾選多個）：</span>
+                <div style="display:flex; gap:6px; align-items:center;">
+                  ${subs.length === 0 && hasDefaults ? `<button type="button" class="card-action-btn" data-restore-defaults-for="${escapeHtml(pCat)}" style="color:var(--accent); font-size:0.72rem; padding:2px 6px;">✨ 恢復預設</button>` : ''}
+                  <button type="button" class="card-action-btn" data-modal-open-sub-for="${escapeHtml(pCat)}" style="color:var(--accent); font-size:0.74rem; padding:2px 6px;">＋ 新增子分類</button>
+                </div>
+              </div>
+              <div class="cat-multi-grid">${pillsHtml}</div>
+            </div>
           `;
         }).join('');
       } else {
-        modalSubcategoryMultiGrid.innerHTML = `<span style="font-size:0.78rem; color:var(--text-muted);">目前勾選的分類還沒有子分類，可點右上角「＋ 新增子分類」建立！</span>`;
+        modalSubcategoryMultiGrid.innerHTML = `<span style="font-size:0.78rem; color:var(--text-muted);">請先勾選上方的分類資料夾</span>`;
       }
 
       modalSubcategoryMultiGrid.querySelectorAll('input[type="checkbox"]').forEach(cb => {
         cb.addEventListener('change', () => {
           modalSelectedSubcategories = Array.from(modalSubcategoryMultiGrid.querySelectorAll('input:checked')).map(el => el.value);
+        });
+      });
+
+      modalSubcategoryMultiGrid.querySelectorAll('[data-inline-del-sub]').forEach(btn => {
+        btn.addEventListener('click', (e) => {
+          e.preventDefault();
+          e.stopPropagation();
+          deleteSubcategory(btn.dataset.inlineDelParent, btn.dataset.inlineDelSub);
+        });
+      });
+
+      modalSubcategoryMultiGrid.querySelectorAll('[data-restore-defaults-for]').forEach(btn => {
+        btn.addEventListener('click', (e) => {
+          e.preventDefault();
+          restoreDefaultSubcategoriesFor(btn.dataset.restoreDefaultsFor);
+        });
+      });
+
+      modalSubcategoryMultiGrid.querySelectorAll('[data-modal-open-sub-for]').forEach(btn => {
+        btn.addEventListener('click', () => {
+          const pCat = btn.dataset.modalOpenSubFor;
+          const parentSelectEl = document.getElementById('inlineNewSubcatParentSelect');
+          if (parentSelectEl) {
+            const parentCandidates = modalSelectedCategories.length > 0 ? modalSelectedCategories : getCategories();
+            parentSelectEl.innerHTML = parentCandidates.map(c => `<option value="${escapeHtml(c)}">${escapeHtml(c)}</option>`).join('');
+            parentSelectEl.value = pCat;
+          }
+          showInlineNewSubcatBox();
         });
       });
 
@@ -2289,6 +2554,7 @@
     function createAndSelectCategory(rawName, addToModal = true) {
       const val = (rawName || '').trim();
       if (!val) return false;
+      setDeletedCatState(val, false);
       const cats = getCategories();
       if (!cats.includes(val)) {
         cats.push(val);
@@ -2311,6 +2577,9 @@
       const s = (rawSubName || '').trim();
       if (!p || !s) return false;
 
+      const subKey = makeSubKey(p, s);
+      setDeletedSubcatState(subKey, false);
+
       const map = getSubcategoriesMap();
       const list = Array.isArray(map[p]) ? [...map[p]] : [];
       if (!list.includes(s)) {
@@ -2319,7 +2588,6 @@
         saveSubcategoriesMap(map);
       }
 
-      const subKey = makeSubKey(p, s);
       if (!quickSelectedCategories.includes(p)) {
         quickSelectedCategories.push(p);
       }
@@ -2338,8 +2606,89 @@
       renderCategorySelects();
       renderFilters();
       renderCards();
+      if (typeof catDialog !== 'undefined' && catDialog && catDialog.open) {
+        renderCategoryManager();
+      }
       triggerCloudSyncInBackground();
       return true;
+    }
+
+    async function deleteSubcategory(parentCat, subName) {
+      const p = String(parentCat || '').trim();
+      const s = String(subName || '').trim();
+      if (!p || !s) return;
+
+      const subKey = makeSubKey(p, s);
+      setDeletedSubcatState(subKey, true);
+
+      const map = getSubcategoriesMap();
+      if (Array.isArray(map[p])) {
+        map[p] = map[p].filter(x => x !== s);
+      }
+      saveSubcategoriesMap(map);
+
+      activeSubcategories = activeSubcategories.filter(x => x !== s);
+      quickSelectedSubcategories = quickSelectedSubcategories.filter(k => k !== subKey);
+      modalSelectedSubcategories = modalSelectedSubcategories.filter(k => k !== subKey);
+
+      // Remove this subcategory tag from any items that had it
+      for (const item of allItems) {
+        if (Array.isArray(item.subcategories) && item.subcategories.includes(subKey)) {
+          item.subcategories = item.subcategories.filter(k => k !== subKey);
+          item.updatedAt = Date.now();
+          await putItemLocal(item);
+        }
+      }
+
+      if (typeof catDialog !== 'undefined' && catDialog && catDialog.open) {
+        renderCategoryManager();
+      }
+      await refreshApp();
+      triggerCloudSyncInBackground();
+    }
+
+    function restoreDefaultSubcategoriesFor(parentCat) {
+      const defaults = getDefaultSubsForCategoryName(parentCat);
+      if (!defaults.length) return;
+      const map = getSubcategoriesMap();
+      const list = Array.isArray(map[parentCat]) ? [...map[parentCat]] : [];
+      defaults.forEach(ds => {
+        setDeletedSubcatState(makeSubKey(parentCat, ds), false);
+        if (!list.includes(ds)) list.push(ds);
+      });
+      map[parentCat] = list;
+      saveSubcategoriesMap(map);
+      if (typeof catDialog !== 'undefined' && catDialog && catDialog.open) {
+        renderCategoryManager();
+      }
+      renderCategorySelects();
+      renderFilters();
+      renderCards();
+      triggerCloudSyncInBackground();
+    }
+
+    async function deleteCategory(catName) {
+      const target = String(catName || '').trim();
+      if (!target) return;
+      const currentCats = getCategories();
+      const updated = currentCats.filter(x => x !== target);
+      if (updated.length === 0) {
+        alert('至少要保留一個分類喔！');
+        return;
+      }
+      setDeletedCatState(target, true);
+      saveCategories(updated);
+      if (activeCategory === target) {
+        activeCategory = 'ALL';
+        activeSubcategories = [];
+      }
+      quickSelectedCategories = quickSelectedCategories.filter(x => x !== target);
+      modalSelectedCategories = modalSelectedCategories.filter(x => x !== target);
+      if (typeof catDialog !== 'undefined' && catDialog && catDialog.open) {
+        renderCategoryManager();
+      }
+      await refreshApp();
+      triggerCloudSyncInBackground();
     }
 
     function renderFilters() {
@@ -2416,45 +2765,72 @@
         });
 
         const isAllSubSelected = activeSubcategories.length === 0;
+        const hasDefaults = getDefaultSubsForCategoryName(activeCategory).length > 0;
         const modeBtnHtml = activeSubcategories.length >= 2 ? `
-          <button type="button" class="pill" id="toggleSubcatMatchModeBtn" style="padding:4px 9px; font-size:0.73rem; background:#FFF7ED; color:#C2410C; border-color:#FDBA74;" title="點此切換「同時符合全部勾選」或「符合任一勾選」">
+          <button type="button" class="pill" id="toggleSubcatMatchModeBtn" style="padding:3px 9px; font-size:0.73rem; background:#FFF7ED; color:#C2410C; border-color:#FDBA74;" title="點此切換「同時符合全部勾選」或「符合任一勾選」">
             <span>${subcatFilterMode === 'AND' ? '🎯 同時符合' : '➕ 符合任一'}</span>
           </button>
         ` : '';
 
         subcategoryFilterRow.style.display = 'flex';
         subcategoryFilterRow.innerHTML = `
-          <span class="subcat-prefix">↳ ${escapeHtml(activeCategory)} 子分類（可複選）：</span>
-          <button type="button" class="pill ${isAllSubSelected ? 'active' : ''}" data-subcat="ALL" style="padding:4px 10px; font-size:0.76rem;">
-            <span>全部</span>
-            <span class="count">${subCounts.ALL}</span>
-          </button>
-          ${subList.map(s => {
-            const isChecked = activeSubcategories.includes(s);
-            return `
-              <button type="button" class="pill ${isChecked ? 'active' : ''}" data-subcat="${escapeHtml(s)}" style="padding:4px 10px; font-size:0.76rem;">
-                <span>${isChecked ? '✓ ' : ''}${escapeHtml(s)}</span>
-                <span class="count">${subCounts[s] || 0}</span>
+          <div class="subcat-bar-top">
+            <span class="subcat-prefix">↳ ${escapeHtml(activeCategory)} 子分類篩選（可打勾複選）：</span>
+            <div style="display:flex; align-items:center; gap:6px; flex-wrap:wrap;">
+              <button type="button" class="pill ${isAllSubSelected ? 'active' : ''}" data-subcat="ALL" style="padding:3px 9px; font-size:0.74rem;">
+                <span>全部</span>
+                <span class="count">${subCounts.ALL}</span>
               </button>
-            `;
-          }).join('')}
-          ${modeBtnHtml}
-          <button type="button" class="pill" id="headerAddSubcatPillBtn" style="padding:4px 10px; font-size:0.76rem; color:var(--accent); border-style:dashed;">
-            <span>＋ 新增子分類</span>
-          </button>
+              ${modeBtnHtml}
+              ${subList.length === 0 && hasDefaults ? `
+                <button type="button" class="pill" id="headerRestoreDefaultSubsBtn" style="padding:3px 9px; font-size:0.73rem; color:var(--accent);">
+                  <span>✨ 恢復預設</span>
+                </button>
+              ` : ''}
+              <button type="button" class="pill" id="headerAddSubcatPillBtn" style="padding:3px 9px; font-size:0.74rem; color:var(--accent); border-style:dashed;">
+                <span>＋ 新增子分類</span>
+              </button>
+            </div>
+          </div>
+          <div id="headerInlineNewSubcatBox" style="display:none; gap:6px; align-items:center; flex-wrap:wrap; width:100%;">
+            <input type="text" id="headerInlineNewSubcatInput" class="form-control" placeholder="輸入「${escapeHtml(activeCategory)}」的新子分類名稱..." style="flex:1; min-width:140px; padding:5px 10px; font-size:14px;">
+            <button type="button" class="btn btn-primary" id="headerInlineConfirmSubcatBtn" style="padding:5px 12px; font-size:0.78rem;">建立</button>
+            <button type="button" class="btn" id="headerInlineCancelSubcatBtn" style="padding:5px 10px; font-size:0.78rem;">✕</button>
+          </div>
+          <div class="subcat-pills-wrap">
+            ${subList.length > 0 ? subList.map(s => {
+              const isChecked = activeSubcategories.includes(s);
+              return `
+                <label class="cat-choice-pill" style="padding:4px 9px; font-size:0.76rem;">
+                  <input type="checkbox" data-filter-subcat="${escapeHtml(s)}" ${isChecked ? 'checked' : ''}>
+                  <span>${escapeHtml(s)}</span>
+                  <span class="count" style="font-size:0.68rem; background:rgba(120,110,105,0.14); padding:0 5px; border-radius:99px;">${subCounts[s] || 0}</span>
+                  <button type="button" class="subcat-del-btn" data-inline-del-parent="${escapeHtml(activeCategory)}" data-inline-del-sub="${escapeHtml(s)}" title="刪除此子分類">✕</button>
+                </label>
+              `;
+            }).join('') : `<span style="font-size:0.75rem; color:var(--text-muted);">目前尚無子分類，點右上方「＋ 新增子分類」建立！</span>`}
+          </div>
         `;
 
-        subcategoryFilterRow.querySelectorAll('.pill[data-subcat]').forEach(btn => {
-          btn.addEventListener('click', () => {
-            const clicked = btn.dataset.subcat;
-            if (clicked === 'ALL') {
-              activeSubcategories = [];
+        const allSubBtn = subcategoryFilterRow.querySelector('.pill[data-subcat="ALL"]');
+        if (allSubBtn) {
+          allSubBtn.addEventListener('click', () => {
+            activeSubcategories = [];
+            quickSelectedCategories = [activeCategory];
+            quickSelectedSubcategories = [];
+            renderCategorySelects();
+            renderFilters();
+            renderCards();
+          });
+        }
+
+        subcategoryFilterRow.querySelectorAll('input[data-filter-subcat]').forEach(cb => {
+          cb.addEventListener('change', () => {
+            const subName = cb.dataset.filterSubcat;
+            if (cb.checked) {
+              if (!activeSubcategories.includes(subName)) activeSubcategories.push(subName);
             } else {
-              if (activeSubcategories.includes(clicked)) {
-                activeSubcategories = activeSubcategories.filter(x => x !== clicked);
-              } else {
-                activeSubcategories.push(clicked);
-              }
+              activeSubcategories = activeSubcategories.filter(x => x !== subName);
             }
             quickSelectedCategories = [activeCategory];
             quickSelectedSubcategories = activeSubcategories.map(s => makeSubKey(activeCategory, s));
@@ -2463,6 +2839,21 @@
             renderCards();
           });
         });
+
+        subcategoryFilterRow.querySelectorAll('[data-inline-del-sub]').forEach(btn => {
+          btn.addEventListener('click', (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            deleteSubcategory(btn.dataset.inlineDelParent, btn.dataset.inlineDelSub);
+          });
+        });
+
+        const restoreBtn = document.getElementById('headerRestoreDefaultSubsBtn');
+        if (restoreBtn) {
+          restoreBtn.addEventListener('click', () => {
+            restoreDefaultSubcategoriesFor(activeCategory);
+          });
+        }
 
         const modeToggleBtn = document.getElementById('toggleSubcatMatchModeBtn');
         if (modeToggleBtn) {
@@ -2474,17 +2865,41 @@
         }
 
         const headerAddSubBtn = document.getElementById('headerAddSubcatPillBtn');
-        if (headerAddSubBtn) {
+        const headerInlineBox = document.getElementById('headerInlineNewSubcatBox');
+        const headerInlineInput = document.getElementById('headerInlineNewSubcatInput');
+        const headerInlineConfirm = document.getElementById('headerInlineConfirmSubcatBtn');
+        const headerInlineCancel = document.getElementById('headerInlineCancelSubcatBtn');
+
+        if (headerAddSubBtn && headerInlineBox && headerInlineInput) {
           headerAddSubBtn.addEventListener('click', () => {
-            const subName = prompt(`請輸入「${activeCategory}」的新子分類名稱（例如：🧥 秋冬穿搭、👖 顯高褲裝）：`);
-            if (subName && subName.trim()) {
-              const cleanSub = subName.trim();
-              createAndSelectSubcategory(activeCategory, cleanSub, false);
-              if (!activeSubcategories.includes(cleanSub)) {
-                activeSubcategories.push(cleanSub);
-              }
-              renderFilters();
-              renderCards();
+            headerInlineBox.style.display = 'flex';
+            headerInlineInput.value = '';
+            setTimeout(() => headerInlineInput.focus(), 40);
+          });
+        }
+        if (headerInlineCancel && headerInlineBox) {
+          headerInlineCancel.addEventListener('click', () => {
+            headerInlineBox.style.display = 'none';
+          });
+        }
+        const submitHeaderNewSub = () => {
+          const cleanSub = (headerInlineInput ? headerInlineInput.value : '').trim();
+          if (!cleanSub) return;
+          createAndSelectSubcategory(activeCategory, cleanSub, false);
+          if (!activeSubcategories.includes(cleanSub)) {
+            activeSubcategories.push(cleanSub);
+          }
+          renderFilters();
+          renderCards();
+        };
+        if (headerInlineConfirm) {
+          headerInlineConfirm.addEventListener('click', submitHeaderNewSub);
+        }
+        if (headerInlineInput) {
+          headerInlineInput.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter') {
+              e.preventDefault();
+              submitHeaderNewSub();
             }
           });
         }
@@ -2810,6 +3225,39 @@
       }
     });
 
+    const quickInlineNewSubcatBox = document.getElementById('quickInlineNewSubcatBox');
+    const quickInlineNewSubcatParentSelect = document.getElementById('quickInlineNewSubcatParentSelect');
+    const quickInlineNewSubcatInput = document.getElementById('quickInlineNewSubcatInput');
+
+    function submitQuickInlineNewSubcat() {
+      if (!quickInlineNewSubcatInput) return;
+      const parentCat = (quickInlineNewSubcatParentSelect && quickInlineNewSubcatParentSelect.value) || quickSelectedCategories[0] || getCategories()[0];
+      const val = quickInlineNewSubcatInput.value.trim();
+      if (!val) return;
+      createAndSelectSubcategory(parentCat, val, false);
+      if (quickInlineNewSubcatBox) quickInlineNewSubcatBox.style.display = 'none';
+      quickInlineNewSubcatInput.value = '';
+    }
+
+    const quickInlineConfirmBtn = document.getElementById('quickInlineConfirmSubcatBtn');
+    const quickInlineCancelBtn = document.getElementById('quickInlineCancelSubcatBtn');
+    if (quickInlineConfirmBtn) {
+      quickInlineConfirmBtn.addEventListener('click', submitQuickInlineNewSubcat);
+    }
+    if (quickInlineCancelBtn && quickInlineNewSubcatBox) {
+      quickInlineCancelBtn.addEventListener('click', () => {
+        quickInlineNewSubcatBox.style.display = 'none';
+      });
+    }
+    if (quickInlineNewSubcatInput) {
+      quickInlineNewSubcatInput.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter') {
+          e.preventDefault();
+          submitQuickInlineNewSubcat();
+        }
+      });
+    }
+
     function showInlineNewSubcatBox() {
       inlineNewSubcatBox.style.display = 'flex';
       inlineNewSubcatInput.value = '';
@@ -3020,66 +3468,95 @@
 
     function renderCategoryManager() {
       const cats = getCategories();
-      catListContainer.innerHTML = cats.map(c => {
+      catListContainer.innerHTML = cats.map((c, idx) => {
         const subs = getSubcategoriesFor(c);
+        const hasDefaults = getDefaultSubsForCategoryName(c).length > 0;
         const subsHtml = subs.map(s => `
-          <span style="display:inline-flex; align-items:center; gap:4px; padding:3px 9px; border-radius:99px; background:var(--surface); border:1px solid var(--border); font-size:0.75rem; font-weight:600;">
+          <span style="display:inline-flex; align-items:center; gap:4px; padding:4px 10px; border-radius:99px; background:var(--surface); border:1px solid var(--border); font-size:0.76rem; font-weight:600;">
             <span>↳ ${escapeHtml(s)}</span>
-            <button type="button" data-del-sub-parent="${escapeHtml(c)}" data-del-sub-name="${escapeHtml(s)}" style="border:none; background:none; color:var(--danger); cursor:pointer; font-size:0.75rem; padding:0 2px;" title="刪除子分類">✕</button>
+            <button type="button" data-del-sub-parent="${escapeHtml(c)}" data-del-sub-name="${escapeHtml(s)}" style="border:none; background:rgba(185,28,28,0.1); color:var(--danger); cursor:pointer; font-size:0.72rem; width:18px; height:18px; border-radius:99px; display:inline-flex; align-items:center; justify-content:center; padding:0;" title="刪除子分類">✕</button>
           </span>
         `).join('');
 
         return `
-          <div style="display:flex; flex-direction:column; gap:6px; padding:10px 12px; background:var(--bg); border-radius:10px; border:1px solid var(--border);">
-            <div style="display:flex; align-items:center; justify-content:space-between; gap:8px;">
+          <div style="display:flex; flex-direction:column; gap:8px; padding:10px 12px; background:var(--bg); border-radius:10px; border:1px solid var(--border);">
+            <div style="display:flex; align-items:center; justify-content:space-between; gap:8px; flex-wrap:wrap;">
               <span style="font-weight:700;">${escapeHtml(c)}</span>
-              <div style="display:flex; gap:6px;">
-                <button type="button" class="card-action-btn" data-add-sub-for="${escapeHtml(c)}" style="color:var(--accent);">＋ 新增子分類</button>
+              <div style="display:flex; gap:6px; align-items:center;">
+                ${subs.length === 0 && hasDefaults ? `<button type="button" class="card-action-btn" data-restore-sub-for="${escapeHtml(c)}" style="color:var(--accent);">✨ 恢復預設</button>` : ''}
+                <button type="button" class="card-action-btn" data-toggle-sub-input="${idx}" style="color:var(--accent);">＋ 新增子分類</button>
                 <button type="button" class="card-action-btn danger" data-del-cat="${escapeHtml(c)}">刪除分類</button>
               </div>
             </div>
+            <div id="catMgrSubInputRow-${idx}" style="display:none; gap:6px; align-items:center;">
+              <input type="text" id="catMgrSubInput-${idx}" data-sub-input-parent="${escapeHtml(c)}" class="form-control" placeholder="輸入「${escapeHtml(c)}」的新子分類..." style="flex:1; padding:5px 10px; font-size:14px;">
+              <button type="button" class="btn btn-primary" data-confirm-sub-idx="${idx}" data-confirm-sub-parent="${escapeHtml(c)}" style="padding:5px 12px; font-size:0.78rem;">建立</button>
+            </div>
             <div style="display:flex; flex-wrap:wrap; gap:6px;">
-              ${subsHtml || '<span style="font-size:0.74rem; color:var(--text-muted);">尚無子分類</span>'}
+              ${subsHtml || '<span style="font-size:0.74rem; color:var(--text-muted);">尚無子分類（點右上「＋ 新增子分類」建立）</span>'}
             </div>
           </div>
         `;
       }).join('');
 
-      catListContainer.querySelectorAll('[data-add-sub-for]').forEach(btn => {
+      catListContainer.querySelectorAll('[data-toggle-sub-input]').forEach(btn => {
         btn.addEventListener('click', () => {
-          const parentCat = btn.dataset.addSubFor;
-          const name = prompt(`請輸入「${parentCat}」的新子分類名稱（例如：🧥 秋冬穿搭）：`);
-          if (name && name.trim()) {
-            createAndSelectSubcategory(parentCat, name.trim(), false);
+          const idx = btn.dataset.toggleSubInput;
+          const row = document.getElementById(`catMgrSubInputRow-${idx}`);
+          const inp = document.getElementById(`catMgrSubInput-${idx}`);
+          if (row && inp) {
+            row.style.display = row.style.display === 'flex' ? 'none' : 'flex';
+            if (row.style.display === 'flex') {
+              inp.value = '';
+              setTimeout(() => inp.focus(), 40);
+            }
+          }
+        });
+      });
+
+      catListContainer.querySelectorAll('[data-confirm-sub-idx]').forEach(btn => {
+        btn.addEventListener('click', () => {
+          const idx = btn.dataset.confirmSubIdx;
+          const parentCat = btn.dataset.confirmSubParent;
+          const inp = document.getElementById(`catMgrSubInput-${idx}`);
+          const val = (inp ? inp.value : '').trim();
+          if (!val) return;
+          createAndSelectSubcategory(parentCat, val, false);
+          renderCategoryManager();
+        });
+      });
+
+      catListContainer.querySelectorAll('[id^="catMgrSubInput-"]').forEach(inp => {
+        inp.addEventListener('keydown', (e) => {
+          if (e.key === 'Enter') {
+            e.preventDefault();
+            const parentCat = inp.dataset.subInputParent;
+            const val = inp.value.trim();
+            if (!val) return;
+            createAndSelectSubcategory(parentCat, val, false);
             renderCategoryManager();
           }
+        });
+      });
+
+      catListContainer.querySelectorAll('[data-restore-sub-for]').forEach(btn => {
+        btn.addEventListener('click', () => {
+          restoreDefaultSubcategoriesFor(btn.dataset.restoreSubFor);
         });
       });
 
       catListContainer.querySelectorAll('[data-del-sub-name]').forEach(btn => {
-        btn.addEventListener('click', () => {
-          const p = btn.dataset.delSubParent;
-          const s = btn.dataset.delSubName;
-          const map = getSubcategoriesMap();
-          if (Array.isArray(map[p])) {
-            map[p] = map[p].filter(x => x !== s);
-            saveSubcategoriesMap(map);
-            renderCategoryManager();
-            refreshApp();
-            triggerCloudSyncInBackground();
-          }
+        btn.addEventListener('click', (e) => {
+          e.preventDefault();
+          e.stopPropagation();
+          deleteSubcategory(btn.dataset.delSubParent, btn.dataset.delSubName);
         });
       });
 
       catListContainer.querySelectorAll('[data-del-cat]').forEach(btn => {
-        btn.addEventListener('click', () => {
-          const target = btn.dataset.delCat;
-          const updated = getCategories().filter(x => x !== target);
-          if (updated.length === 0) return alert('至少要保留一個分類喔！');
-          saveCategories(updated);
-          renderCategoryManager();
-          refreshApp();
-          triggerCloudSyncInBackground();
+        btn.addEventListener('click', (e) => {
+          e.preventDefault();
+          deleteCategory(btn.dataset.delCat);
         });
       });
     }
@@ -3096,15 +3573,9 @@
       const input = document.getElementById('newCatInput');
       const val = input.value.trim();
       if (!val) return;
-      const cats = getCategories();
-      if (!cats.includes(val)) {
-        cats.push(val);
-        saveCategories(cats);
-      }
+      createAndSelectCategory(val, false);
       input.value = '';
       renderCategoryManager();
-      refreshApp();
-      triggerCloudSyncInBackground();
     });
 
     const syncDialog = document.getElementById('syncDialog');
@@ -3308,7 +3779,15 @@
     });
 
     if ('serviceWorker' in navigator && location.protocol.startsWith('http')) {
-      navigator.serviceWorker.register('./sw.js').catch(() => {});
+      let swRefreshing = false;
+      navigator.serviceWorker.addEventListener('controllerchange', () => {
+        if (swRefreshing) return;
+        swRefreshing = true;
+        window.location.reload();
+      });
+      navigator.serviceWorker.register('./sw.js').then((reg) => {
+        reg.update().catch(() => {});
+      }).catch(() => {});
     }
 
     (async () => {
