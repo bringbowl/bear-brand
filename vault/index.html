@@ -2085,7 +2085,8 @@
     // =========================================================================
     let allItems = [];
     let activeCategory = 'ALL';
-    let activeSubcategory = 'ALL';
+    let activeSubcategories = [];
+    let subcatFilterMode = 'AND'; // 'AND' (同時符合) or 'OR' (符合任一)
     let activePlatform = 'ALL';
     let searchQuery = '';
     let currentEditingImageData = '';
@@ -2372,7 +2373,7 @@
         btn.addEventListener('click', () => {
           const nextCat = btn.dataset.cat;
           if (activeCategory !== nextCat) {
-            activeSubcategory = 'ALL';
+            activeSubcategories = [];
           }
           activeCategory = nextCat;
           if (activeCategory !== 'ALL') {
@@ -2395,9 +2396,11 @@
         });
       }
 
-      // Render Subcategory Bar when a specific category (e.g. 👗 150穿搭) is active!
+      // Render Multi-Select Subcategory Filter Bar when a specific category (e.g. 👗 150穿搭, 食譜) is active!
       if (activeCategory !== 'ALL') {
         const subList = getSubcategoriesFor(activeCategory);
+        activeSubcategories = activeSubcategories.filter(s => subList.includes(s));
+
         const itemsInActiveCat = allItems.filter(it => getItemCategories(it).includes(activeCategory));
         const subCounts = { ALL: itemsInActiveCat.length };
         subList.forEach(s => { subCounts[s] = 0; });
@@ -2412,19 +2415,30 @@
           });
         });
 
+        const isAllSubSelected = activeSubcategories.length === 0;
+        const modeBtnHtml = activeSubcategories.length >= 2 ? `
+          <button type="button" class="pill" id="toggleSubcatMatchModeBtn" style="padding:4px 9px; font-size:0.73rem; background:#FFF7ED; color:#C2410C; border-color:#FDBA74;" title="點此切換「同時符合全部勾選」或「符合任一勾選」">
+            <span>${subcatFilterMode === 'AND' ? '🎯 同時符合' : '➕ 符合任一'}</span>
+          </button>
+        ` : '';
+
         subcategoryFilterRow.style.display = 'flex';
         subcategoryFilterRow.innerHTML = `
-          <span class="subcat-prefix">↳ ${escapeHtml(activeCategory)} 子分類：</span>
-          <button type="button" class="pill ${activeSubcategory === 'ALL' ? 'active' : ''}" data-subcat="ALL" style="padding:4px 10px; font-size:0.76rem;">
+          <span class="subcat-prefix">↳ ${escapeHtml(activeCategory)} 子分類（可複選）：</span>
+          <button type="button" class="pill ${isAllSubSelected ? 'active' : ''}" data-subcat="ALL" style="padding:4px 10px; font-size:0.76rem;">
             <span>全部</span>
             <span class="count">${subCounts.ALL}</span>
           </button>
-          ${subList.map(s => `
-            <button type="button" class="pill ${activeSubcategory === s ? 'active' : ''}" data-subcat="${escapeHtml(s)}" style="padding:4px 10px; font-size:0.76rem;">
-              <span>${escapeHtml(s)}</span>
-              <span class="count">${subCounts[s] || 0}</span>
-            </button>
-          `).join('')}
+          ${subList.map(s => {
+            const isChecked = activeSubcategories.includes(s);
+            return `
+              <button type="button" class="pill ${isChecked ? 'active' : ''}" data-subcat="${escapeHtml(s)}" style="padding:4px 10px; font-size:0.76rem;">
+                <span>${isChecked ? '✓ ' : ''}${escapeHtml(s)}</span>
+                <span class="count">${subCounts[s] || 0}</span>
+              </button>
+            `;
+          }).join('')}
+          ${modeBtnHtml}
           <button type="button" class="pill" id="headerAddSubcatPillBtn" style="padding:4px 10px; font-size:0.76rem; color:var(--accent); border-style:dashed;">
             <span>＋ 新增子分類</span>
           </button>
@@ -2432,18 +2446,32 @@
 
         subcategoryFilterRow.querySelectorAll('.pill[data-subcat]').forEach(btn => {
           btn.addEventListener('click', () => {
-            activeSubcategory = btn.dataset.subcat;
-            if (activeSubcategory !== 'ALL') {
-              quickSelectedCategories = [activeCategory];
-              quickSelectedSubcategories = [makeSubKey(activeCategory, activeSubcategory)];
+            const clicked = btn.dataset.subcat;
+            if (clicked === 'ALL') {
+              activeSubcategories = [];
             } else {
-              quickSelectedSubcategories = [];
+              if (activeSubcategories.includes(clicked)) {
+                activeSubcategories = activeSubcategories.filter(x => x !== clicked);
+              } else {
+                activeSubcategories.push(clicked);
+              }
             }
+            quickSelectedCategories = [activeCategory];
+            quickSelectedSubcategories = activeSubcategories.map(s => makeSubKey(activeCategory, s));
             renderCategorySelects();
             renderFilters();
             renderCards();
           });
         });
+
+        const modeToggleBtn = document.getElementById('toggleSubcatMatchModeBtn');
+        if (modeToggleBtn) {
+          modeToggleBtn.addEventListener('click', () => {
+            subcatFilterMode = subcatFilterMode === 'AND' ? 'OR' : 'AND';
+            renderFilters();
+            renderCards();
+          });
+        }
 
         const headerAddSubBtn = document.getElementById('headerAddSubcatPillBtn');
         if (headerAddSubBtn) {
@@ -2452,7 +2480,9 @@
             if (subName && subName.trim()) {
               const cleanSub = subName.trim();
               createAndSelectSubcategory(activeCategory, cleanSub, false);
-              activeSubcategory = cleanSub;
+              if (!activeSubcategories.includes(cleanSub)) {
+                activeSubcategories.push(cleanSub);
+              }
               renderFilters();
               renderCards();
             }
@@ -2460,7 +2490,7 @@
         }
       } else {
         subcategoryFilterRow.style.display = 'none';
-        activeSubcategory = 'ALL';
+        activeSubcategories = [];
       }
 
       const platCounts = { ALL: allItems.length };
@@ -2500,9 +2530,15 @@
         const itemCats = getItemCategories(item);
         const itemSubs = getItemSubcategories(item);
         if (activeCategory !== 'ALL' && !itemCats.includes(activeCategory)) return false;
-        if (activeCategory !== 'ALL' && activeSubcategory !== 'ALL') {
-          const targetKey = makeSubKey(activeCategory, activeSubcategory);
-          if (!itemSubs.includes(targetKey)) return false;
+        if (activeCategory !== 'ALL' && activeSubcategories.length > 0) {
+          const targetKeys = activeSubcategories.map(s => makeSubKey(activeCategory, s));
+          if (subcatFilterMode === 'AND') {
+            const matchesAll = targetKeys.every(tk => itemSubs.includes(tk));
+            if (!matchesAll) return false;
+          } else {
+            const matchesAny = targetKeys.some(tk => itemSubs.includes(tk));
+            if (!matchesAny) return false;
+          }
         }
         if (activePlatform !== 'ALL' && item.platform !== activePlatform) return false;
         if (q) {

@@ -7,7 +7,8 @@ self.addEventListener('activate', (e) => {
 });
 
 self.addEventListener('fetch', (e) => {
+  const fetchOpts = e.request.mode === 'navigate' ? { cache: 'no-cache' } : {};
   e.respondWith(
-    fetch(e.request).catch(() => caches.match(e.request))
+    fetch(e.request, fetchOpts).catch(() => caches.match(e.request))
   );
 });
