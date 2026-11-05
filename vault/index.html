@@ -1125,8 +1125,8 @@
       </div>
 
       <div class="form-group">
-        <label for="itemTitleInput">標題（可自由修改）</label>
-        <input type="text" id="itemTitleInput" class="form-control" placeholder="例如：150cm 秋冬風衣穿搭..." required>
+        <label for="itemTitleInput">標題（留空會自動抓取貼文標題）</label>
+        <input type="text" id="itemTitleInput" class="form-control" placeholder="留空自動抓取，或自由修改標題...">
       </div>
 
       <div class="form-group">
@@ -1149,7 +1149,7 @@
 
       <div style="display:flex; justify-content:flex-end; gap:10px; margin-top:4px;">
         <button type="button" class="btn" id="cancelItemDialogBtn" style="flex:1;">取消</button>
-        <button type="submit" class="btn btn-primary" style="flex:2;">💾 儲存收藏</button>
+        <button type="submit" class="btn btn-primary" id="saveItemSubmitBtn" style="flex:2;">💾 儲存收藏</button>
       </div>
     </form>
   </dialog>
@@ -1945,8 +1945,12 @@
     function isGenericPlatformTitle(t) {
       const s = String(t || '').trim();
       if (!s) return true;
-      if (/^(instagram|threads|pinterest|小紅書|小红书)$/i.test(s)) return true;
-      if (/on instagram/i.test(s) || /instagram photos and videos/i.test(s) || /•\s*instagram/i.test(s)) return true;
+      if (/^(instagram|threads|pinterest|小紅書|小红书|security verification|login|登入|登录)$/i.test(s)) return true;
+      if (/小红书\s*-\s*你的生活兴趣社区/i.test(s)) return true;
+      if (/^(instagram|threads|pinterest|小紅書)\s+收藏貼文$/i.test(s)) return true;
+      if (/^instagram photos and videos$/i.test(s)) return true;
+      if (/^post isn't available/i.test(s)) return true;
+      if (/^explore the best of pinterest$/i.test(s)) return true;
       return false;
     }
 
@@ -1973,31 +1977,128 @@
     async function proxyAndPersistImageUrl(rawImageUrl) {
       if (!rawImageUrl) return '';
       if (rawImageUrl.startsWith('data:')) return rawImageUrl;
-      const cleanUrl = decodeHtmlEntities(rawImageUrl.trim());
+      const cleanUrl = decodeHtmlEntities(String(rawImageUrl).trim());
       if (!cleanUrl.startsWith('http')) return '';
 
-      const needsProxy = /cdninstagram\.com|fbcdn\.net|instagram\.com|xhscdn\.com|xiaohongshu\.com/i.test(cleanUrl);
       const wsrvUrl = `https://wsrv.nl/?url=${encodeURIComponent(cleanUrl)}&w=560&output=jpg&q=78`;
+      const wpProxyUrl = `https://i0.wp.com/${cleanUrl.replace(/^https?:\/\//i, '')}?w=560&quality=78`;
 
-      if (needsProxy) {
+      for (const candidateProxy of [wsrvUrl, wpProxyUrl]) {
         try {
-          const resp = await fetch(wsrvUrl);
+          const resp = await fetch(candidateProxy);
           if (resp.ok) {
             const blob = await resp.blob();
-            if (blob && blob.size > 800 && blob.size < 220000) {
+            if (blob && blob.size > 600 && blob.size < 350000) {
               const dataUrl = await new Promise((resolve) => {
                 const reader = new FileReader();
-                reader.onloadend = () => resolve(reader.result || wsrvUrl);
-                reader.onerror = () => resolve(wsrvUrl);
+                reader.onloadend = () => resolve(reader.result || candidateProxy);
+                reader.onerror = () => resolve(candidateProxy);
                 reader.readAsDataURL(blob);
               });
-              return dataUrl;
+              if (dataUrl && String(dataUrl).startsWith('data:image/')) {
+                return dataUrl;
+              }
             }
+            return candidateProxy;
           }
         } catch (e) {}
-        return wsrvUrl;
       }
-      return cleanUrl;
+
+      const needsProxy = /cdninstagram\.com|fbcdn\.net|instagram\.com|xhscdn\.com|xiaohongshu\.com/i.test(cleanUrl);
+      return needsProxy ? wsrvUrl : cleanUrl;
+    }
+
+    function isAvatarOrIconUrl(u) {
+      if (!u || typeof u !== 'string' || !u.startsWith('http')) return true;
+      return /s150x150|s240x240|p240x240|rsrc\.php|logo_transparent|favicon|profile_pic|apple-touch-icon|144x144/i.test(u);
+    }
+
+    async function fetchJinaJson(targetUrl) {
+      if (!targetUrl) return null;
+      try {
+        const res = await fetch(`https://r.jina.ai/${targetUrl}`, {
+          headers: {
+            'Accept': 'application/json',
+            'X-With-Images-Summary': 'true'
+          }
+        });
+        if (!res.ok) return null;
+        const json = await res.json();
+        return (json && json.data) ? json.data : null;
+      } catch (e) {
+        return null;
+      }
+    }
+
+    function cleanSocialOgText(rawTitle, rawDesc) {
+      let caption = decodeHtmlEntities(String(rawDesc || '').trim());
+      let username = '';
+
+      // Strip "18 likes, 5 comments - username on Month Day, Year: \"...\""
+      const mDesc = caption.match(/^\d[\d,]*\s+likes?,\s*\d[\d,]*\s+comments?\s*-\s*([A-Za-z0-9._]+)\s+on\s+[^:]+:\s*"([\s\S]*)"\.?\s*$/i);
+      if (mDesc) {
+        username = mDesc[1];
+        caption = mDesc[2].trim();
+      }
+
+      let title = decodeHtmlEntities(String(rawTitle || '').trim());
+      // Strip "Display Name on Instagram: \"...\"" or "Display Name (@user) on Threads: \"...\""
+      const mTitle = title.match(/^(.+?)\s+on\s+(?:Instagram|Threads)(?:\s*:\s*"([\s\S]*)")?$/i);
+      if (mTitle) {
+        const authorPart = mTitle[1].trim();
+        const userInAuthor = authorPart.match(/\(@([A-Za-z0-9._]+)\)/);
+        if (!username) username = userInAuthor ? userInAuthor[1] : authorPart;
+        if (mTitle[2] && !caption) caption = mTitle[2].trim();
+        title = '';
+      }
+
+      // Also strip "• Instagram reel/photos and videos"
+      if (/•\s*Instagram/i.test(title) || /•\s*Threads/i.test(title)) {
+        const userM = title.match(/\(@([A-Za-z0-9._]+)\)/);
+        if (!username && userM) username = userM[1];
+        title = '';
+      }
+
+      const lines = caption.split('\n').map(l => l.trim()).filter(Boolean);
+      const firstLine = lines[0] || '';
+      let finalTitle = '';
+      if (firstLine) {
+        finalTitle = (username && !firstLine.includes(username) && username.length <= 24)
+          ? `${firstLine} (@${username})`
+          : firstLine;
+      } else if (title && !isGenericPlatformTitle(title)) {
+        finalTitle = title;
+      } else if (username) {
+        finalTitle = `@${username} 的貼文`;
+      }
+
+      return {
+        title: finalTitle.slice(0, 100),
+        description: caption
+      };
+    }
+
+    function pickBestImageFromJinaData(d) {
+      if (!d) return '';
+      const meta = d.metadata || {};
+      const ogImg = Array.isArray(meta['og:image']) ? meta['og:image'][0] : meta['og:image'];
+      const twImg = Array.isArray(meta['twitter:image']) ? meta['twitter:image'][0] : (meta['twitter:image'] || meta['twitter:image:src']);
+
+      if (!isAvatarOrIconUrl(ogImg)) return ogImg;
+      if (!isAvatarOrIconUrl(twImg)) return twImg;
+
+      const imgs = (d.images && typeof d.images === 'object') ? d.images : {};
+      for (const [k, u] of Object.entries(imgs)) {
+        if (/Instagram post shared by|^Image 2\b/i.test(k) && !isAvatarOrIconUrl(u)) {
+          return u;
+        }
+      }
+      for (const [k, u] of Object.entries(imgs)) {
+        if (!/profile picture|avatar|logo/i.test(k) && !isAvatarOrIconUrl(u)) {
+          return u;
+        }
+      }
+      return '';
     }
 
     function parseJinaInstagramEmbed(md) {
@@ -2009,14 +2110,19 @@
       else if (userM2) username = userM2[1];
 
       let rawImg = '';
-      const img2Match = md.match(/!\[Image 2:[^\]]*\]\((https:\/\/[^\s)]+)\)/i);
-      if (img2Match) {
-        rawImg = img2Match[1];
-      } else {
-        const allImgs = Array.from(md.matchAll(/!\[Image \d+[^\]]*\]\((https:\/\/[^\s)]+)\)/gi));
+      const allImgs = Array.from(md.matchAll(/!\[Image (\d+)(?::[\s\S]*?)?\]\((https:\/\/[^\s)]+)\)/gi));
+      for (const m of allImgs) {
+        const idx = Number(m[1]);
+        const u = m[2];
+        if (idx === 2 && !isAvatarOrIconUrl(u)) {
+          rawImg = u;
+          break;
+        }
+      }
+      if (!rawImg) {
         for (const m of allImgs) {
-          const u = m[1];
-          if (!u.includes('s150x150') && !u.includes('p240x240') && !u.includes('rsrc.php')) {
+          const u = m[2];
+          if (!isAvatarOrIconUrl(u)) {
             rawImg = u;
             break;
           }
@@ -2046,7 +2152,7 @@
       const lines = captionBlock
         .split('\n')
         .map(l => l.trim())
-        .filter(l => l && !/^(\d[\d,]*\s+likes?|Original audio|View profile|View more on Instagram)$/i.test(l));
+        .filter(l => l && !/^(\d[\d,]*\s+likes?|Original audio|View profile|View more on Instagram|The link to this photo or video may be broken.*)$/i.test(l));
 
       const fullCaption = lines.join('\n');
       const firstLine = lines[0] || (username ? `@${username} 的 IG Reels / 貼文` : '');
@@ -2059,193 +2165,224 @@
       };
     }
 
-    function parseJinaThreadsEmbed(md) {
-      if (!md) return null;
-      let username = '';
-      const userM = md.match(/\[([A-Za-z0-9._]+)\]\(https:\/\/www\.threads\.(?:com|net)\/@[A-Za-z0-9._]+/i);
-      if (userM) username = userM[1];
+    async function fetchInstagramReelOrPostMetadata(shortcode, originalUrl = '') {
+      let bestTitle = '';
+      let bestDesc = '';
+      let bestRawImg = '';
 
-      let rawImg = '';
-      const allImgs = Array.from(md.matchAll(/!\[Image (\d+)[^\]]*\]\((https:\/\/[^\s)]+)\)/gi));
-      for (const m of allImgs) {
-        const idx = Number(m[1]);
-        const u = m[2];
-        if (idx >= 2 && !u.includes('s150x150') && !u.includes('rsrc.php')) {
-          rawImg = u;
-          break;
+      // Strategy 1: Jina JSON on direct post URL (extracts og:image, twitter:image, og:title, og:description directly!)
+      const directPostUrl = `https://www.instagram.com/p/${shortcode}/`;
+      const jinaDirect = await fetchJinaJson(directPostUrl);
+      if (jinaDirect) {
+        bestRawImg = pickBestImageFromJinaData(jinaDirect);
+        const meta = jinaDirect.metadata || {};
+        const cleaned = cleanSocialOgText(
+          meta['og:title'] || meta['twitter:title'] || jinaDirect.title,
+          meta['og:description'] || meta['description'] || jinaDirect.description
+        );
+        if (cleaned.title) bestTitle = cleaned.title;
+        if (cleaned.description) bestDesc = cleaned.description;
+      }
+
+      // Strategy 2: Jina JSON + Markdown on public captioned embed (if image or caption still missing)
+      if (!bestRawImg || !bestTitle) {
+        const embedUrl = `https://www.instagram.com/p/${shortcode}/embed/captioned/`;
+        const jinaEmbed = await fetchJinaJson(embedUrl);
+        if (jinaEmbed) {
+          if (!bestRawImg) {
+            bestRawImg = pickBestImageFromJinaData(jinaEmbed);
+          }
+          if (jinaEmbed.content) {
+            const parsedMd = parseJinaInstagramEmbed(jinaEmbed.content);
+            if (parsedMd) {
+              if (!bestRawImg && parsedMd.rawImage) bestRawImg = parsedMd.rawImage;
+              if (!bestTitle && parsedMd.title) bestTitle = parsedMd.title;
+              if (!bestDesc && parsedMd.description) bestDesc = parsedMd.description;
+            }
+          }
         }
       }
 
-      let bodyBlock = '';
-      const followSplit = md.split(/\[Follow\]\([^)]+\)\s*\n+/i);
-      if (followSplit.length > 1) {
-        bodyBlock = followSplit[1].split(/\n+!\[Image|\n+\d{1,2}:\d{2}\s*(?:AM|PM)|\n+View on Threads/i)[0] || '';
+      // Strategy 3: Plain text Jina reader on public captioned embed
+      if (!bestRawImg) {
+        try {
+          const embedUrl = `https://www.instagram.com/p/${shortcode}/embed/captioned/`;
+          const jinaRes = await fetch(`https://r.jina.ai/${embedUrl}`);
+          if (jinaRes.ok) {
+            const md = await jinaRes.text();
+            const parsed = parseJinaInstagramEmbed(md);
+            if (parsed) {
+              if (!bestRawImg && parsed.rawImage) bestRawImg = parsed.rawImage;
+              if (!bestTitle && parsed.title) bestTitle = parsed.title;
+              if (!bestDesc && parsed.description) bestDesc = parsed.description;
+            }
+          }
+        } catch (e) {}
       }
-      bodyBlock = bodyBlock.replace(/\[([^\]]+)\]\([^)]+\)/g, '$1').trim();
-      const lines = bodyBlock.split('\n').map(l => l.trim()).filter(Boolean);
-      const firstLine = lines[0] || (username ? `@${username} 的 Threads 貼文` : '');
 
-      if (!rawImg && !firstLine) return null;
+      if (!bestRawImg && !bestTitle) return null;
+      const finalImg = bestRawImg ? await proxyAndPersistImageUrl(bestRawImg) : '';
       return {
-        title: firstLine ? (username && !firstLine.includes(username) ? `${firstLine} (@${username})` : firstLine) : '',
-        description: lines.join('\n'),
-        rawImage: rawImg
+        title: bestTitle,
+        description: bestDesc,
+        image: finalImg
       };
     }
 
-    async function fetchInstagramReelOrPostMetadata(shortcode) {
-      const embedUrl = `https://www.instagram.com/p/${shortcode}/embed/captioned/`;
+    async function fetchThreadsPostMetadata(shortcode, originalUrl = '') {
+      let bestTitle = '';
+      let bestDesc = '';
+      let bestRawImg = '';
 
-      // Strategy 1: r.jina.ai reader on public captioned embed (fast, CORS-enabled, no tight 429 limit)
-      try {
-        const jinaRes = await fetch(`https://r.jina.ai/${embedUrl}`);
-        if (jinaRes.ok) {
-          const md = await jinaRes.text();
-          const parsed = parseJinaInstagramEmbed(md);
-          if (parsed && (parsed.rawImage || parsed.title)) {
-            const finalImg = parsed.rawImage ? await proxyAndPersistImageUrl(parsed.rawImage) : '';
-            return {
-              title: parsed.title,
-              description: parsed.description,
-              image: finalImg
-            };
+      // Strategy 1: Jina JSON on direct Threads post URL (returns og:image, og:description, and images["Image 2"])
+      const targetUrl = originalUrl || `https://www.threads.com/t/${shortcode}`;
+      const jinaDirect = await fetchJinaJson(targetUrl);
+      if (jinaDirect) {
+        bestRawImg = pickBestImageFromJinaData(jinaDirect);
+        const meta = jinaDirect.metadata || {};
+        const cleaned = cleanSocialOgText(
+          meta['og:title'] || meta['twitter:title'] || jinaDirect.title,
+          meta['og:description'] || meta['description'] || jinaDirect.description
+        );
+        if (cleaned.title) bestTitle = cleaned.title;
+        if (cleaned.description) bestDesc = cleaned.description;
+      }
+
+      // Strategy 2: Jina JSON on Threads /embed endpoint if image or title still missing
+      if ((!bestRawImg || !bestTitle) && shortcode) {
+        const embedData = await fetchJinaJson(`https://www.threads.net/t/${shortcode}/embed`);
+        if (embedData) {
+          if (!bestRawImg) bestRawImg = pickBestImageFromJinaData(embedData);
+          if (!bestTitle && embedData.content) {
+            const lines = String(embedData.content).split('\n').map(l => l.trim()).filter(Boolean);
+            if (lines[0] && !isGenericPlatformTitle(lines[0])) bestTitle = lines[0].slice(0, 90);
           }
         }
-      } catch (e) {}
+      }
 
-      // Strategy 2: Microlink with custom CSS selectors on public captioned embed
-      try {
-        const apiUrl =
-          `https://api.microlink.io/?url=${encodeURIComponent(embedUrl)}` +
-          `&data.caption.selector=.Caption` +
-          `&data.username.selector=.UsernameText` +
-          `&data.embedImg.selector=.EmbeddedMediaImage` +
-          `&data.embedImg.attr=src`;
-        const res = await fetch(apiUrl);
-        if (res.ok) {
-          const json = await res.json();
-          if (json && json.status === 'success' && json.data) {
-            const d = json.data;
-            const username = String(d.username || '').trim();
-            const captionText = cleanEmbedHtmlToText(d.caption || '');
-            const lines = captionText.split('\n').filter(Boolean);
-            const firstLine = lines[0] || (username ? `@${username} 的 IG Reels / 貼文` : '');
-            const rawEmbedImg = (typeof d.embedImg === 'string' ? d.embedImg : (d.embedImg && d.embedImg.url)) ||
-              (d.image && d.image.url && !d.image.url.includes('s150x150') ? d.image.url : '');
-            const finalImg = rawEmbedImg ? await proxyAndPersistImageUrl(rawEmbedImg) : '';
-            return {
-              title: firstLine ? (username && !firstLine.includes(username) ? `${firstLine} (@${username})` : firstLine) : '',
-              description: captionText,
-              image: finalImg
-            };
-          }
-        }
-      } catch (e) {}
-
-      return null;
+      if (!bestRawImg && !bestTitle) return null;
+      const finalImg = bestRawImg ? await proxyAndPersistImageUrl(bestRawImg) : '';
+      return {
+        title: bestTitle,
+        description: bestDesc,
+        image: finalImg
+      };
     }
 
-    async function fetchThreadsPostMetadata(shortcode) {
-      const embedUrl = `https://www.threads.net/t/${shortcode}/embed`;
-
-      // Strategy 1: r.jina.ai reader on Threads public embed
-      try {
-        const jinaRes = await fetch(`https://r.jina.ai/${embedUrl}`);
-        if (jinaRes.ok) {
-          const md = await jinaRes.text();
-          const parsed = parseJinaThreadsEmbed(md);
-          if (parsed && (parsed.rawImage || parsed.title)) {
-            const finalImg = parsed.rawImage ? await proxyAndPersistImageUrl(parsed.rawImage) : '';
-            return {
-              title: parsed.title,
-              description: parsed.description,
-              image: finalImg
-            };
-          }
-        }
-      } catch (e) {}
-
-      // Strategy 2: Microlink with custom selectors on Threads public embed
-      try {
-        const apiUrl =
-          `https://api.microlink.io/?url=${encodeURIComponent(embedUrl)}` +
-          `&data.caption.selector=.BodyTextContainer` +
-          `&data.username.selector=.AuthorIdentity` +
-          `&data.embedImg.selector=.MediaContainer%20img,.SingleInnerMediaContainer%20img` +
-          `&data.embedImg.attr=src`;
-        const res = await fetch(apiUrl);
-        if (res.ok) {
-          const json = await res.json();
-          if (json && json.status === 'success' && json.data) {
-            const d = json.data;
-            const username = cleanEmbedHtmlToText(d.username || '').split('\n')[0] || '';
-            const captionText = cleanEmbedHtmlToText(d.caption || '');
-            const firstLine = captionText.split('\n')[0] || (username ? `@${username} 的 Threads 貼文` : '');
-            const rawEmbedImg = (typeof d.embedImg === 'string' ? d.embedImg : (d.embedImg && d.embedImg.url)) || '';
-            const finalImg = rawEmbedImg ? await proxyAndPersistImageUrl(rawEmbedImg) : '';
-            return {
-              title: firstLine ? (username && !firstLine.includes(username) ? `${firstLine} (@${username})` : firstLine) : '',
-              description: captionText,
-              image: finalImg
-            };
-          }
-        }
-      } catch (e) {}
-
-      return null;
+    function extractIgShortcodeFromUrl(u) {
+      if (!u) return '';
+      // Exclude /share/ paths because /share/reel/{token} uses a redirect token, not a post shortcode
+      const m = String(u).match(/(?:instagram\.com|instagr\.am)\/(?:(?!share\/)[A-Za-z0-9._-]+\/)?(?:reel|reels|p|tv)\/([A-Za-z0-9_-]+)/i);
+      return (m && m[1]) ? m[1] : '';
     }
 
     async function fetchUrlMetadata(url) {
       if (!url) return null;
 
-      // 1. Instagram Reel / Post / TV public embed extraction (bypasses IG login wall & grabs Reel cover + caption)
-      const igMatch = url.match(/(?:instagram\.com|instagr\.am)\/(?:[^\/]+\/)?(?:reel|reels|p|tv)\/([A-Za-z0-9_-]+)/i);
-      if (igMatch && igMatch[1]) {
-        const igMeta = await fetchInstagramReelOrPostMetadata(igMatch[1]);
-        if (igMeta && (igMeta.title || igMeta.image)) {
-          return igMeta;
+      // 1. Instagram Reel / Post / Share link extraction
+      if (/instagram\.com|instagr\.am/i.test(url)) {
+        let shortcode = extractIgShortcodeFromUrl(url);
+        let fallbackTitle = '';
+        let fallbackDesc = '';
+        let fallbackRawImg = '';
+
+        // If it is an Instagram /share/ link or shortlink without a direct shortcode, resolve via Jina JSON first!
+        if (!shortcode) {
+          const resolvedData = await fetchJinaJson(url);
+          if (resolvedData) {
+            shortcode = extractIgShortcodeFromUrl(resolvedData.finalUrl || resolvedData.url || '');
+            fallbackRawImg = pickBestImageFromJinaData(resolvedData);
+            const meta = resolvedData.metadata || {};
+            const cleaned = cleanSocialOgText(
+              meta['og:title'] || resolvedData.title,
+              meta['og:description'] || meta['description'] || resolvedData.description
+            );
+            fallbackTitle = cleaned.title;
+            fallbackDesc = cleaned.description;
+          }
+        }
+
+        if (shortcode) {
+          const igMeta = await fetchInstagramReelOrPostMetadata(shortcode, url);
+          if (igMeta && igMeta.image) {
+            return igMeta;
+          }
+          if (igMeta) {
+            if (!fallbackTitle && igMeta.title) fallbackTitle = igMeta.title;
+            if (!fallbackDesc && igMeta.description) fallbackDesc = igMeta.description;
+          }
+        }
+
+        if (fallbackRawImg || fallbackTitle) {
+          const finalImg = fallbackRawImg ? await proxyAndPersistImageUrl(fallbackRawImg) : '';
+          return {
+            title: fallbackTitle,
+            description: fallbackDesc,
+            image: finalImg
+          };
         }
       }
 
-      // 2. Threads Post public embed extraction
-      const thMatch = url.match(/threads\.(?:net|com)\/(?:@[^\/]+\/post|t)\/([A-Za-z0-9_-]+)/i);
-      if (thMatch && thMatch[1]) {
-        const thMeta = await fetchThreadsPostMetadata(thMatch[1]);
-        if (thMeta && (thMeta.title || thMeta.image)) {
+      // 2. Threads Post extraction
+      if (/threads\.(?:net|com)/i.test(url)) {
+        const thMatch = url.match(/threads\.(?:net|com)\/(?:@[^\/]+\/post|t)\/([A-Za-z0-9_-]+)/i);
+        const shortcode = (thMatch && thMatch[1]) ? thMatch[1] : '';
+        const thMeta = await fetchThreadsPostMetadata(shortcode, url);
+        if (thMeta && (thMeta.image || thMeta.title)) {
           return thMeta;
         }
       }
 
-      // 3. Standard Microlink extraction (Pinterest, Xiaohongshu, Web, or IG /share/ redirect links)
-      try {
-        const apiUrl = `https://api.microlink.io/?url=${encodeURIComponent(url)}`;
-        const res = await fetch(apiUrl);
-        if (res.ok) {
-          const json = await res.json();
-          if (json && json.status === 'success' && json.data) {
-            const resolvedUrl = json.data.url || '';
-            // If an IG /share/reel/ link resolved to /reel/{shortcode}/, run the IG embed extractor!
-            if (!igMatch && resolvedUrl) {
-              const resolvedIg = resolvedUrl.match(/(?:instagram\.com|instagr\.am)\/(?:[^\/]+\/)?(?:reel|reels|p|tv)\/([A-Za-z0-9_-]+)/i);
-              if (resolvedIg && resolvedIg[1]) {
-                const igMeta2 = await fetchInstagramReelOrPostMetadata(resolvedIg[1]);
-                if (igMeta2 && (igMeta2.title || igMeta2.image)) {
-                  return igMeta2;
-                }
+      // 3. Pinterest / Xiaohongshu / Web extraction: combine Jina JSON + Microlink for maximum reliability
+      let bestTitle = '';
+      let bestDesc = '';
+      let bestRawImg = '';
+
+      // 3a. Try Jina JSON first (resolves xhslink.com, pin.it, and extracts og:image + page images)
+      const jinaData = await fetchJinaJson(url);
+      if (jinaData) {
+        bestRawImg = pickBestImageFromJinaData(jinaData);
+        const meta = jinaData.metadata || {};
+        const rawT = meta['og:title'] || meta['twitter:title'] || jinaData.title || '';
+        const rawD = meta['og:description'] || meta['description'] || jinaData.description || '';
+        if (!isGenericPlatformTitle(rawT)) {
+          bestTitle = decodeHtmlEntities(String(rawT).trim()).replace(/\s*-\s*小紅書.*|\s*-\s*小红书.*/i, '');
+        }
+        if (rawD && !isGenericPlatformTitle(rawD)) {
+          bestDesc = decodeHtmlEntities(String(rawD).trim());
+        }
+      }
+
+      // 3b. If image or title is still missing, try Microlink
+      if (!bestRawImg || !bestTitle) {
+        try {
+          const apiUrl = `https://api.microlink.io/?url=${encodeURIComponent(url)}`;
+          const res = await fetch(apiUrl);
+          if (res.ok) {
+            const json = await res.json();
+            if (json && json.status === 'success' && json.data) {
+              const mImg = (json.data.image && json.data.image.url) || '';
+              if (!bestRawImg && mImg && !isAvatarOrIconUrl(mImg)) {
+                bestRawImg = mImg;
+              }
+              if (!bestTitle && json.data.title && !isGenericPlatformTitle(json.data.title)) {
+                bestTitle = json.data.title;
+              }
+              if (!bestDesc && json.data.description && !isGenericPlatformTitle(json.data.description)) {
+                bestDesc = json.data.description;
               }
             }
-            const rawImg = (json.data.image && json.data.image.url) || (json.data.logo && json.data.logo.url) || '';
-            const finalImg = rawImg ? await proxyAndPersistImageUrl(rawImg) : '';
-            const cleanTitle = isGenericPlatformTitle(json.data.title) ? '' : (json.data.title || '');
-            return {
-              title: cleanTitle,
-              description: json.data.description || '',
-              image: finalImg
-            };
           }
-        }
-      } catch (err) {}
-      return null;
+        } catch (err) {}
+      }
+
+      if (!bestRawImg && !bestTitle) return null;
+      const finalImg = bestRawImg ? await proxyAndPersistImageUrl(bestRawImg) : '';
+      return {
+        title: bestTitle,
+        description: bestDesc,
+        image: finalImg
+      };
     }
 
     function compressImageFile(file, maxWidth = 860, quality = 0.78) {
@@ -2313,11 +2450,63 @@
       return [];
     }
 
+    const autoHealAttemptedIds = new Set();
+    let isAutoHealingThumbnails = false;
+
+    async function healMissingThumbnailsInBackground() {
+      if (isAutoHealingThumbnails) return;
+      const candidates = allItems.filter(it => {
+        if (!it || !it.id || String(it.id).startsWith('demo-')) return false;
+        if (!it.url || !it.url.startsWith('http')) return false;
+        if (autoHealAttemptedIds.has(it.id)) return false;
+        const img = String(it.image || '');
+        const isMissingOrFallback = !img || img.startsWith('data:image/svg+xml');
+        const isExpiredRawSocialCdn = img.startsWith('http') && /cdninstagram\.com|fbcdn\.net/i.test(img) && !img.includes('wsrv.nl');
+        return isMissingOrFallback || isExpiredRawSocialCdn;
+      });
+      if (!candidates.length) return;
+
+      isAutoHealingThumbnails = true;
+      let anyUpdated = false;
+      try {
+        for (const item of candidates.slice(0, 6)) {
+          autoHealAttemptedIds.add(item.id);
+          try {
+            const meta = await fetchUrlMetadata(item.url);
+            if (meta && meta.image) {
+              const latest = allItems.find(x => x.id === item.id) || item;
+              const updated = {
+                ...latest,
+                image: meta.image,
+                updatedAt: Date.now()
+              };
+              if (meta.title && (isGenericPlatformTitle(updated.title) || updated.title.endsWith('收藏貼文') || updated.title === '未命名靈感')) {
+                updated.title = meta.title;
+              }
+              if (meta.description && !updated.note) {
+                updated.note = meta.description.slice(0, 120);
+              }
+              await putItemLocal(updated);
+              anyUpdated = true;
+            }
+          } catch (e) {}
+        }
+        if (anyUpdated) {
+          allItems = await getAllItems();
+          renderCards();
+          triggerCloudSyncInBackground();
+        }
+      } finally {
+        isAutoHealingThumbnails = false;
+      }
+    }
+
     async function refreshApp() {
       allItems = await getAllItems();
       renderCategorySelects();
       renderFilters();
       renderCards();
+      healMissingThumbnailsInBackground();
     }
 
     function renderCategorySelects() {
@@ -3008,8 +3197,9 @@
               <p class="card-note">${escapeHtml(item.note || '')}</p>
             </div>
             <footer>
-              <div style="display:flex; gap:2px;">
+              <div style="display:flex; gap:2px; flex-wrap:wrap;">
                 <button type="button" class="card-action-btn" data-edit-id="${escapeHtml(item.id)}" title="換圖、改標題或調整多個分類">✏️ 編輯/分類</button>
+                ${item.url ? `<button type="button" class="card-action-btn" data-refetch-id="${escapeHtml(item.id)}" title="重新自動抓取貼文縮圖與標題">🔄 抓圖</button>` : ''}
                 <button type="button" class="card-action-btn" data-lightbox-id="${escapeHtml(item.id)}" title="放大看圖">🔍</button>
               </div>
               <button type="button" class="card-action-btn danger" data-delete-id="${escapeHtml(item.id)}" title="刪除">🗑️</button>
@@ -3020,6 +3210,35 @@
 
       cardsGrid.querySelectorAll('[data-edit-id]').forEach(btn => {
         btn.addEventListener('click', () => openEditModal(btn.dataset.editId));
+      });
+      cardsGrid.querySelectorAll('[data-refetch-id]').forEach(btn => {
+        btn.addEventListener('click', async () => {
+          const id = btn.dataset.refetchId;
+          const item = allItems.find(x => x.id === id);
+          if (!item || !item.url) return;
+          const origText = btn.textContent;
+          btn.disabled = true;
+          btn.textContent = '⏳ 抓圖中...';
+          try {
+            const meta = await fetchUrlMetadata(item.url);
+            if (meta && (meta.image || meta.title)) {
+              const updated = { ...item, updatedAt: Date.now() };
+              if (meta.image) updated.image = meta.image;
+              if (meta.title && (isGenericPlatformTitle(updated.title) || updated.title.endsWith('收藏貼文') || updated.title === '未命名靈感')) {
+                updated.title = meta.title;
+              }
+              if (meta.description && !updated.note) {
+                updated.note = meta.description.slice(0, 120);
+              }
+              await putItem(updated);
+              await refreshApp();
+              return;
+            }
+          } catch (e) {}
+          btn.disabled = false;
+          btn.textContent = origText;
+          openEditModal(id);
+        });
       });
       cardsGrid.querySelectorAll('[data-lightbox-id]').forEach(btn => {
         btn.addEventListener('click', () => openLightbox(btn.dataset.lightboxId));
@@ -3298,12 +3517,17 @@
       }
     }
 
+    let activeModalFetchPromise = null;
+    let lastFetchedModalUrl = '';
+    let modalInputDebounceTimer = null;
+
     function openAddModal(prefill = {}) {
       document.getElementById('itemDialogTitle').textContent = '✨ 新增靈感收藏';
       inlineNewCatBox.style.display = 'none';
       inlineNewSubcatBox.style.display = 'none';
       itemIdInput.value = '';
       itemRawInput.value = prefill.url || '';
+      lastFetchedModalUrl = '';
       modalSelectedCategories = Array.isArray(prefill.categories) && prefill.categories.length
         ? [...prefill.categories]
         : (prefill.category ? [prefill.category] : [...quickSelectedCategories]);
@@ -3332,21 +3556,26 @@
       inlineNewSubcatBox.style.display = 'none';
       itemIdInput.value = item.id;
       itemRawInput.value = item.url || '';
+      lastFetchedModalUrl = item.url || '';
       modalSelectedCategories = [...getItemCategories(item)];
       modalSelectedSubcategories = [...getItemSubcategories(item)];
       renderCategorySelects();
       itemPlatformInput.value = item.platform;
       itemTitleInput.value = item.title;
       itemNoteInput.value = item.note || '';
-      itemImageUrlInput.value = (item.image && item.image.startsWith('http')) ? item.image : '';
+      const hasRealImage = item.image && !item.image.startsWith('data:image/svg+xml');
+      itemImageUrlInput.value = (hasRealImage && item.image.startsWith('http')) ? item.image : '';
       fetchStatusBanner.style.display = 'none';
-      setModalPreviewImage(item.image || '');
+      setModalPreviewImage(hasRealImage ? item.image : '');
       itemDialog.showModal();
+      if (!hasRealImage && item.url) {
+        triggerModalMetadataFetch(true);
+      }
     }
 
-    async function triggerModalMetadataFetch() {
+    function triggerModalMetadataFetch(force = false) {
       const raw = itemRawInput.value.trim();
-      if (!raw) return;
+      if (!raw) return Promise.resolve(null);
       const { url, extractedTitle, platform } = parseSharedInput(raw);
       if (url) {
         itemRawInput.value = url;
@@ -3355,37 +3584,66 @@
       if (extractedTitle && !isGenericPlatformTitle(extractedTitle) && isGenericPlatformTitle(itemTitleInput.value)) {
         itemTitleInput.value = extractedTitle;
       }
-      if (!url) return;
+      if (!url) return Promise.resolve(null);
+      if (!force && activeModalFetchPromise && lastFetchedModalUrl === url) {
+        return activeModalFetchPromise;
+      }
+      lastFetchedModalUrl = url;
 
       fetchStatusBanner.style.display = 'block';
       fetchStatusBanner.textContent = '⏳ 正在自動抓取貼文縮圖與標題...';
-      const meta = await fetchUrlMetadata(url);
-      if (meta) {
-        if (meta.title && isGenericPlatformTitle(itemTitleInput.value)) {
-          itemTitleInput.value = meta.title;
+
+      const p = (async () => {
+        try {
+          const meta = await fetchUrlMetadata(url);
+          if (meta) {
+            if (meta.title && (isGenericPlatformTitle(itemTitleInput.value) || itemTitleInput.value.endsWith('收藏貼文'))) {
+              itemTitleInput.value = meta.title;
+            }
+            const currentImgIsWeak =
+              !currentEditingImageData ||
+              currentEditingImageData.startsWith('data:image/svg+xml') ||
+              currentEditingImageData.includes('s150x150') ||
+              currentEditingImageData.includes('rsrc.php') ||
+              (currentEditingImageData.startsWith('http') && /cdninstagram\.com|fbcdn\.net/i.test(currentEditingImageData) && !currentEditingImageData.includes('wsrv.nl'));
+            if (meta.image && (force || currentImgIsWeak)) {
+              setModalPreviewImage(meta.image);
+              itemImageUrlInput.value = meta.image.startsWith('http') ? meta.image : '';
+            }
+            if (meta.description && !itemNoteInput.value.trim()) {
+              itemNoteInput.value = meta.description.slice(0, 220);
+            }
+            fetchStatusBanner.textContent = meta.image
+              ? '✅ 已自動抓到貼文 / Reels 封面縮圖與標題！'
+              : '💡 已辨識連結！若平台鎖圖，可點下方選取手機截圖。';
+          } else {
+            fetchStatusBanner.textContent = '💡 已辨識連結！若平台鎖圖，可點下方選取手機截圖。';
+          }
+          return meta;
+        } finally {
+          if (activeModalFetchPromise === p) {
+            activeModalFetchPromise = null;
+          }
         }
-        const currentImgIsWeak =
-          !currentEditingImageData ||
-          currentEditingImageData.includes('s150x150') ||
-          currentEditingImageData.includes('rsrc.php') ||
-          (currentEditingImageData.startsWith('http') && /cdninstagram\.com|fbcdn\.net/i.test(currentEditingImageData));
-        if (meta.image && currentImgIsWeak) {
-          setModalPreviewImage(meta.image);
-          itemImageUrlInput.value = meta.image.startsWith('http') ? meta.image : '';
-        }
-        if (meta.description && !itemNoteInput.value.trim()) {
-          itemNoteInput.value = meta.description.slice(0, 220);
-        }
-        fetchStatusBanner.textContent = meta.image
-          ? '✅ 已自動抓到貼文 / Reels 封面縮圖與標題！'
-          : '💡 已辨識連結！若平台鎖圖，可點下方選取手機截圖。';
-      } else {
-        fetchStatusBanner.textContent = '💡 已辨識連結！若平台鎖圖，可點下方選取手機截圖。';
-      }
+      })();
+      activeModalFetchPromise = p;
+      return p;
     }
 
-    itemRawInput.addEventListener('change', triggerModalMetadataFetch);
-    document.getElementById('fetchMetaBtn').addEventListener('click', triggerModalMetadataFetch);
+    itemRawInput.addEventListener('change', () => triggerModalMetadataFetch());
+    itemRawInput.addEventListener('paste', () => {
+      setTimeout(() => triggerModalMetadataFetch(), 60);
+    });
+    itemRawInput.addEventListener('input', () => {
+      clearTimeout(modalInputDebounceTimer);
+      modalInputDebounceTimer = setTimeout(() => {
+        const val = itemRawInput.value.trim();
+        if (/https?:\/\/[^\s]+/i.test(val) && val !== lastFetchedModalUrl) {
+          triggerModalMetadataFetch();
+        }
+      }, 350);
+    });
+    document.getElementById('fetchMetaBtn').addEventListener('click', () => triggerModalMetadataFetch(true));
 
     itemImageFileInput.addEventListener('change', async (e) => {
       const file = e.target.files && e.target.files[0];
@@ -3408,14 +3666,41 @@
       itemImageFileInput.value = '';
     });
 
+    const saveItemSubmitBtn = document.getElementById('saveItemSubmitBtn');
+
     itemForm.addEventListener('submit', async (e) => {
       e.preventDefault();
+      clearTimeout(modalInputDebounceTimer);
       const existingId = itemIdInput.value;
       const raw = itemRawInput.value.trim();
-      const { url } = parseSharedInput(raw);
+      const { url, extractedTitle, platform: detectedPlat } = parseSharedInput(raw);
       const finalUrl = url || (raw.startsWith('http') ? raw : '');
-      const platform = itemPlatformInput.value;
-      const title = itemTitleInput.value.trim() || '未命名靈感';
+
+      if (finalUrl && (!currentEditingImageData || currentEditingImageData.startsWith('data:image/svg+xml') || activeModalFetchPromise)) {
+        if (saveItemSubmitBtn) {
+          saveItemSubmitBtn.disabled = true;
+          saveItemSubmitBtn.textContent = '⏳ 正在自動抓圖並儲存...';
+        }
+        try {
+          if (activeModalFetchPromise) {
+            await activeModalFetchPromise;
+          } else {
+            await triggerModalMetadataFetch(true);
+          }
+        } catch (err) {}
+        if (saveItemSubmitBtn) {
+          saveItemSubmitBtn.disabled = false;
+          saveItemSubmitBtn.textContent = '💾 儲存收藏';
+        }
+      }
+
+      const platform = itemPlatformInput.value || detectedPlat || 'web';
+      let title = itemTitleInput.value.trim();
+      if (!title || isGenericPlatformTitle(title)) {
+        title = (!isGenericPlatformTitle(extractedTitle) && extractedTitle)
+          ? extractedTitle
+          : (finalUrl ? `${(PLATFORM_INFO[platform] || PLATFORM_INFO.web).label} 收藏貼文` : '未命名靈感');
+      }
       const chosenCats = modalSelectedCategories.length > 0 ? [...modalSelectedCategories] : [getCategories()[0]];
       const chosenSubs = modalSelectedSubcategories.filter(sk => chosenCats.includes(parseSubKey(sk).parent));
       const note = itemNoteInput.value.trim();
@@ -3611,7 +3896,7 @@
       }
     });
 
-    const BOOKMARKLET_CODE = `javascript:(function(){var v=document.querySelector('video[poster]');var img=(v&&v.poster&&v.poster.indexOf('http')===0)?v.poster:((document.querySelector('meta[property="og:image"]')||{}).content||'');if(!img||img.indexOf('http')!==0||img.indexOf('s150x150')>-1){var imgs=Array.from(document.images).filter(function(i){return i.src&&i.src.indexOf('http')===0&&i.src.indexOf('s150x150')===-1&&i.width>180&&i.height>180;});img=imgs.length?imgs[0].src:'';}var u='https://bringbowl.github.io/bear-brand/vault/?url='+encodeURIComponent(location.href)+'&title='+encodeURIComponent(document.title)+'&image='+encodeURIComponent(img);if(!window.open(u,'_blank'))location.href=u;})();`;
+    const BOOKMARKLET_CODE = `javascript:(function(){var v=document.querySelector('video[poster]');var og=document.querySelector('meta[property="og:image"],meta[name="og:image"],meta[name="twitter:image"]');var img=(v&&v.poster&&v.poster.indexOf('http')===0)?v.poster:((og||{}).content||'');if(!img||img.indexOf('http')!==0||img.indexOf('s150x150')>-1){var imgs=Array.from(document.images).filter(function(i){return i.src&&i.src.indexOf('http')===0&&i.src.indexOf('s150x150')===-1&&i.width>180&&i.height>180;});img=imgs.length?imgs[0].src:'';}var u='https://bringbowl.github.io/bear-brand/vault/?url='+encodeURIComponent(location.href)+'&title='+encodeURIComponent(document.title)+'&image='+encodeURIComponent(img);if(!window.open(u,'_blank'))location.href=u;})();`;
 
     const bmLinkEl = document.getElementById('bookmarkletLink');
     bmLinkEl.setAttribute('href', BOOKMARKLET_CODE);
