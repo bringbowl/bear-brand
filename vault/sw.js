@@ -1,4 +1,4 @@
-// v5 - Network-first with cache cleanup & thumbnail auto-fetch upgrade
+// v6 - Network-first with cache cleanup & fast non-blocking save
 self.addEventListener('install', (e) => {
   self.skipWaiting();
 });

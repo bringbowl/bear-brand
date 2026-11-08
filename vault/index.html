@@ -1459,29 +1459,83 @@
       });
     }
 
+    let inMemoryItemsMap = new Map();
+
+    function getFallbackLocalItems() {
+      try {
+        const list = JSON.parse(localStorage.getItem('winnie_vault_fallback_items') || '[]');
+        return Array.isArray(list) ? list : [];
+      } catch (e) {
+        return [];
+      }
+    }
+
+    function saveFallbackLocalItems(list) {
+      try {
+        // Strip large base64 data URLs only in localStorage fallback if needed so we never exceed 5MB localStorage quota
+        const lightList = list.slice(0, 150).map(it => {
+          if (!it) return null;
+          if (it.image && it.image.startsWith('data:image/') && it.image.length > 35000) {
+            return { ...it, image: makeCoverDataUrl(it.title, it.platform) };
+          }
+          return it;
+        }).filter(Boolean);
+        localStorage.setItem('winnie_vault_fallback_items', JSON.stringify(lightList));
+      } catch (e) {}
+    }
+
     async function getAllItems() {
-      const db = await openDB();
-      return new Promise((resolve, reject) => {
-        const tx = db.transaction(STORE_ITEMS, 'readonly');
-        const req = tx.objectStore(STORE_ITEMS).getAll();
-        req.onsuccess = () => {
-          const list = req.result || [];
-          list.sort((a, b) => b.createdAt - a.createdAt);
-          resolve(list);
-        };
-        req.onerror = () => reject(req.error);
-      });
+      let idbList = [];
+      try {
+        const db = await openDB();
+        idbList = await new Promise((resolve, reject) => {
+          const tx = db.transaction(STORE_ITEMS, 'readonly');
+          const req = tx.objectStore(STORE_ITEMS).getAll();
+          req.onsuccess = () => resolve(req.result || []);
+          req.onerror = () => reject(req.error);
+        });
+      } catch (e) {
+        console.warn('IndexedDB read fallback:', e);
+      }
+      const fbList = getFallbackLocalItems();
+      const map = new Map();
+      for (const it of fbList) {
+        if (it && it.id) map.set(it.id, it);
+      }
+      for (const [id, it] of inMemoryItemsMap.entries()) {
+        if (it && id) map.set(id, it);
+      }
+      for (const it of idbList) {
+        if (it && it.id) {
+          const existing = map.get(it.id);
+          if (!existing || (it.updatedAt || 0) >= (existing.updatedAt || 0)) {
+            map.set(it.id, it);
+          }
+        }
+      }
+      const list = Array.from(map.values());
+      list.sort((a, b) => (b.createdAt || 0) - (a.createdAt || 0));
+      return list;
     }
 
     async function putItemLocal(item) {
       item.updatedAt = item.updatedAt || Date.now();
-      const db = await openDB();
-      return new Promise((resolve, reject) => {
-        const tx = db.transaction(STORE_ITEMS, 'readwrite');
-        tx.objectStore(STORE_ITEMS).put(item);
-        tx.oncomplete = () => resolve(item);
-        tx.onerror = () => reject(tx.error);
-      });
+      inMemoryItemsMap.set(item.id, item);
+      try {
+        const db = await openDB();
+        await new Promise((resolve, reject) => {
+          const tx = db.transaction(STORE_ITEMS, 'readwrite');
+          tx.objectStore(STORE_ITEMS).put(item);
+          tx.oncomplete = () => resolve(item);
+          tx.onerror = () => reject(tx.error);
+        });
+      } catch (e) {
+        console.warn('IndexedDB write fallback:', e);
+      }
+      const fbList = getFallbackLocalItems().filter(x => x && x.id !== item.id);
+      fbList.unshift(item);
+      saveFallbackLocalItems(fbList);
+      return item;
     }
 
     async function putItem(item) {
@@ -1491,13 +1545,18 @@
     }
 
     async function deleteItemByIdLocal(id) {
-      const db = await openDB();
-      return new Promise((resolve, reject) => {
-        const tx = db.transaction(STORE_ITEMS, 'readwrite');
-        tx.objectStore(STORE_ITEMS).delete(id);
-        tx.oncomplete = () => resolve();
-        tx.onerror = () => reject(tx.error);
-      });
+      inMemoryItemsMap.delete(id);
+      try {
+        const db = await openDB();
+        await new Promise((resolve, reject) => {
+          const tx = db.transaction(STORE_ITEMS, 'readwrite');
+          tx.objectStore(STORE_ITEMS).delete(id);
+          tx.oncomplete = () => resolve();
+          tx.onerror = () => reject(tx.error);
+        });
+      } catch (e) {}
+      const fbList = getFallbackLocalItems().filter(x => x && x.id !== id);
+      saveFallbackLocalItems(fbList);
     }
 
     async function deleteItemById(id) {
@@ -1902,12 +1961,16 @@
     // =========================================================================
     function parseSharedInput(rawText) {
       const trimmed = (rawText || '').trim();
-      const urlMatch = trimmed.match(/https?:\/\/[^\s，。！!）】」"']+/i);
-      const url = urlMatch ? urlMatch[0] : '';
+      const urlMatch = trimmed.match(/https?:\/\/[^\s，。！!）】」"']+/i)
+        || trimmed.match(/(?:www\.)?(?:instagram\.com|instagr\.am|threads\.(?:net|com)|xiaohongshu\.com|xhslink\.com|pinterest\.com|pin\.it)\/[^\s，。！!）】」"']+/i);
+      let url = urlMatch ? urlMatch[0] : '';
+      if (url && !/^https?:\/\//i.test(url)) {
+        url = 'https://' + url;
+      }
 
       let extractedTitle = '';
-      if (url) {
-        let rest = trimmed.replace(url, '').trim();
+      if (urlMatch) {
+        let rest = trimmed.replace(urlMatch[0], '').trim();
         rest = rest
           .replace(/複製後打開【小紅書】查看筆記！?/g, '')
           .replace(/复制后打开【小红书】查看笔记！?/g, '')
@@ -1974,6 +2037,20 @@
         .join('\n');
     }
 
+    function fetchWithTimeout(resource, options = {}, timeoutMs = 4200) {
+      const controller = new AbortController();
+      const timer = setTimeout(() => controller.abort(), timeoutMs);
+      return fetch(resource, { ...options, signal: controller.signal })
+        .finally(() => clearTimeout(timer));
+    }
+
+    function withOverallTimeout(promise, timeoutMs = 6000) {
+      return Promise.race([
+        promise,
+        new Promise((resolve) => setTimeout(() => resolve(null), timeoutMs))
+      ]);
+    }
+
     async function proxyAndPersistImageUrl(rawImageUrl) {
       if (!rawImageUrl) return '';
       if (rawImageUrl.startsWith('data:')) return rawImageUrl;
@@ -1985,7 +2062,7 @@
 
       for (const candidateProxy of [wsrvUrl, wpProxyUrl]) {
         try {
-          const resp = await fetch(candidateProxy);
+          const resp = await fetchWithTimeout(candidateProxy, {}, 3500);
           if (resp.ok) {
             const blob = await resp.blob();
             if (blob && blob.size > 600 && blob.size < 350000) {
@@ -2016,12 +2093,12 @@
     async function fetchJinaJson(targetUrl) {
       if (!targetUrl) return null;
       try {
-        const res = await fetch(`https://r.jina.ai/${targetUrl}`, {
+        const res = await fetchWithTimeout(`https://r.jina.ai/${targetUrl}`, {
           headers: {
             'Accept': 'application/json',
             'X-With-Images-Summary': 'true'
           }
-        });
+        }, 4200);
         if (!res.ok) return null;
         const json = await res.json();
         return (json && json.data) ? json.data : null;
@@ -2207,7 +2284,7 @@
       if (!bestRawImg) {
         try {
           const embedUrl = `https://www.instagram.com/p/${shortcode}/embed/captioned/`;
-          const jinaRes = await fetch(`https://r.jina.ai/${embedUrl}`);
+          const jinaRes = await fetchWithTimeout(`https://r.jina.ai/${embedUrl}`, {}, 3800);
           if (jinaRes.ok) {
             const md = await jinaRes.text();
             const parsed = parseJinaInstagramEmbed(md);
@@ -2357,7 +2434,7 @@
       if (!bestRawImg || !bestTitle) {
         try {
           const apiUrl = `https://api.microlink.io/?url=${encodeURIComponent(url)}`;
-          const res = await fetch(apiUrl);
+          const res = await fetchWithTimeout(apiUrl, {}, 3500);
           if (res.ok) {
             const json = await res.json();
             if (json && json.status === 'success' && json.data) {
@@ -2383,6 +2460,10 @@
         description: bestDesc,
         image: finalImg
       };
+    }
+
+    async function fetchUrlMetadataSafe(url, maxWaitMs = 5500) {
+      return withOverallTimeout(fetchUrlMetadata(url), maxWaitMs);
     }
 
     function compressImageFile(file, maxWidth = 860, quality = 0.78) {
@@ -2469,10 +2550,10 @@
       isAutoHealingThumbnails = true;
       let anyUpdated = false;
       try {
-        for (const item of candidates.slice(0, 6)) {
+        for (const item of candidates.slice(0, 4)) {
           autoHealAttemptedIds.add(item.id);
           try {
-            const meta = await fetchUrlMetadata(item.url);
+            const meta = await fetchUrlMetadataSafe(item.url, 6000);
             if (meta && meta.image) {
               const latest = allItems.find(x => x.id === item.id) || item;
               const updated = {
@@ -3220,7 +3301,7 @@
           btn.disabled = true;
           btn.textContent = '⏳ 抓圖中...';
           try {
-            const meta = await fetchUrlMetadata(item.url);
+            const meta = await fetchUrlMetadataSafe(item.url, 6500);
             if (meta && (meta.image || meta.title)) {
               const updated = { ...item, updatedAt: Date.now() };
               if (meta.image) updated.image = meta.image;
@@ -3279,45 +3360,73 @@
       quickSaveBtn.disabled = true;
       quickSaveBtn.textContent = '⏳';
 
-      let title = extractedTitle || '';
-      let image = '';
-      let note = '';
+      try {
+        let title = extractedTitle || '';
+        let image = '';
+        let note = '';
 
-      if (url) {
-        const meta = await fetchUrlMetadata(url);
-        if (meta) {
-          if (!title && meta.title) title = meta.title;
-          if (meta.image) image = meta.image;
-          if (meta.description) note = meta.description.slice(0, 120);
+        if (url) {
+          const meta = await fetchUrlMetadataSafe(url, 4800);
+          if (meta) {
+            if (!title && meta.title) title = meta.title;
+            if (meta.image) image = meta.image;
+            if (meta.description) note = meta.description.slice(0, 120);
+          }
         }
+
+        if (!title) {
+          title = url ? `${(PLATFORM_INFO[platform] || PLATFORM_INFO.web).label} 收藏貼文` : raw.slice(0, 50);
+        }
+
+        const chosenCats = quickSelectedCategories.length > 0 ? [...quickSelectedCategories] : [getCategories()[0]];
+        const chosenSubs = [...quickSelectedSubcategories];
+
+        const newItem = {
+          id: 'item-' + Date.now(),
+          title,
+          url: url || '',
+          platform,
+          category: chosenCats[0],
+          categories: chosenCats,
+          subcategories: chosenSubs,
+          note,
+          image: image || makeCoverDataUrl(title, platform),
+          createdAt: Date.now(),
+          updatedAt: Date.now()
+        };
+
+        // Reset active filter if the newly saved item wouldn't be visible under the current filter
+        if (activeCategory !== 'ALL' && !chosenCats.includes(activeCategory)) {
+          activeCategory = 'ALL';
+          activeSubcategories = [];
+        } else if (activeCategory !== 'ALL' && activeSubcategories.length > 0) {
+          const targetKeys = activeSubcategories.map(s => makeSubKey(activeCategory, s));
+          const visibleInSub = subcatFilterMode === 'AND'
+            ? targetKeys.every(tk => chosenSubs.includes(tk))
+            : targetKeys.some(tk => chosenSubs.includes(tk));
+          if (!visibleInSub) {
+            activeSubcategories = [];
+          }
+        }
+        if (activePlatform !== 'ALL' && activePlatform !== platform) {
+          activePlatform = 'ALL';
+        }
+        if (searchQuery) {
+          searchQuery = '';
+          const sInput = document.getElementById('searchInput');
+          if (sInput) sInput.value = '';
+        }
+
+        await putItem(newItem);
+        quickUrlInput.value = '';
+        await refreshApp();
+      } catch (err) {
+        console.error('Quick save error:', err);
+        alert('儲存發生錯誤，請再試一次：' + (err.message || err));
+      } finally {
+        quickSaveBtn.disabled = false;
+        quickSaveBtn.textContent = '存入';
       }
-
-      if (!title) {
-        title = url ? `${PLATFORM_INFO[platform].label} 收藏貼文` : raw.slice(0, 50);
-      }
-
-      const chosenCats = quickSelectedCategories.length > 0 ? [...quickSelectedCategories] : [getCategories()[0]];
-      const chosenSubs = [...quickSelectedSubcategories];
-
-      const newItem = {
-        id: 'item-' + Date.now(),
-        title,
-        url: url || '',
-        platform,
-        category: chosenCats[0],
-        categories: chosenCats,
-        subcategories: chosenSubs,
-        note,
-        image: image || makeCoverDataUrl(title, platform),
-        createdAt: Date.now(),
-        updatedAt: Date.now()
-      };
-
-      await putItem(newItem);
-      quickUrlInput.value = '';
-      quickSaveBtn.disabled = false;
-      quickSaveBtn.textContent = '存入';
-      await refreshApp();
     }
 
     quickSaveBtn.addEventListener('click', () => handleQuickSave());
@@ -3573,7 +3682,7 @@
       }
     }
 
-    function triggerModalMetadataFetch(force = false) {
+    function triggerModalMetadataFetch(force = false, maxWaitMs = 5500) {
       const raw = itemRawInput.value.trim();
       if (!raw) return Promise.resolve(null);
       const { url, extractedTitle, platform } = parseSharedInput(raw);
@@ -3586,7 +3695,7 @@
       }
       if (!url) return Promise.resolve(null);
       if (!force && activeModalFetchPromise && lastFetchedModalUrl === url) {
-        return activeModalFetchPromise;
+        return withOverallTimeout(activeModalFetchPromise, maxWaitMs);
       }
       lastFetchedModalUrl = url;
 
@@ -3595,7 +3704,7 @@
 
       const p = (async () => {
         try {
-          const meta = await fetchUrlMetadata(url);
+          const meta = await fetchUrlMetadataSafe(url, maxWaitMs);
           if (meta) {
             if (meta.title && (isGenericPlatformTitle(itemTitleInput.value) || itemTitleInput.value.endsWith('收藏貼文'))) {
               itemTitleInput.value = meta.title;
@@ -3676,16 +3785,16 @@
       const { url, extractedTitle, platform: detectedPlat } = parseSharedInput(raw);
       const finalUrl = url || (raw.startsWith('http') ? raw : '');
 
-      if (finalUrl && (!currentEditingImageData || currentEditingImageData.startsWith('data:image/svg+xml') || activeModalFetchPromise)) {
+      if (finalUrl && (!currentEditingImageData || currentEditingImageData.startsWith('data:image/svg+xml'))) {
         if (saveItemSubmitBtn) {
           saveItemSubmitBtn.disabled = true;
           saveItemSubmitBtn.textContent = '⏳ 正在自動抓圖並儲存...';
         }
         try {
           if (activeModalFetchPromise) {
-            await activeModalFetchPromise;
+            await withOverallTimeout(activeModalFetchPromise, 2200);
           } else {
-            await triggerModalMetadataFetch(true);
+            await triggerModalMetadataFetch(true, 2800);
           }
         } catch (err) {}
         if (saveItemSubmitBtn) {
@@ -3694,36 +3803,63 @@
         }
       }
 
-      const platform = itemPlatformInput.value || detectedPlat || 'web';
-      let title = itemTitleInput.value.trim();
-      if (!title || isGenericPlatformTitle(title)) {
-        title = (!isGenericPlatformTitle(extractedTitle) && extractedTitle)
-          ? extractedTitle
-          : (finalUrl ? `${(PLATFORM_INFO[platform] || PLATFORM_INFO.web).label} 收藏貼文` : '未命名靈感');
+      try {
+        const platform = itemPlatformInput.value || detectedPlat || 'web';
+        let title = itemTitleInput.value.trim();
+        if (!title || isGenericPlatformTitle(title)) {
+          title = (!isGenericPlatformTitle(extractedTitle) && extractedTitle)
+            ? extractedTitle
+            : (finalUrl ? `${(PLATFORM_INFO[platform] || PLATFORM_INFO.web).label} 收藏貼文` : (raw ? raw.slice(0, 50) : '未命名靈感'));
+        }
+        const chosenCats = modalSelectedCategories.length > 0 ? [...modalSelectedCategories] : [getCategories()[0]];
+        const chosenSubs = modalSelectedSubcategories.filter(sk => chosenCats.includes(parseSubKey(sk).parent));
+        const note = itemNoteInput.value.trim();
+        const finalImage = currentEditingImageData || makeCoverDataUrl(title, platform);
+
+        const existingItem = existingId ? allItems.find(x => x.id === existingId) : null;
+
+        await putItem({
+          id: existingId || ('item-' + Date.now()),
+          title,
+          url: finalUrl,
+          platform,
+          category: chosenCats[0],
+          categories: chosenCats,
+          subcategories: chosenSubs,
+          note,
+          image: finalImage,
+          createdAt: existingItem ? existingItem.createdAt : Date.now(),
+          updatedAt: Date.now()
+        });
+
+        // Reset active filter if the newly saved item wouldn't be visible under the current filter
+        if (activeCategory !== 'ALL' && !chosenCats.includes(activeCategory)) {
+          activeCategory = 'ALL';
+          activeSubcategories = [];
+        } else if (activeCategory !== 'ALL' && activeSubcategories.length > 0) {
+          const targetKeys = activeSubcategories.map(s => makeSubKey(activeCategory, s));
+          const visibleInSub = subcatFilterMode === 'AND'
+            ? targetKeys.every(tk => chosenSubs.includes(tk))
+            : targetKeys.some(tk => chosenSubs.includes(tk));
+          if (!visibleInSub) {
+            activeSubcategories = [];
+          }
+        }
+        if (activePlatform !== 'ALL' && activePlatform !== platform) {
+          activePlatform = 'ALL';
+        }
+        if (searchQuery) {
+          searchQuery = '';
+          const sInput = document.getElementById('searchInput');
+          if (sInput) sInput.value = '';
+        }
+
+        itemDialog.close();
+        await refreshApp();
+      } catch (err) {
+        console.error('Modal save error:', err);
+        alert('儲存發生錯誤，請再試一次：' + (err.message || err));
       }
-      const chosenCats = modalSelectedCategories.length > 0 ? [...modalSelectedCategories] : [getCategories()[0]];
-      const chosenSubs = modalSelectedSubcategories.filter(sk => chosenCats.includes(parseSubKey(sk).parent));
-      const note = itemNoteInput.value.trim();
-      const finalImage = currentEditingImageData || makeCoverDataUrl(title, platform);
-
-      const existingItem = existingId ? allItems.find(x => x.id === existingId) : null;
-
-      await putItem({
-        id: existingId || ('item-' + Date.now()),
-        title,
-        url: finalUrl,
-        platform,
-        category: chosenCats[0],
-        categories: chosenCats,
-        subcategories: chosenSubs,
-        note,
-        image: finalImage,
-        createdAt: existingItem ? existingItem.createdAt : Date.now(),
-        updatedAt: Date.now()
-      });
-
-      itemDialog.close();
-      await refreshApp();
     });
 
     document.getElementById('openAddModalBtn').addEventListener('click', () => openAddModal());
