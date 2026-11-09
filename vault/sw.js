@@ -1,4 +1,4 @@
-// v6 - Network-first with cache cleanup & fast non-blocking save
+// v7 - Fix IndexedDB connection pooling & timeout so all items render and save immediately
 self.addEventListener('install', (e) => {
   self.skipWaiting();
 });

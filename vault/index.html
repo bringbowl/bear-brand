@@ -1445,17 +1445,70 @@
       localStorage.setItem('winnie_vault_deleted_ids', JSON.stringify(map));
     }
 
+    let cachedDbInstance = null;
+
     function openDB() {
+      if (cachedDbInstance) {
+        return Promise.resolve(cachedDbInstance);
+      }
       return new Promise((resolve, reject) => {
-        const req = indexedDB.open(DB_NAME, DB_VERSION);
-        req.onupgradeneeded = (e) => {
-          const db = e.target.result;
-          if (!db.objectStoreNames.contains(STORE_ITEMS)) {
-            db.createObjectStore(STORE_ITEMS, { keyPath: 'id' });
+        if (typeof indexedDB === 'undefined') {
+          reject(new Error('IndexedDB unavailable'));
+          return;
+        }
+        let settled = false;
+        const timer = setTimeout(() => {
+          if (!settled) {
+            settled = true;
+            reject(new Error('IndexedDB open timeout'));
           }
-        };
-        req.onsuccess = () => resolve(req.result);
-        req.onerror = () => reject(req.error);
+        }, 1200);
+
+        try {
+          const req = indexedDB.open(DB_NAME, DB_VERSION);
+          req.onupgradeneeded = (e) => {
+            const db = e.target.result;
+            if (!db.objectStoreNames.contains(STORE_ITEMS)) {
+              db.createObjectStore(STORE_ITEMS, { keyPath: 'id' });
+            }
+          };
+          req.onblocked = () => {
+            if (!settled) {
+              settled = true;
+              clearTimeout(timer);
+              reject(new Error('IndexedDB blocked'));
+            }
+          };
+          req.onsuccess = () => {
+            if (!settled) {
+              settled = true;
+              clearTimeout(timer);
+              const db = req.result;
+              db.onversionchange = () => {
+                db.close();
+                cachedDbInstance = null;
+              };
+              db.onclose = () => {
+                cachedDbInstance = null;
+              };
+              cachedDbInstance = db;
+              resolve(db);
+            }
+          };
+          req.onerror = () => {
+            if (!settled) {
+              settled = true;
+              clearTimeout(timer);
+              reject(req.error || new Error('IndexedDB open error'));
+            }
+          };
+        } catch (err) {
+          if (!settled) {
+            settled = true;
+            clearTimeout(timer);
+            reject(err);
+          }
+        }
       });
     }
 
@@ -1489,10 +1542,39 @@
       try {
         const db = await openDB();
         idbList = await new Promise((resolve, reject) => {
-          const tx = db.transaction(STORE_ITEMS, 'readonly');
-          const req = tx.objectStore(STORE_ITEMS).getAll();
-          req.onsuccess = () => resolve(req.result || []);
-          req.onerror = () => reject(req.error);
+          let settled = false;
+          const timer = setTimeout(() => {
+            if (!settled) {
+              settled = true;
+              cachedDbInstance = null;
+              reject(new Error('IndexedDB getAll timeout'));
+            }
+          }, 1200);
+          try {
+            const tx = db.transaction(STORE_ITEMS, 'readonly');
+            const req = tx.objectStore(STORE_ITEMS).getAll();
+            req.onsuccess = () => {
+              if (!settled) {
+                settled = true;
+                clearTimeout(timer);
+                resolve(req.result || []);
+              }
+            };
+            req.onerror = () => {
+              if (!settled) {
+                settled = true;
+                clearTimeout(timer);
+                reject(req.error);
+              }
+            };
+          } catch (txErr) {
+            cachedDbInstance = null;
+            if (!settled) {
+              settled = true;
+              clearTimeout(timer);
+              reject(txErr);
+            }
+          }
         });
       } catch (e) {
         console.warn('IndexedDB read fallback:', e);
@@ -1508,33 +1590,67 @@
       for (const it of idbList) {
         if (it && it.id) {
           const existing = map.get(it.id);
-          if (!existing || (it.updatedAt || 0) >= (existing.updatedAt || 0)) {
+          const idbHasRealImg = it.image && !String(it.image).startsWith('data:image/svg+xml');
+          const exHasRealImg = existing && existing.image && !String(existing.image).startsWith('data:image/svg+xml');
+          if (!existing || (it.updatedAt || 0) > (existing.updatedAt || 0) || ((it.updatedAt || 0) === (existing.updatedAt || 0) && idbHasRealImg && !exHasRealImg)) {
             map.set(it.id, it);
           }
         }
       }
       const list = Array.from(map.values());
       list.sort((a, b) => (b.createdAt || 0) - (a.createdAt || 0));
+      if (list.length > 0 && fbList.length === 0) {
+        saveFallbackLocalItems(list);
+      }
       return list;
     }
 
     async function putItemLocal(item) {
       item.updatedAt = item.updatedAt || Date.now();
       inMemoryItemsMap.set(item.id, item);
+      const fbList = getFallbackLocalItems().filter(x => x && x.id !== item.id);
+      fbList.unshift(item);
+      saveFallbackLocalItems(fbList);
       try {
         const db = await openDB();
         await new Promise((resolve, reject) => {
-          const tx = db.transaction(STORE_ITEMS, 'readwrite');
-          tx.objectStore(STORE_ITEMS).put(item);
-          tx.oncomplete = () => resolve(item);
-          tx.onerror = () => reject(tx.error);
+          let settled = false;
+          const timer = setTimeout(() => {
+            if (!settled) {
+              settled = true;
+              cachedDbInstance = null;
+              reject(new Error('IndexedDB put timeout'));
+            }
+          }, 1200);
+          try {
+            const tx = db.transaction(STORE_ITEMS, 'readwrite');
+            tx.objectStore(STORE_ITEMS).put(item);
+            tx.oncomplete = () => {
+              if (!settled) {
+                settled = true;
+                clearTimeout(timer);
+                resolve(item);
+              }
+            };
+            tx.onerror = () => {
+              if (!settled) {
+                settled = true;
+                clearTimeout(timer);
+                reject(tx.error);
+              }
+            };
+          } catch (txErr) {
+            cachedDbInstance = null;
+            if (!settled) {
+              settled = true;
+              clearTimeout(timer);
+              reject(txErr);
+            }
+          }
         });
       } catch (e) {
         console.warn('IndexedDB write fallback:', e);
       }
-      const fbList = getFallbackLocalItems().filter(x => x && x.id !== item.id);
-      fbList.unshift(item);
-      saveFallbackLocalItems(fbList);
       return item;
     }
 
@@ -1546,17 +1662,46 @@
 
     async function deleteItemByIdLocal(id) {
       inMemoryItemsMap.delete(id);
+      const fbList = getFallbackLocalItems().filter(x => x && x.id !== id);
+      saveFallbackLocalItems(fbList);
       try {
         const db = await openDB();
         await new Promise((resolve, reject) => {
-          const tx = db.transaction(STORE_ITEMS, 'readwrite');
-          tx.objectStore(STORE_ITEMS).delete(id);
-          tx.oncomplete = () => resolve();
-          tx.onerror = () => reject(tx.error);
+          let settled = false;
+          const timer = setTimeout(() => {
+            if (!settled) {
+              settled = true;
+              cachedDbInstance = null;
+              resolve();
+            }
+          }, 1200);
+          try {
+            const tx = db.transaction(STORE_ITEMS, 'readwrite');
+            tx.objectStore(STORE_ITEMS).delete(id);
+            tx.oncomplete = () => {
+              if (!settled) {
+                settled = true;
+                clearTimeout(timer);
+                resolve();
+              }
+            };
+            tx.onerror = () => {
+              if (!settled) {
+                settled = true;
+                clearTimeout(timer);
+                reject(tx.error);
+              }
+            };
+          } catch (txErr) {
+            cachedDbInstance = null;
+            if (!settled) {
+              settled = true;
+              clearTimeout(timer);
+              resolve();
+            }
+          }
         });
       } catch (e) {}
-      const fbList = getFallbackLocalItems().filter(x => x && x.id !== id);
-      saveFallbackLocalItems(fbList);
     }
 
     async function deleteItemById(id) {
@@ -4212,12 +4357,22 @@
     }
 
     (async () => {
-      await seedDemoDataIfEmpty();
-      updateSyncButtonUI();
-      await refreshApp();
-      await checkIncomingParamsAndHash();
+      try {
+        updateSyncButtonUI();
+        renderCategorySelects();
+        renderFilters();
+      } catch (e) {}
+      try {
+        await seedDemoDataIfEmpty();
+      } catch (e) {}
+      try {
+        await refreshApp();
+      } catch (e) {}
+      try {
+        await checkIncomingParamsAndHash();
+      } catch (e) {}
       if (getGithubToken()) {
-        await syncWithGithubCloud(false);
+        syncWithGithubCloud(false);
       }
     })();
   </script>
