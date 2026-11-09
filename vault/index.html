@@ -1269,6 +1269,22 @@
       '🍽️ 探店美食': ['☕ 咖啡廳甜點', '🍜 正餐聚餐', '🥂 約會餐廳']
     };
 
+    function safeSetLocalStorage(key, val) {
+      try {
+        localStorage.setItem(key, val);
+        return true;
+      } catch (e) {
+        try {
+          localStorage.removeItem('winnie_vault_fallback_items');
+          localStorage.setItem(key, val);
+          return true;
+        } catch (e2) {
+          console.warn('localStorage quota exceeded for key:', key);
+          return false;
+        }
+      }
+    }
+
     function getDeletedCats() {
       try {
         return JSON.parse(localStorage.getItem('winnie_vault_deleted_cats')) || {};
@@ -1280,7 +1296,7 @@
     function setDeletedCatState(catName, isDeleted) {
       const map = getDeletedCats();
       map[catName] = { deleted: Boolean(isDeleted), updatedAt: Date.now() };
-      localStorage.setItem('winnie_vault_deleted_cats', JSON.stringify(map));
+      safeSetLocalStorage('winnie_vault_deleted_cats', JSON.stringify(map));
     }
 
     function getDeletedSubcats() {
@@ -1294,7 +1310,7 @@
     function setDeletedSubcatState(subKey, isDeleted) {
       const map = getDeletedSubcats();
       map[subKey] = { deleted: Boolean(isDeleted), updatedAt: Date.now() };
-      localStorage.setItem('winnie_vault_deleted_subcats', JSON.stringify(map));
+      safeSetLocalStorage('winnie_vault_deleted_subcats', JSON.stringify(map));
     }
 
     function isSubcatMarkedDeleted(subKey, delMap) {
@@ -1333,9 +1349,9 @@
             const hasRecipe = saved.some(c => String(c).includes('食譜'));
             if (!hasRecipe && !isCatMarkedDeleted('🍳 食譜', delCats)) {
               saved.splice(1, 0, '🍳 食譜');
-              localStorage.setItem('winnie_vault_categories', JSON.stringify(saved));
+              safeSetLocalStorage('winnie_vault_categories', JSON.stringify(saved));
             }
-            localStorage.setItem('winnie_vault_recipe_cat_seeded', '1');
+            safeSetLocalStorage('winnie_vault_recipe_cat_seeded', '1');
           }
           const filtered = saved.filter(c => !isCatMarkedDeleted(c, delCats));
           if (filtered.length > 0) return filtered;
@@ -1343,14 +1359,14 @@
       } catch (e) {}
       const defaults = DEFAULT_CATEGORIES.filter(c => !isCatMarkedDeleted(c, delCats));
       const finalDefaults = defaults.length > 0 ? defaults : [DEFAULT_CATEGORIES[0]];
-      localStorage.setItem('winnie_vault_categories', JSON.stringify(finalDefaults));
-      localStorage.setItem('winnie_vault_recipe_cat_seeded', '1');
+      safeSetLocalStorage('winnie_vault_categories', JSON.stringify(finalDefaults));
+      safeSetLocalStorage('winnie_vault_recipe_cat_seeded', '1');
       return finalDefaults;
     }
 
     function saveCategories(cats) {
-      localStorage.setItem('winnie_vault_categories', JSON.stringify(cats));
-      localStorage.setItem('winnie_vault_cats_updated_at', String(Date.now()));
+      safeSetLocalStorage('winnie_vault_categories', JSON.stringify(cats));
+      safeSetLocalStorage('winnie_vault_cats_updated_at', String(Date.now()));
     }
 
     function getSubcategoriesMap() {
@@ -1385,7 +1401,7 @@
             map[c] = current;
           }
         });
-        localStorage.setItem('winnie_vault_subs_seeded_v2', '1');
+        safeSetLocalStorage('winnie_vault_subs_seeded_v2', '1');
       }
 
       // Always filter out any subcategory marked deleted in tombstones
@@ -1400,14 +1416,14 @@
       }
 
       if (changed) {
-        localStorage.setItem('winnie_vault_subcategories', JSON.stringify(map));
+        safeSetLocalStorage('winnie_vault_subcategories', JSON.stringify(map));
       }
       return map;
     }
 
     function saveSubcategoriesMap(map) {
-      localStorage.setItem('winnie_vault_subcategories', JSON.stringify(map));
-      localStorage.setItem('winnie_vault_cats_updated_at', String(Date.now()));
+      safeSetLocalStorage('winnie_vault_subcategories', JSON.stringify(map));
+      safeSetLocalStorage('winnie_vault_cats_updated_at', String(Date.now()));
     }
 
     function getSubcategoriesFor(parentCat) {
@@ -1442,7 +1458,7 @@
     function markDeletedId(id) {
       const map = getDeletedIds();
       map[id] = Date.now();
-      localStorage.setItem('winnie_vault_deleted_ids', JSON.stringify(map));
+      safeSetLocalStorage('winnie_vault_deleted_ids', JSON.stringify(map));
     }
 
     let cachedDbInstance = null;
@@ -1525,15 +1541,16 @@
 
     function saveFallbackLocalItems(list) {
       try {
-        // Strip large base64 data URLs only in localStorage fallback if needed so we never exceed 5MB localStorage quota
-        const lightList = list.slice(0, 150).map(it => {
+        // Keep only a compact metadata backup (max 50 items, stripping any data:image base64) so localStorage NEVER fills up!
+        const lightList = list.slice(0, 50).map(it => {
           if (!it) return null;
-          if (it.image && it.image.startsWith('data:image/') && it.image.length > 35000) {
-            return { ...it, image: makeCoverDataUrl(it.title, it.platform) };
+          const img = String(it.image || '');
+          if (img.startsWith('data:image/')) {
+            return { ...it, image: '' };
           }
           return it;
         }).filter(Boolean);
-        localStorage.setItem('winnie_vault_fallback_items', JSON.stringify(lightList));
+        safeSetLocalStorage('winnie_vault_fallback_items', JSON.stringify(lightList));
       } catch (e) {}
     }
 
@@ -1710,8 +1727,24 @@
       triggerCloudSyncInBackground();
     }
 
+    function stripLoneSurrogates(str) {
+      return String(str || '').replace(/[\uD800-\uDBFF](?![\uDC00-\uDFFF])|(?<![\uD800-\uDBFF])[\uDC00-\uDFFF]/g, '');
+    }
+
+    function safeSliceText(str, maxChars) {
+      return Array.from(stripLoneSurrogates(str)).slice(0, maxChars).join('');
+    }
+
+    function safeEncodeURIComponent(str) {
+      try {
+        return encodeURIComponent(stripLoneSurrogates(str));
+      } catch (e) {
+        return encodeURIComponent(Array.from(String(str || '')).filter(ch => ch.codePointAt(0) <= 0xFFFF && (ch.codePointAt(0) < 0xD800 || ch.codePointAt(0) > 0xDFFF)).join(''));
+      }
+    }
+
     function makeCoverDataUrl(title, platform, bgHex = '#F3E5DE', accentHex = '#B36850') {
-      const safeTitle = (title || '靈感筆記').slice(0, 16).replace(/[<>&"']/g, '');
+      const safeTitle = safeSliceText(title || '靈感筆記', 16).replace(/[<>&"']/g, '');
       const labelMap = {
         ig: 'Instagram',
         xhs: '小紅書筆記',
@@ -1736,14 +1769,14 @@
         <text x="40" y="230" font-family="-apple-system, sans-serif" font-size="28" font-weight="700" fill="#2C2523">${safeTitle}</text>
         <text x="40" y="490" font-family="-apple-system, sans-serif" font-size="14" fill="#786E69">點卡片回原貼文 · 點「換圖」貼截圖</text>
       </svg>`;
-      return 'data:image/svg+xml;utf8,' + encodeURIComponent(svg);
+      return 'data:image/svg+xml;utf8,' + safeEncodeURIComponent(svg);
     }
 
     async function seedDemoDataIfEmpty() {
       if (localStorage.getItem('winnie_vault_seeded')) return;
       const existing = await getAllItems();
       if (existing.length > 0) {
-        localStorage.setItem('winnie_vault_seeded', '1');
+        safeSetLocalStorage('winnie_vault_seeded', '1');
         return;
       }
       const demoItems = [
@@ -1784,7 +1817,7 @@
       for (const item of demoItems) {
         await putItemLocal(item);
       }
-      localStorage.setItem('winnie_vault_seeded', '1');
+      safeSetLocalStorage('winnie_vault_seeded', '1');
     }
 
     // =========================================================================
@@ -1801,7 +1834,7 @@
 
     function setGithubToken(token) {
       if (token) {
-        localStorage.setItem('winnie_gh_token', token.trim());
+        safeSetLocalStorage('winnie_gh_token', token.trim());
       } else {
         localStorage.removeItem('winnie_gh_token');
         localStorage.removeItem('winnie_gh_gist_id');
@@ -1846,7 +1879,7 @@
       const gists = await listRes.json();
       const found = gists.find(g => g.description === GIST_DESC || (g.files && g.files[GIST_FILENAME]));
       if (found) {
-        localStorage.setItem('winnie_gh_gist_id', found.id);
+        safeSetLocalStorage('winnie_gh_gist_id', found.id);
         const detailRes = await fetch(`https://api.github.com/gists/${found.id}?_t=${Date.now()}`, {
           headers,
           cache: 'no-store'
@@ -1877,7 +1910,7 @@
         throw new Error('無法建立私密 Gist，請確認金鑰有勾選 gist 權限');
       }
       const created = await createRes.json();
-      localStorage.setItem('winnie_gh_gist_id', created.id);
+      safeSetLocalStorage('winnie_gh_gist_id', created.id);
       return created;
     }
 
@@ -1916,7 +1949,7 @@
         const localDeleted = getDeletedIds();
         const remoteDeleted = remoteData.deletedIds || {};
         const mergedDeleted = { ...remoteDeleted, ...localDeleted };
-        localStorage.setItem('winnie_vault_deleted_ids', JSON.stringify(mergedDeleted));
+        safeSetLocalStorage('winnie_vault_deleted_ids', JSON.stringify(mergedDeleted));
 
         const localItems = await getAllItems();
         const remoteItems = Array.isArray(remoteData.items) ? remoteData.items : [];
@@ -1930,8 +1963,14 @@
         for (const lItem of localItems) {
           if (lItem && lItem.id && !mergedDeleted[lItem.id]) {
             const existing = itemMap.get(lItem.id);
-            if (!existing || (lItem.updatedAt || lItem.createdAt || 0) >= (existing.updatedAt || existing.createdAt || 0)) {
+            const lHasRealImg = lItem.image && !String(lItem.image).startsWith('data:image/svg+xml');
+            const exHasRealImg = existing && existing.image && !String(existing.image).startsWith('data:image/svg+xml');
+            if (!existing) {
               itemMap.set(lItem.id, lItem);
+            } else if ((lItem.updatedAt || lItem.createdAt || 0) >= (existing.updatedAt || existing.createdAt || 0)) {
+              // If local item came from stripped fallback (empty image), preserve remote's real image!
+              const mergedImg = (lHasRealImg || !exHasRealImg) ? lItem.image : existing.image;
+              itemMap.set(lItem.id, { ...lItem, image: mergedImg });
             }
           }
         }
@@ -1948,7 +1987,7 @@
             mergedDeletedCats[k] = v;
           }
         }
-        localStorage.setItem('winnie_vault_deleted_cats', JSON.stringify(mergedDeletedCats));
+        safeSetLocalStorage('winnie_vault_deleted_cats', JSON.stringify(mergedDeletedCats));
 
         const localDeletedSubcats = getDeletedSubcats();
         const remoteDeletedSubcats = (remoteData.deletedSubcats && typeof remoteData.deletedSubcats === 'object') ? remoteData.deletedSubcats : {};
@@ -1961,7 +2000,7 @@
             mergedDeletedSubcats[k] = v;
           }
         }
-        localStorage.setItem('winnie_vault_deleted_subcats', JSON.stringify(mergedDeletedSubcats));
+        safeSetLocalStorage('winnie_vault_deleted_subcats', JSON.stringify(mergedDeletedSubcats));
 
         const mergedItems = Array.from(itemMap.values()).sort((a, b) => b.createdAt - a.createdAt);
         for (const lItem of localItems) {
@@ -1992,8 +2031,8 @@
         }
         finalCats = finalCats.filter(c => !isCatMarkedDeleted(c, mergedDeletedCats));
         if (finalCats.length === 0) finalCats = [DEFAULT_CATEGORIES[0]];
-        localStorage.setItem('winnie_vault_categories', JSON.stringify(finalCats));
-        localStorage.setItem('winnie_vault_cats_updated_at', String(finalCatsUpdatedAt));
+        safeSetLocalStorage('winnie_vault_categories', JSON.stringify(finalCats));
+        safeSetLocalStorage('winnie_vault_cats_updated_at', String(finalCatsUpdatedAt));
 
         const localSubMap = getSubcategoriesMap();
         const remoteSubMap = (remoteData.subcategories && typeof remoteData.subcategories === 'object') ? remoteData.subcategories : {};
@@ -2011,7 +2050,7 @@
           }
           finalSubMap[pCat] = combined;
         }
-        localStorage.setItem('winnie_vault_subcategories', JSON.stringify(finalSubMap));
+        safeSetLocalStorage('winnie_vault_subcategories', JSON.stringify(finalSubMap));
 
         const payload = {
           updatedAt: Date.now(),
@@ -2035,7 +2074,7 @@
           body: JSON.stringify({
             files: {
               [GIST_FILENAME]: {
-                content: JSON.stringify(payload)
+                content: stripLoneSurrogates(JSON.stringify(payload))
               }
             }
           })
@@ -2092,8 +2131,8 @@
       }
       pairSection.style.display = 'flex';
       const baseUrl = 'https://bringbowl.github.io/bear-brand/vault/';
-      const pairUrl = `${baseUrl}#sync_token=${encodeURIComponent(token)}`;
-      const qrApi = `https://api.qrserver.com/v1/create-qr-code/?size=200x200&margin=8&data=${encodeURIComponent(pairUrl)}`;
+      const pairUrl = `${baseUrl}#sync_token=${safeEncodeURIComponent(token)}`;
+      const qrApi = `https://api.qrserver.com/v1/create-qr-code/?size=200x200&margin=8&data=${safeEncodeURIComponent(pairUrl)}`;
       document.getElementById('pairQrImg').src = qrApi;
       document.getElementById('copyPairLinkBtn').onclick = () => {
         navigator.clipboard.writeText(pairUrl);
@@ -2105,7 +2144,7 @@
     // 4. Smart Platform & Share-Text Parser
     // =========================================================================
     function parseSharedInput(rawText) {
-      const trimmed = (rawText || '').trim();
+      const trimmed = stripLoneSurrogates(rawText || '').trim();
       const urlMatch = trimmed.match(/https?:\/\/[^\s，。！!）】」"']+/i)
         || trimmed.match(/(?:www\.)?(?:instagram\.com|instagr\.am|threads\.(?:net|com)|xiaohongshu\.com|xhslink\.com|pinterest\.com|pin\.it)\/[^\s，。！!）】」"']+/i);
       let url = urlMatch ? urlMatch[0] : '';
@@ -2123,7 +2162,7 @@
           .replace(/^[0-9]{1,3}\s+/, '')
           .trim();
         if (rest.length >= 2) {
-          extractedTitle = rest.slice(0, 80);
+          extractedTitle = safeSliceText(rest, 80);
         }
       }
 
@@ -2202,7 +2241,7 @@
       const cleanUrl = decodeHtmlEntities(String(rawImageUrl).trim());
       if (!cleanUrl.startsWith('http')) return '';
 
-      const wsrvUrl = `https://wsrv.nl/?url=${encodeURIComponent(cleanUrl)}&w=560&output=jpg&q=78`;
+      const wsrvUrl = `https://wsrv.nl/?url=${safeEncodeURIComponent(cleanUrl)}&w=560&output=jpg&q=78`;
       const wpProxyUrl = `https://i0.wp.com/${cleanUrl.replace(/^https?:\/\//i, '')}?w=560&quality=78`;
 
       for (const candidateProxy of [wsrvUrl, wpProxyUrl]) {
@@ -2295,8 +2334,8 @@
       }
 
       return {
-        title: finalTitle.slice(0, 100),
-        description: caption
+        title: safeSliceText(finalTitle, 100),
+        description: stripLoneSurrogates(caption)
       };
     }
 
@@ -2477,7 +2516,7 @@
           if (!bestRawImg) bestRawImg = pickBestImageFromJinaData(embedData);
           if (!bestTitle && embedData.content) {
             const lines = String(embedData.content).split('\n').map(l => l.trim()).filter(Boolean);
-            if (lines[0] && !isGenericPlatformTitle(lines[0])) bestTitle = lines[0].slice(0, 90);
+            if (lines[0] && !isGenericPlatformTitle(lines[0])) bestTitle = safeSliceText(lines[0], 90);
           }
         }
       }
@@ -2578,7 +2617,7 @@
       // 3b. If image or title is still missing, try Microlink
       if (!bestRawImg || !bestTitle) {
         try {
-          const apiUrl = `https://api.microlink.io/?url=${encodeURIComponent(url)}`;
+          const apiUrl = `https://api.microlink.io/?url=${safeEncodeURIComponent(url)}`;
           const res = await fetchWithTimeout(apiUrl, {}, 3500);
           if (res.ok) {
             const json = await res.json();
@@ -2710,7 +2749,7 @@
                 updated.title = meta.title;
               }
               if (meta.description && !updated.note) {
-                updated.note = meta.description.slice(0, 120);
+                updated.note = safeSliceText(meta.description, 120);
               }
               await putItemLocal(updated);
               anyUpdated = true;
@@ -3454,7 +3493,7 @@
                 updated.title = meta.title;
               }
               if (meta.description && !updated.note) {
-                updated.note = meta.description.slice(0, 120);
+                updated.note = safeSliceText(meta.description, 120);
               }
               await putItem(updated);
               await refreshApp();
@@ -3515,12 +3554,12 @@
           if (meta) {
             if (!title && meta.title) title = meta.title;
             if (meta.image) image = meta.image;
-            if (meta.description) note = meta.description.slice(0, 120);
+            if (meta.description) note = safeSliceText(meta.description, 120);
           }
         }
 
         if (!title) {
-          title = url ? `${(PLATFORM_INFO[platform] || PLATFORM_INFO.web).label} 收藏貼文` : raw.slice(0, 50);
+          title = url ? `${(PLATFORM_INFO[platform] || PLATFORM_INFO.web).label} 收藏貼文` : safeSliceText(raw, 50);
         }
 
         const chosenCats = quickSelectedCategories.length > 0 ? [...quickSelectedCategories] : [getCategories()[0]];
@@ -3865,7 +3904,7 @@
               itemImageUrlInput.value = meta.image.startsWith('http') ? meta.image : '';
             }
             if (meta.description && !itemNoteInput.value.trim()) {
-              itemNoteInput.value = meta.description.slice(0, 220);
+              itemNoteInput.value = safeSliceText(meta.description, 220);
             }
             fetchStatusBanner.textContent = meta.image
               ? '✅ 已自動抓到貼文 / Reels 封面縮圖與標題！'
@@ -3954,7 +3993,7 @@
         if (!title || isGenericPlatformTitle(title)) {
           title = (!isGenericPlatformTitle(extractedTitle) && extractedTitle)
             ? extractedTitle
-            : (finalUrl ? `${(PLATFORM_INFO[platform] || PLATFORM_INFO.web).label} 收藏貼文` : (raw ? raw.slice(0, 50) : '未命名靈感'));
+            : (finalUrl ? `${(PLATFORM_INFO[platform] || PLATFORM_INFO.web).label} 收藏貼文` : (raw ? safeSliceText(raw, 50) : '未命名靈感'));
         }
         const chosenCats = modalSelectedCategories.length > 0 ? [...modalSelectedCategories] : [getCategories()[0]];
         const chosenSubs = modalSelectedSubcategories.filter(sk => chosenCats.includes(parseSubKey(sk).parent));
@@ -4278,7 +4317,7 @@
 
         let initialImg = sharedImage;
         if (initialImg && /cdninstagram\.com|fbcdn\.net|xhscdn\.com/i.test(initialImg) && !initialImg.includes('wsrv.nl')) {
-          initialImg = `https://wsrv.nl/?url=${encodeURIComponent(initialImg)}&w=560&output=jpg&q=78`;
+          initialImg = `https://wsrv.nl/?url=${safeEncodeURIComponent(initialImg)}&w=560&output=jpg&q=78`;
         }
 
         const shouldAutoFetch =
@@ -4357,6 +4396,13 @@
     }
 
     (async () => {
+      try {
+        // Free up any bloated fallback cache from previous version so localStorage has plenty of space
+        const rawFb = localStorage.getItem('winnie_vault_fallback_items') || '';
+        if (rawFb.length > 120000) {
+          localStorage.removeItem('winnie_vault_fallback_items');
+        }
+      } catch (e) {}
       try {
         updateSyncButtonUI();
         renderCategorySelects();

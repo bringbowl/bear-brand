@@ -1,4 +1,4 @@
-// v7 - Fix IndexedDB connection pooling & timeout so all items render and save immediately
+// v8 - Fix URIError: URI malformed caused by UTF-16 surrogate pair splitting on emojis in titles/URLs
 self.addEventListener('install', (e) => {
   self.skipWaiting();
 });
