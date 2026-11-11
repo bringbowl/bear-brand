@@ -2228,25 +2228,35 @@
         .finally(() => clearTimeout(timer));
     }
 
-    function withOverallTimeout(promise, timeoutMs = 6000) {
+    function withOverallTimeout(promise, timeoutMs = 8500) {
       return Promise.race([
         promise,
         new Promise((resolve) => setTimeout(() => resolve(null), timeoutMs))
       ]);
     }
 
+    function normalizeRawImageUrl(rawUrl) {
+      if (!rawUrl || typeof rawUrl !== 'string') return '';
+      let clean = decodeHtmlEntities(rawUrl.trim());
+      if (clean.startsWith('//')) {
+        clean = 'https:' + clean;
+      }
+      if (!clean.startsWith('http')) return '';
+      return clean;
+    }
+
     async function proxyAndPersistImageUrl(rawImageUrl) {
       if (!rawImageUrl) return '';
       if (rawImageUrl.startsWith('data:')) return rawImageUrl;
-      const cleanUrl = decodeHtmlEntities(String(rawImageUrl).trim());
-      if (!cleanUrl.startsWith('http')) return '';
+      const cleanUrl = normalizeRawImageUrl(rawImageUrl);
+      if (!cleanUrl) return '';
 
       const wsrvUrl = `https://wsrv.nl/?url=${safeEncodeURIComponent(cleanUrl)}&w=560&output=jpg&q=78`;
       const wpProxyUrl = `https://i0.wp.com/${cleanUrl.replace(/^https?:\/\//i, '')}?w=560&quality=78`;
 
       for (const candidateProxy of [wsrvUrl, wpProxyUrl]) {
         try {
-          const resp = await fetchWithTimeout(candidateProxy, {}, 3500);
+          const resp = await fetchWithTimeout(candidateProxy, {}, 2800);
           if (resp.ok) {
             const blob = await resp.blob();
             if (blob && blob.size > 600 && blob.size < 350000) {
@@ -2265,30 +2275,47 @@
         } catch (e) {}
       }
 
-      const needsProxy = /cdninstagram\.com|fbcdn\.net|instagram\.com|xhscdn\.com|xiaohongshu\.com/i.test(cleanUrl);
+      const needsProxy = /cdninstagram\.com|fbcdn\.net|instagram\.com|xhscdn\.com|xiaohongshu\.com|^http:\/\//i.test(cleanUrl);
       return needsProxy ? wsrvUrl : cleanUrl;
     }
 
     function isAvatarOrIconUrl(u) {
-      if (!u || typeof u !== 'string' || !u.startsWith('http')) return true;
-      return /s150x150|s240x240|p240x240|rsrc\.php|logo_transparent|favicon|profile_pic|apple-touch-icon|144x144/i.test(u);
+      const clean = normalizeRawImageUrl(u);
+      if (!clean) return true;
+      return /s150x150|s240x240|p240x240|rsrc\.php|logo_transparent|favicon|profile_pic|apple-touch-icon|144x144|fe-platform\/e6214e4fbfae2cf14d634d4296916e8a5eaefdf4|rednotecdn\.com\/fe-platform/i.test(clean);
     }
 
-    async function fetchJinaJson(targetUrl) {
+    async function fetchJinaJson(targetUrl, useDirectEngine = true, timeoutMs = 4500) {
       if (!targetUrl) return null;
       try {
-        const res = await fetchWithTimeout(`https://r.jina.ai/${targetUrl}`, {
-          headers: {
-            'Accept': 'application/json',
-            'X-With-Images-Summary': 'true'
-          }
-        }, 4200);
+        const headers = {
+          'Accept': 'application/json',
+          'X-With-Images-Summary': 'true'
+        };
+        if (useDirectEngine) {
+          headers['X-Engine'] = 'direct';
+        }
+        const res = await fetchWithTimeout(`https://r.jina.ai/${targetUrl}`, { headers }, timeoutMs);
         if (!res.ok) return null;
         const json = await res.json();
         return (json && json.data) ? json.data : null;
       } catch (e) {
         return null;
       }
+    }
+
+    async function fetchMicrolinkData(targetUrl, timeoutMs = 4000) {
+      if (!targetUrl) return null;
+      try {
+        const apiUrl = `https://api.microlink.io/?url=${safeEncodeURIComponent(targetUrl)}`;
+        const res = await fetchWithTimeout(apiUrl, {}, timeoutMs);
+        if (!res.ok) return null;
+        const json = await res.json();
+        if (json && json.status === 'success' && json.data) {
+          return json.data;
+        }
+      } catch (e) {}
+      return null;
     }
 
     function cleanSocialOgText(rawTitle, rawDesc) {
@@ -2342,21 +2369,29 @@
     function pickBestImageFromJinaData(d) {
       if (!d) return '';
       const meta = d.metadata || {};
-      const ogImg = Array.isArray(meta['og:image']) ? meta['og:image'][0] : meta['og:image'];
-      const twImg = Array.isArray(meta['twitter:image']) ? meta['twitter:image'][0] : (meta['twitter:image'] || meta['twitter:image:src']);
+      const ogImg = normalizeRawImageUrl(Array.isArray(meta['og:image']) ? meta['og:image'][0] : meta['og:image']);
+      const twImg = normalizeRawImageUrl(Array.isArray(meta['twitter:image']) ? meta['twitter:image'][0] : (meta['twitter:image'] || meta['twitter:image:src']));
 
-      if (!isAvatarOrIconUrl(ogImg)) return ogImg;
-      if (!isAvatarOrIconUrl(twImg)) return twImg;
+      if (ogImg && !isAvatarOrIconUrl(ogImg)) return ogImg;
+      if (twImg && !isAvatarOrIconUrl(twImg)) return twImg;
 
       const imgs = (d.images && typeof d.images === 'object') ? d.images : {};
       for (const [k, u] of Object.entries(imgs)) {
-        if (/Instagram post shared by|^Image 2\b/i.test(k) && !isAvatarOrIconUrl(u)) {
-          return u;
+        const cleanU = normalizeRawImageUrl(u);
+        if (/Instagram post shared by|^Image 2\b/i.test(k) && cleanU && !isAvatarOrIconUrl(cleanU)) {
+          return cleanU;
         }
       }
       for (const [k, u] of Object.entries(imgs)) {
-        if (!/profile picture|avatar|logo/i.test(k) && !isAvatarOrIconUrl(u)) {
-          return u;
+        const cleanU = normalizeRawImageUrl(u);
+        if (!/profile picture|avatar|logo/i.test(k) && cleanU && !isAvatarOrIconUrl(cleanU)) {
+          return cleanU;
+        }
+      }
+      if (d.content && typeof d.content === 'string') {
+        const cdnMatch = d.content.match(/https?:\/\/(?:i\.pinimg\.com|sns-[^\s)"']+\.xhscdn\.com|scontent[^\s)"']+\.cdninstagram\.com)\/[^\s)"']+/i);
+        if (cdnMatch && !isAvatarOrIconUrl(cdnMatch[0])) {
+          return cdnMatch[0];
         }
       }
       return '';
@@ -2430,10 +2465,10 @@
       let bestTitle = '';
       let bestDesc = '';
       let bestRawImg = '';
-
-      // Strategy 1: Jina JSON on direct post URL (extracts og:image, twitter:image, og:title, og:description directly!)
       const directPostUrl = `https://www.instagram.com/p/${shortcode}/`;
-      const jinaDirect = await fetchJinaJson(directPostUrl);
+
+      // Strategy 1: Ultra-fast Jina Direct Engine (~0.5s!) on /p/{shortcode}/
+      const jinaDirect = await fetchJinaJson(directPostUrl, true, 4000);
       if (jinaDirect) {
         bestRawImg = pickBestImageFromJinaData(jinaDirect);
         const meta = jinaDirect.metadata || {};
@@ -2445,10 +2480,22 @@
         if (cleaned.description) bestDesc = cleaned.description;
       }
 
-      // Strategy 2: Jina JSON + Markdown on public captioned embed (if image or caption still missing)
+      // Strategy 2: Parallel Microlink + Jina Browser Embed if image or title still missing
       if (!bestRawImg || !bestTitle) {
         const embedUrl = `https://www.instagram.com/p/${shortcode}/embed/captioned/`;
-        const jinaEmbed = await fetchJinaJson(embedUrl);
+        const [mlData, jinaEmbed] = await Promise.all([
+          fetchMicrolinkData(directPostUrl, 4000),
+          fetchJinaJson(embedUrl, false, 5200)
+        ]);
+
+        if (mlData) {
+          const mImg = normalizeRawImageUrl(mlData.image && mlData.image.url);
+          if (!bestRawImg && mImg && !isAvatarOrIconUrl(mImg)) bestRawImg = mImg;
+          const cleanedMl = cleanSocialOgText(mlData.title, mlData.description);
+          if (!bestTitle && cleanedMl.title) bestTitle = cleanedMl.title;
+          if (!bestDesc && cleanedMl.description) bestDesc = cleanedMl.description;
+        }
+
         if (jinaEmbed) {
           if (!bestRawImg) {
             bestRawImg = pickBestImageFromJinaData(jinaEmbed);
@@ -2462,23 +2509,6 @@
             }
           }
         }
-      }
-
-      // Strategy 3: Plain text Jina reader on public captioned embed
-      if (!bestRawImg) {
-        try {
-          const embedUrl = `https://www.instagram.com/p/${shortcode}/embed/captioned/`;
-          const jinaRes = await fetchWithTimeout(`https://r.jina.ai/${embedUrl}`, {}, 3800);
-          if (jinaRes.ok) {
-            const md = await jinaRes.text();
-            const parsed = parseJinaInstagramEmbed(md);
-            if (parsed) {
-              if (!bestRawImg && parsed.rawImage) bestRawImg = parsed.rawImage;
-              if (!bestTitle && parsed.title) bestTitle = parsed.title;
-              if (!bestDesc && parsed.description) bestDesc = parsed.description;
-            }
-          }
-        } catch (e) {}
       }
 
       if (!bestRawImg && !bestTitle) return null;
@@ -2495,9 +2525,13 @@
       let bestDesc = '';
       let bestRawImg = '';
 
-      // Strategy 1: Jina JSON on direct Threads post URL (returns og:image, og:description, and images["Image 2"])
-      const targetUrl = originalUrl || `https://www.threads.com/t/${shortcode}`;
-      const jinaDirect = await fetchJinaJson(targetUrl);
+      // IMPORTANT: Always use threads.net (not threads.com) because threads.com returns a login wall to crawlers!
+      const netUrl = shortcode
+        ? `https://www.threads.net/t/${shortcode}`
+        : String(originalUrl || '').replace(/threads\.com/gi, 'threads.net');
+
+      // Strategy 1: Ultra-fast Jina Direct Engine (~0.5s!) on threads.net
+      const jinaDirect = await fetchJinaJson(netUrl, true, 4000);
       if (jinaDirect) {
         bestRawImg = pickBestImageFromJinaData(jinaDirect);
         const meta = jinaDirect.metadata || {};
@@ -2509,16 +2543,100 @@
         if (cleaned.description) bestDesc = cleaned.description;
       }
 
-      // Strategy 2: Jina JSON on Threads /embed endpoint if image or title still missing
-      if ((!bestRawImg || !bestTitle) && shortcode) {
-        const embedData = await fetchJinaJson(`https://www.threads.net/t/${shortcode}/embed`);
-        if (embedData) {
-          if (!bestRawImg) bestRawImg = pickBestImageFromJinaData(embedData);
-          if (!bestTitle && embedData.content) {
-            const lines = String(embedData.content).split('\n').map(l => l.trim()).filter(Boolean);
-            if (lines[0] && !isGenericPlatformTitle(lines[0])) bestTitle = safeSliceText(lines[0], 90);
+      // Strategy 2: Parallel Microlink + Jina Browser Mode if image or title still missing
+      if (!bestRawImg || !bestTitle) {
+        const [mlData, jinaBrowser] = await Promise.all([
+          fetchMicrolinkData(netUrl, 4200),
+          fetchJinaJson(netUrl, false, 5500)
+        ]);
+
+        if (mlData) {
+          const mImg = normalizeRawImageUrl(mlData.image && mlData.image.url);
+          if (!bestRawImg && mImg && !isAvatarOrIconUrl(mImg)) bestRawImg = mImg;
+          const cleanedMl = cleanSocialOgText(mlData.title, mlData.description);
+          if (!bestTitle && cleanedMl.title) bestTitle = cleanedMl.title;
+          if (!bestDesc && cleanedMl.description) bestDesc = cleanedMl.description;
+        }
+
+        if (jinaBrowser) {
+          if (!bestRawImg) bestRawImg = pickBestImageFromJinaData(jinaBrowser);
+          const meta = jinaBrowser.metadata || {};
+          const cleanedB = cleanSocialOgText(
+            meta['og:title'] || meta['twitter:title'] || jinaBrowser.title,
+            meta['og:description'] || meta['description'] || jinaBrowser.description
+          );
+          if (!bestTitle && cleanedB.title) bestTitle = cleanedB.title;
+          if (!bestDesc && cleanedB.description) bestDesc = cleanedB.description;
+        }
+      }
+
+      if (!bestRawImg && !bestTitle) return null;
+      const finalImg = bestRawImg ? await proxyAndPersistImageUrl(bestRawImg) : '';
+      return {
+        title: bestTitle,
+        description: bestDesc,
+        image: finalImg
+      };
+    }
+
+    function extractPinterestPinId(u) {
+      if (!u) return '';
+      const m = String(u).match(/pinterest\.[a-z.]+\/pin\/(?:[^/?#]*--)?(\d{8,22})/i);
+      return (m && m[1]) ? m[1] : '';
+    }
+
+    async function fetchPinterestMetadata(url) {
+      let pinId = extractPinterestPinId(url);
+      let bestTitle = '';
+      let bestDesc = '';
+      let bestRawImg = '';
+
+      // Resolve pin.it shortlinks or get page title via Jina Direct Engine
+      const jinaDirect = await fetchJinaJson(url, true, 4000);
+      if (jinaDirect) {
+        if (!pinId) {
+          pinId = extractPinterestPinId(jinaDirect.finalUrl || jinaDirect.url || '');
+        }
+        bestRawImg = pickBestImageFromJinaData(jinaDirect);
+        const rawT = (jinaDirect.metadata && jinaDirect.metadata['og:title']) || jinaDirect.title || '';
+        if (rawT && !isGenericPlatformTitle(rawT)) {
+          bestTitle = safeSliceText(decodeHtmlEntities(String(rawT).trim()).replace(/\s*\|\s*Pinterest.*$/i, ''), 90);
+        }
+      }
+
+      if (!pinId && /pin\.it/i.test(url)) {
+        const jinaBrowser = await fetchJinaJson(url, false, 5000);
+        if (jinaBrowser) {
+          pinId = extractPinterestPinId(jinaBrowser.finalUrl || jinaBrowser.url || '');
+          if (!bestRawImg) bestRawImg = pickBestImageFromJinaData(jinaBrowser);
+          if (!bestTitle && jinaBrowser.title && !isGenericPlatformTitle(jinaBrowser.title)) {
+            bestTitle = safeSliceText(decodeHtmlEntities(String(jinaBrowser.title).trim()), 90);
           }
         }
+      }
+
+      // Query Pinterest's official CORS-friendly Pidgets API (0 rate limit, ~100ms response!)
+      if (pinId) {
+        try {
+          const pidgetRes = await fetchWithTimeout(`https://widgets.pinterest.com/v3/pidgets/pins/info/?pin_ids=${pinId}`, {}, 3500);
+          if (pidgetRes.ok) {
+            const pj = await pidgetRes.json();
+            const pinObj = pj && Array.isArray(pj.data) && pj.data[0];
+            if (pinObj && !pinObj.error) {
+              const imgs = pinObj.images || {};
+              const pImg = (imgs['564x'] && imgs['564x'].url) || (imgs['orig'] && imgs['orig'].url) || (imgs['236x'] && imgs['236x'].url) || '';
+              if (pImg) bestRawImg = pImg;
+              const richTitle = pinObj.rich_metadata && pinObj.rich_metadata.title;
+              const pDesc = (pinObj.description || '').trim();
+              if (!bestTitle && richTitle && !isGenericPlatformTitle(richTitle)) {
+                bestTitle = safeSliceText(richTitle, 90);
+              } else if (!bestTitle && pDesc) {
+                bestTitle = safeSliceText(pDesc, 90);
+              }
+              if (pDesc) bestDesc = pDesc;
+            }
+          }
+        } catch (e) {}
       }
 
       if (!bestRawImg && !bestTitle) return null;
@@ -2537,8 +2655,14 @@
       return (m && m[1]) ? m[1] : '';
     }
 
+    const urlMetadataCache = new Map();
+
     async function fetchUrlMetadata(url) {
       if (!url) return null;
+      const cached = urlMetadataCache.get(url);
+      if (cached && cached.image) return cached;
+
+      let result = null;
 
       // 1. Instagram Reel / Post / Share link extraction
       if (/instagram\.com|instagr\.am/i.test(url)) {
@@ -2547,9 +2671,12 @@
         let fallbackDesc = '';
         let fallbackRawImg = '';
 
-        // If it is an Instagram /share/ link or shortlink without a direct shortcode, resolve via Jina JSON first!
+        // If it is an Instagram /share/ link or shortlink without a direct shortcode, resolve via Jina first
         if (!shortcode) {
-          const resolvedData = await fetchJinaJson(url);
+          let resolvedData = await fetchJinaJson(url, true, 4000);
+          if (!resolvedData || (!extractIgShortcodeFromUrl(resolvedData.finalUrl || resolvedData.url || '') && !pickBestImageFromJinaData(resolvedData))) {
+            resolvedData = await fetchJinaJson(url, false, 5500);
+          }
           if (resolvedData) {
             shortcode = extractIgShortcodeFromUrl(resolvedData.finalUrl || resolvedData.url || '');
             fallbackRawImg = pickBestImageFromJinaData(resolvedData);
@@ -2566,21 +2693,24 @@
         if (shortcode) {
           const igMeta = await fetchInstagramReelOrPostMetadata(shortcode, url);
           if (igMeta && igMeta.image) {
-            return igMeta;
-          }
-          if (igMeta) {
+            result = igMeta;
+          } else if (igMeta) {
             if (!fallbackTitle && igMeta.title) fallbackTitle = igMeta.title;
             if (!fallbackDesc && igMeta.description) fallbackDesc = igMeta.description;
           }
         }
 
-        if (fallbackRawImg || fallbackTitle) {
+        if (!result && (fallbackRawImg || fallbackTitle)) {
           const finalImg = fallbackRawImg ? await proxyAndPersistImageUrl(fallbackRawImg) : '';
-          return {
+          result = {
             title: fallbackTitle,
             description: fallbackDesc,
             image: finalImg
           };
+        }
+        if (result) {
+          if (result.image) urlMetadataCache.set(url, result);
+          return result;
         }
       }
 
@@ -2590,63 +2720,84 @@
         const shortcode = (thMatch && thMatch[1]) ? thMatch[1] : '';
         const thMeta = await fetchThreadsPostMetadata(shortcode, url);
         if (thMeta && (thMeta.image || thMeta.title)) {
+          if (thMeta.image) urlMetadataCache.set(url, thMeta);
           return thMeta;
         }
       }
 
-      // 3. Pinterest / Xiaohongshu / Web extraction: combine Jina JSON + Microlink for maximum reliability
+      // 3. Pinterest Pin / pin.it extraction
+      if (/pinterest\.[a-z.]+|pin\.it/i.test(url)) {
+        const pinMeta = await fetchPinterestMetadata(url);
+        if (pinMeta && (pinMeta.image || pinMeta.title)) {
+          if (pinMeta.image) urlMetadataCache.set(url, pinMeta);
+          return pinMeta;
+        }
+      }
+
+      // 4. Xiaohongshu / Web extraction: try Jina Direct Engine first (captures SSR og:image before client-side login redirect!), then Browser Mode + Microlink
       let bestTitle = '';
       let bestDesc = '';
       let bestRawImg = '';
 
-      // 3a. Try Jina JSON first (resolves xhslink.com, pin.it, and extracts og:image + page images)
-      const jinaData = await fetchJinaJson(url);
-      if (jinaData) {
-        bestRawImg = pickBestImageFromJinaData(jinaData);
-        const meta = jinaData.metadata || {};
-        const rawT = meta['og:title'] || meta['twitter:title'] || jinaData.title || '';
-        const rawD = meta['og:description'] || meta['description'] || jinaData.description || '';
+      const jinaDirect = await fetchJinaJson(url, true, 4200);
+      if (jinaDirect) {
+        bestRawImg = pickBestImageFromJinaData(jinaDirect);
+        const meta = jinaDirect.metadata || {};
+        const rawT = meta['og:title'] || meta['twitter:title'] || jinaDirect.title || '';
+        const rawD = meta['og:description'] || meta['description'] || jinaDirect.description || '';
         if (!isGenericPlatformTitle(rawT)) {
-          bestTitle = decodeHtmlEntities(String(rawT).trim()).replace(/\s*-\s*小紅書.*|\s*-\s*小红书.*/i, '');
+          bestTitle = decodeHtmlEntities(String(rawT).trim()).replace(/\s*-\s*小紅書.*|\s*-\s*小红书.*|\s*-\s*rednote.*/i, '');
         }
         if (rawD && !isGenericPlatformTitle(rawD)) {
           bestDesc = decodeHtmlEntities(String(rawD).trim());
         }
       }
 
-      // 3b. If image or title is still missing, try Microlink
       if (!bestRawImg || !bestTitle) {
-        try {
-          const apiUrl = `https://api.microlink.io/?url=${safeEncodeURIComponent(url)}`;
-          const res = await fetchWithTimeout(apiUrl, {}, 3500);
-          if (res.ok) {
-            const json = await res.json();
-            if (json && json.status === 'success' && json.data) {
-              const mImg = (json.data.image && json.data.image.url) || '';
-              if (!bestRawImg && mImg && !isAvatarOrIconUrl(mImg)) {
-                bestRawImg = mImg;
-              }
-              if (!bestTitle && json.data.title && !isGenericPlatformTitle(json.data.title)) {
-                bestTitle = json.data.title;
-              }
-              if (!bestDesc && json.data.description && !isGenericPlatformTitle(json.data.description)) {
-                bestDesc = json.data.description;
-              }
-            }
+        const [jinaBrowser, mlData] = await Promise.all([
+          fetchJinaJson(url, false, 5500),
+          fetchMicrolinkData(url, 4000)
+        ]);
+
+        if (jinaBrowser) {
+          if (!bestRawImg) bestRawImg = pickBestImageFromJinaData(jinaBrowser);
+          const meta = jinaBrowser.metadata || {};
+          const rawT = meta['og:title'] || meta['twitter:title'] || jinaBrowser.title || '';
+          const rawD = meta['og:description'] || meta['description'] || jinaBrowser.description || '';
+          if (!bestTitle && !isGenericPlatformTitle(rawT)) {
+            bestTitle = decodeHtmlEntities(String(rawT).trim()).replace(/\s*-\s*小紅書.*|\s*-\s*小红书.*|\s*-\s*rednote.*/i, '');
           }
-        } catch (err) {}
+          if (!bestDesc && rawD && !isGenericPlatformTitle(rawD)) {
+            bestDesc = decodeHtmlEntities(String(rawD).trim());
+          }
+        }
+
+        if (mlData) {
+          const mImg = normalizeRawImageUrl(mlData.image && mlData.image.url);
+          if (!bestRawImg && mImg && !isAvatarOrIconUrl(mImg)) {
+            bestRawImg = mImg;
+          }
+          if (!bestTitle && mlData.title && !isGenericPlatformTitle(mlData.title)) {
+            bestTitle = decodeHtmlEntities(String(mlData.title).trim()).replace(/\s*-\s*小紅書.*|\s*-\s*小红书.*|\s*-\s*rednote.*/i, '');
+          }
+          if (!bestDesc && mlData.description && !isGenericPlatformTitle(mlData.description)) {
+            bestDesc = decodeHtmlEntities(String(mlData.description).trim());
+          }
+        }
       }
 
       if (!bestRawImg && !bestTitle) return null;
       const finalImg = bestRawImg ? await proxyAndPersistImageUrl(bestRawImg) : '';
-      return {
+      result = {
         title: bestTitle,
         description: bestDesc,
         image: finalImg
       };
+      if (result.image) urlMetadataCache.set(url, result);
+      return result;
     }
 
-    async function fetchUrlMetadataSafe(url, maxWaitMs = 5500) {
+    async function fetchUrlMetadataSafe(url, maxWaitMs = 9000) {
       return withOverallTimeout(fetchUrlMetadata(url), maxWaitMs);
     }
 
@@ -2771,7 +2922,6 @@
       renderCategorySelects();
       renderFilters();
       renderCards();
-      healMissingThumbnailsInBackground();
     }
 
     function renderCategorySelects() {
@@ -3550,7 +3700,7 @@
         let note = '';
 
         if (url) {
-          const meta = await fetchUrlMetadataSafe(url, 4800);
+          const meta = await fetchUrlMetadataSafe(url, 8500);
           if (meta) {
             if (!title && meta.title) title = meta.title;
             if (meta.image) image = meta.image;
@@ -3866,7 +4016,7 @@
       }
     }
 
-    function triggerModalMetadataFetch(force = false, maxWaitMs = 5500) {
+    function triggerModalMetadataFetch(force = false, maxWaitMs = 8500) {
       const raw = itemRawInput.value.trim();
       if (!raw) return Promise.resolve(null);
       const { url, extractedTitle, platform } = parseSharedInput(raw);
@@ -3976,9 +4126,9 @@
         }
         try {
           if (activeModalFetchPromise) {
-            await withOverallTimeout(activeModalFetchPromise, 2200);
+            await withOverallTimeout(activeModalFetchPromise, 6500);
           } else {
-            await triggerModalMetadataFetch(true, 2800);
+            await triggerModalMetadataFetch(true, 6500);
           }
         } catch (err) {}
         if (saveItemSubmitBtn) {

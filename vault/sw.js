@@ -1,4 +1,4 @@
-// v8 - Fix URIError: URI malformed caused by UTF-16 surrogate pair splitting on emojis in titles/URLs
+// v9 - Ultra-fast X-Engine direct thumbnail extraction + Pinterest Pidgets API + prevent background rate-limit exhaustion
 self.addEventListener('install', (e) => {
   self.skipWaiting();
 });
