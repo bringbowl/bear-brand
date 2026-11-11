@@ -344,6 +344,25 @@ def apply_metrics_to_html(metrics):
                     html
                 )
 
+        # 6. Update DEWYTREE Live Stats (Lookbook + Showcase Card)
+        if "public_tiktoks" in metrics and "dewytree" in metrics["public_tiktoks"]:
+            dt_plays = metrics["public_tiktoks"]["dewytree"].get("plays", 0)
+            dt_likes = metrics["public_tiktoks"]["dewytree"].get("likes", 0)
+            dt_comments = metrics["public_tiktoks"]["dewytree"].get("comments", 0)
+            if dt_plays > 0:
+                dt_plays_fmt = f"{dt_plays:,}"
+                dt_likes_fmt = f"{dt_likes:,}"
+                html = re.sub(
+                    r'(<div class="lookbook-title">DEWYTREE 愛心泡泡挑戰</div>\s*<div class="lookbook-meta">)[^<]+(</div>)',
+                    rf'\g<1>TikTok {dt_plays_fmt} 觀看・{dt_likes_fmt} 讚・12K 新觀眾\g<2>',
+                    html
+                )
+                html = re.sub(
+                    r'(<span>TikTok 自然觀看 <strong>)[^<]+(</strong></span>\s*<span>)❤️ [^｜]+｜ 💬 [^<]+(</span>)',
+                    rf'\g<1>{dt_plays_fmt}+\g<2>❤️ {dt_likes_fmt} ｜ 💬 {dt_comments}\g<3>',
+                    html
+                )
+
         # 6. Update visible sync timestamp in footer
         if last_updated:
             sync_stamp = f'<br><span class="sync-stamp" style="display:inline-block;margin-top:6px;font-size:12px;opacity:0.8;">📊 全平台公開數據最後同步：{last_updated}（每日 07:17 CST 自動執行）</span>'
