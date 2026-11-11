@@ -227,13 +227,16 @@ def fetch_public_tiktok_data(metrics):
                 l_num = int(v_likes.group(1)) if v_likes else 0
                 p_num = int(v_plays.group(1)) if v_plays else 0
                 c_num = int(v_comments.group(1)) if v_comments else 0
-                tiktok_videos_stats[label] = {
-                    "video_id": vid,
-                    "likes": l_num,
-                    "plays": p_num,
-                    "comments": c_num
-                }
-                print(f"  👉 TikTok [{label}]: {l_num} likes, {p_num} plays, {c_num} comments")
+                if l_num > 0 or p_num > 0:
+                    tiktok_videos_stats[label] = {
+                        "video_id": vid,
+                        "likes": l_num,
+                        "plays": p_num,
+                        "comments": c_num
+                    }
+                    print(f"  👉 TikTok [{label}]: {l_num} likes, {p_num} plays, {c_num} comments")
+                else:
+                    print(f"  ⚠️ TikTok [{label}] returned empty stats; preserving cached metrics")
         except Exception as e:
             print(f"  ⚠️ Warning fetching TikTok video {vid}: {e}")
 
@@ -346,10 +349,11 @@ def apply_metrics_to_html(metrics):
                 )
 
         # 6. Update DEWYTREE Live Stats (Lookbook + Showcase Card)
-        if "public_tiktoks" in metrics and "dewytree" in metrics["public_tiktoks"]:
-            dt_plays = metrics["public_tiktoks"]["dewytree"].get("plays", 0)
-            dt_likes = metrics["public_tiktoks"]["dewytree"].get("likes", 0)
-            dt_comments = metrics["public_tiktoks"]["dewytree"].get("comments", 0)
+        dt_data = metrics.get("tiktok", {}).get("public_videos", {}).get("dewytree", {})
+        if dt_data:
+            dt_plays = dt_data.get("plays", 0)
+            dt_likes = dt_data.get("likes", 0)
+            dt_comments = dt_data.get("comments", 0)
             if dt_plays > 0:
                 dt_plays_fmt = f"{dt_plays:,}"
                 dt_likes_fmt = f"{dt_likes:,}"
@@ -364,7 +368,7 @@ def apply_metrics_to_html(metrics):
                     html
                 )
 
-        # 6. Update visible sync timestamp in footer
+        # 7. Update visible sync timestamp in footer
         if last_updated:
             sync_stamp = f'<br><span class="sync-stamp" style="display:inline-block;margin-top:6px;font-size:12px;opacity:0.8;">📊 全平台公開數據最後同步：{last_updated}（每日 07:17 CST 自動執行）</span>'
             if 'class="sync-stamp"' in html:

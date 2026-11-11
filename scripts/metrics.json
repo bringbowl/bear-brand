@@ -39,39 +39,39 @@
     "public_videos": {
       "weekly_outfit": {
         "video_id": "7702347579811499272",
-        "likes": 0,
-        "plays": 0,
-        "comments": 0
+        "likes": 90,
+        "plays": 578,
+        "comments": 4
       },
       "beef_noodles_tiktok": {
         "video_id": "7703047882932292871",
-        "likes": 0,
-        "plays": 0,
-        "comments": 0
+        "likes": 45,
+        "plays": 440,
+        "comments": 3
       },
       "dewytree": {
         "video_id": "7703458907158482183",
-        "likes": 0,
-        "plays": 0,
-        "comments": 0
+        "likes": 1488,
+        "plays": 14900,
+        "comments": 6
       },
       "picnic_outfit": {
         "video_id": "7705726517854145810",
-        "likes": 0,
-        "plays": 0,
-        "comments": 0
+        "likes": 79,
+        "plays": 571,
+        "comments": 4
       },
       "dont_film_me": {
         "video_id": "7705259051969482002",
-        "likes": 0,
-        "plays": 0,
+        "likes": 6,
+        "plays": 51,
         "comments": 0
       },
       "nuegray_tiktok": {
         "video_id": "7706505140433374482",
-        "likes": 0,
-        "plays": 0,
-        "comments": 0
+        "likes": 8,
+        "plays": 104,
+        "comments": 1
       }
     }
   },
