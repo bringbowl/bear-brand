@@ -1,21 +1,23 @@
 {
   "last_updated": "2026-11-11",
   "followers": {
-    "threads": 5141,
-    "instagram": 3865,
-    "tiktok": 2615
+    "threads": 5212,
+    "instagram": 3868,
+    "tiktok": 2675
   },
   "instagram": {
-    "views_30d": 105000,
-    "reach_30d": 51000,
-    "interactions_30d": 3856,
-    "reels_share": 94.0,
-    "non_follower_reach": 41693,
-    "interaction_growth_pct": 120.6,
-    "reach_growth_pct": 22.4,
+    "is_verified": true,
+    "views_30d": 62089,
+    "reach_30d": 24000,
+    "interactions_30d": 2363,
+    "reels_share": 91.6,
+    "interaction_growth_pct": -20.2,
+    "reach_growth_pct": -51.4,
+    "link_clicks_28d": 63,
+    "link_clicks_growth_pct": 530.0,
     "gender": {
-      "female": 37.0,
-      "male": 63.0
+      "female": 36.4,
+      "male": 63.6
     },
     "age": {
       "25_34": 48.2,
@@ -25,15 +27,53 @@
     }
   },
   "threads": {
-    "views_30d": 540187,
-    "reach_30d": 306360,
-    "interactions_30d": 26792,
-    "interaction_growth_pct": 78.8,
-    "female_reach_ratio": 47.8,
+    "views_30d": 311200,
+    "reach_30d": 143919,
+    "interactions_30d": 20334,
+    "interaction_growth_pct": -1.0,
+    "female_reach_ratio": 42.9,
     "public_follower_badge": "5.2K"
   },
   "tiktok": {
-    "likes_total": "1.4 萬+"
+    "likes_total": "1.6 萬+",
+    "public_videos": {
+      "weekly_outfit": {
+        "video_id": "7702347579811499272",
+        "likes": 90,
+        "plays": 578,
+        "comments": 4
+      },
+      "beef_noodles_tiktok": {
+        "video_id": "7703047882932292871",
+        "likes": 45,
+        "plays": 440,
+        "comments": 3
+      },
+      "dewytree": {
+        "video_id": "7703458907158482183",
+        "likes": 1488,
+        "plays": 14900,
+        "comments": 6
+      },
+      "picnic_outfit": {
+        "video_id": "7705726517854145810",
+        "likes": 79,
+        "plays": 571,
+        "comments": 4
+      },
+      "dont_film_me": {
+        "video_id": "7705259051969482002",
+        "likes": 6,
+        "plays": 51,
+        "comments": 0
+      },
+      "nuegray_tiktok": {
+        "video_id": "7706505140433374482",
+        "likes": 8,
+        "plays": 104,
+        "comments": 1
+      }
+    }
   },
   "top_reels": {
     "outlook": {
@@ -62,6 +102,46 @@
       "shortcode": "DfEFEc5NgyB",
       "likes": 91,
       "comments": 2
+    },
+    "weekly_outfit": {
+      "shortcode": "DfG9G8kN2TP",
+      "likes": 68,
+      "comments": 4
+    },
+    "moana_ai": {
+      "shortcode": "DfHnBt9CcET",
+      "likes": 0,
+      "comments": 0
+    },
+    "beef_noodles_reel": {
+      "shortcode": "DfL0-_ENJjw",
+      "likes": 31,
+      "comments": 1
+    },
+    "aomo_xmas_reel": {
+      "shortcode": "DfRGLjHN6M1",
+      "likes": 2,
+      "comments": 0
+    },
+    "puppy_control": {
+      "shortcode": "DfebFdRtSQq",
+      "likes": 5,
+      "comments": 0
+    },
+    "picnic_outfit": {
+      "shortcode": "DfeZ8UjNtwU",
+      "likes": 33,
+      "comments": 1
+    },
+    "dont_film_me": {
+      "shortcode": "DfbLumTpofI",
+      "likes": 16,
+      "comments": 0
+    },
+    "nuegray_reel": {
+      "shortcode": "Dfjx-XlJplC",
+      "likes": 9,
+      "comments": 0
     }
   },
   "public_threads": {
@@ -84,6 +164,91 @@
       "post_id": "DfEFKfVjl06",
       "likes": "40",
       "replies": "10"
+    },
+    "sunbathe_new": {
+      "post_id": "DfGz76kgdIa",
+      "likes": "220",
+      "replies": "25"
+    },
+    "weekly_outfit": {
+      "post_id": "DfG9TZ8lTP7",
+      "likes": "69",
+      "replies": "14"
+    },
+    "nangang_bento": {
+      "post_id": "DfG4O04gZK3",
+      "likes": "29",
+      "replies": "7"
+    },
+    "moana_ai": {
+      "post_id": "DfHnC7KCWGg",
+      "likes": "0",
+      "replies": "0"
+    },
+    "moana_disney": {
+      "post_id": "DfHnhiRAcZh",
+      "likes": "23",
+      "replies": "5"
+    },
+    "sunbathe_d173": {
+      "post_id": "DfJFJ45Af3Z",
+      "likes": "129",
+      "replies": "12"
+    },
+    "pomelo_halloween": {
+      "post_id": "DfJBr0GAZDP",
+      "likes": "6",
+      "replies": "0"
+    },
+    "beef_noodles_threads": {
+      "post_id": "DfLzzKYgeD_",
+      "likes": "46",
+      "replies": "7"
+    },
+    "sunbathe_d174": {
+      "post_id": "DfL_qzYgQjq",
+      "likes": "124",
+      "replies": "16"
+    },
+    "sunbathe_d175": {
+      "post_id": "DfOU98KgVp3",
+      "likes": "164",
+      "replies": "26"
+    },
+    "aomo_xmas_threads": {
+      "post_id": "DfRFCI1Aa4R",
+      "likes": "31",
+      "replies": "6"
+    },
+    "picnic_outfit": {
+      "post_id": "DfeaEyYgTEA",
+      "likes": "33",
+      "replies": "1"
+    },
+    "flower_thread": {
+      "post_id": "DfkDvF1gZMq",
+      "likes": "14",
+      "replies": "11"
+    },
+    "nuegray_threads": {
+      "post_id": "Dfjz7icgWQ7",
+      "likes": "18",
+      "replies": "2"
+    },
+    "sunbathe_d182": {
+      "post_id": "DfjMnClAQ_c",
+      "likes": "261",
+      "replies": "25"
+    },
+    "heels_walk_threads": {
+      "post_id": "Dfl4NTWAUye",
+      "likes": "95",
+      "replies": "7"
+    },
+    "sunbathe_d183": {
+      "post_id": "Dfl34SygXJy",
+      "likes": "190",
+      "replies": "40"
     }
   }
 }
