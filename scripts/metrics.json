@@ -39,39 +39,39 @@
     "public_videos": {
       "weekly_outfit": {
         "video_id": "7702347579811499272",
-        "likes": 90,
-        "plays": 578,
-        "comments": 4
+        "likes": 0,
+        "plays": 0,
+        "comments": 0
       },
       "beef_noodles_tiktok": {
         "video_id": "7703047882932292871",
-        "likes": 45,
-        "plays": 440,
-        "comments": 3
+        "likes": 0,
+        "plays": 0,
+        "comments": 0
       },
       "dewytree": {
         "video_id": "7703458907158482183",
-        "likes": 1488,
-        "plays": 14900,
-        "comments": 6
+        "likes": 0,
+        "plays": 0,
+        "comments": 0
       },
       "picnic_outfit": {
         "video_id": "7705726517854145810",
-        "likes": 79,
-        "plays": 571,
-        "comments": 4
+        "likes": 0,
+        "plays": 0,
+        "comments": 0
       },
       "dont_film_me": {
         "video_id": "7705259051969482002",
-        "likes": 6,
-        "plays": 51,
+        "likes": 0,
+        "plays": 0,
         "comments": 0
       },
       "nuegray_tiktok": {
         "video_id": "7706505140433374482",
-        "likes": 8,
-        "plays": 104,
-        "comments": 1
+        "likes": 0,
+        "plays": 0,
+        "comments": 0
       }
     }
   },
@@ -141,6 +141,11 @@
     "nuegray_reel": {
       "shortcode": "Dfjx-XlJplC",
       "likes": 9,
+      "comments": 0
+    },
+    "eaton_dried_fruit": {
+      "shortcode": "Dc5iZoqiTBt",
+      "likes": 22,
       "comments": 0
     }
   },
@@ -247,7 +252,7 @@
     },
     "sunbathe_d183": {
       "post_id": "Dfl34SygXJy",
-      "likes": "192",
+      "likes": "195",
       "replies": "40"
     }
   }

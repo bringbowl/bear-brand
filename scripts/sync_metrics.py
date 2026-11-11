@@ -40,7 +40,8 @@ FEATURED_REELS = {
     "DfEFEc5NgyB": "windows_boot",      # 工程師說過：重新開機可以解決 99% 的問題 (Windows 開機穿搭)
     "DeLN3-lJr_Z": "outlook",           # 當不了Luke 只有Outlook 黑西裝
     "DdnPGRkpgYI": "grandma_dress",     # 152/45 拯救阿嬤睡衣
-    "DdIcdqApnra": "dear_dahlia"        # Dear Dahlia
+    "DdIcdqApnra": "dear_dahlia",       # Dear Dahlia
+    "Dc5iZoqiTBt": "eaton_dried_fruit"  # EATON 伊頓果乾團購 (2026/09)
 }
 
 # Featured Threads Posts
