@@ -194,6 +194,38 @@ def fetch_public_instagram_data(metrics):
     return metrics
 
 
+def extract_threads_followers_from_html(html):
+    """Extract (exact_count, badge_str) from Threads profile HTML/DOM."""
+    if not html:
+        return None, None
+
+    exact = None
+    m_json = re.search(r'\\?"follower_count\\?"\s*:\s*(\d+)', html)
+    if m_json:
+        val = int(m_json.group(1))
+        if val >= 3000:
+            exact = val
+
+    if exact is None:
+        m_exact = (
+            re.search(r'title="([\d,]+)"[^>]*>[\d,]+</span>\s*(?:位粉絲|Followers)', html)
+            or re.search(r'content="([\d,]+)\s*(?:位粉絲|Followers)', html)
+        )
+        if m_exact:
+            val = int(m_exact.group(1).replace(",", ""))
+            if val >= 3000:
+                exact = val
+
+    badge = None
+    m_badge = re.search(r'content="([0-9\.]+[KMkm])\s*(?:Followers|位粉絲)', html)
+    if m_badge:
+        badge = m_badge.group(1).upper()
+    elif exact is not None:
+        badge = f"{exact / 1000:.1f}K" if exact >= 1000 else str(exact)
+
+    return exact, badge
+
+
 def fetch_public_threads_data(metrics):
     print("🧵 [2/3] Fetching live Threads data via public profile & post embed parser...")
     url = "https://www.threads.net/@bear__only150"
@@ -201,16 +233,22 @@ def fetch_public_threads_data(metrics):
     try:
         with urllib.request.urlopen(req, timeout=8) as resp:
             html = resp.read().decode("utf-8", errors="ignore")
-            m = re.search(r'content="([0-9\.]+[KMkm]?)\s*Followers', html)
-            if m:
-                th_badge = m.group(1)
+            exact, th_badge = extract_threads_followers_from_html(html)
+            cur_th = metrics.get("followers", {}).get("threads", 0)
+            if th_badge:
                 metrics.setdefault("threads", {})["public_follower_badge"] = th_badge
+                print(f"  🏆 Live Threads Followers badge: {th_badge}")
+            if exact is not None:
+                if exact != cur_th:
+                    metrics["followers"]["threads"] = exact
+                    print(f"  📈 Updated live Threads followers: {cur_th} -> {exact}")
+                else:
+                    print(f"  🏆 Live Threads Followers (exact): {exact}")
+            elif th_badge:
                 badge_floor = _parse_badge_to_int(th_badge)
-                cur_th = metrics.get("followers", {}).get("threads", 0)
                 if badge_floor > cur_th:
                     metrics["followers"]["threads"] = badge_floor
                     print(f"  📈 Updated Threads follower baseline from badge {th_badge} -> {badge_floor}")
-                print(f"  🏆 Live Threads Followers badge: {th_badge}")
     except Exception as e:
         print(f"  ⚠️ Warning fetching Threads profile: {e}")
 
