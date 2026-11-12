@@ -315,6 +315,16 @@ def apply_metrics_to_html(metrics):
             f'累積逾 {wan_str}粉絲（{total_fans_fmt}+）',
             html
         )
+        html = re.sub(
+            r'(<span>📸 Instagram 核心商業池（)[0-9,]+( 粉）</span>)',
+            rf'\g<1>{ig_fans_fmt}\g<2>',
+            html
+        )
+        html = re.sub(
+            r'(<span>🧵 Threads [^（]+（)[0-9,]+( 粉）</span>)',
+            rf'\g<1>{th_fans_fmt}\g<2>',
+            html
+        )
 
         # 3. Update Outlook Highlight Stats
         if "public_reels" in metrics and "outlook" in metrics["public_reels"]:
