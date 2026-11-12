@@ -150,13 +150,13 @@ def fetch_public_instagram_data(metrics):
                 likes = re.search(r"edge_liked_by[\\]*\"*:\s*\{[\\]*\"*count[\\]*\"*:\s*(\d+)", html)
                 l_count = int(likes.group(1)) if likes else None
                 if l_count is None:
-                    m = re.search(r"([\d,]+)\s*(?:likes|like|次贊|個讚)", html)
+                    m = re.search(r"(\d[\d,]*)\s*(?:likes|like|次贊|個讚)", html)
                     l_count = int(m.group(1).replace(",", "")) if m else 0
 
                 comments = re.search(r"edge_media_to_comment[\\]*\"*:\s*\{[\\]*\"*count[\\]*\"*:\s*(\d+)", html)
                 c_count = int(comments.group(1)) if comments else None
                 if c_count is None:
-                    c = re.search(r"([\d,]+)\s*(?:comments|comment|則留言|條評論)", html)
+                    c = re.search(r"(\d[\d,]*)\s*(?:comments|comment|則留言|條評論)", html)
                     c_count = int(c.group(1).replace(",", "")) if c else 0
 
                 cap_match = re.search(r'<div class="Caption"[^>]*>(.*?)</div>', html, re.S)
