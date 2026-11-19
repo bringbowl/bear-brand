@@ -32,7 +32,15 @@ USER_AGENT = "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36
 
 # Featured Instagram Reels / Posts (plus any auto-discovered shortcodes saved in metrics.json)
 FEATURED_REELS = {
-    "Dfjx-XlJplC": "nuegray_reel",      # nuegray 雙色唇釉測評 (2026/11/10)
+    "Df5_XUeNWsC": "winter_2026_grwm",     # 151/45 2026第一個冬天⛄ 氛圍感穿搭 GRWM (2026/11/19)
+    "Df3n0SBRtHk": "reel_dont_be_pushover", # 拒當受氣包😤😤 (2026/11/18)
+    "Dfwa197N6Wz": "sansui_palace_reel",   # 山水吸塵器黑五大片《吸妃回宮：後宮掃除傳》 (2026/11/15)
+    "Dfv_sMioWu0": "rhinestone_sticker",   # 偶然在家裡撿到水鑽貼的我 (2026/11/15)
+    "DftQEGiNsqI": "aomo_xmas_part1",      # 奧莫聖誕寫真一：聖誕老人培訓 (2026/11/14)
+    "DftRgqNtqM_": "aomo_xmas_part2",      # 奧莫聖誕寫真二：偷禮物不冬眠的熊 (2026/11/14)
+    "DftSA1lNK9k": "aomo_xmas_part3",      # 奧莫聖誕寫真三：卡在煙囪口了啦 (2026/11/14)
+    "DfoZtQutuQN": "aomo_xmas_final_reel", # 奧莫韓式照相館板橋店聖誕寫真體驗 Reels (2026/11/12)
+    "Dfjx-XlJplC": "nuegray_reel",         # nuegray 雙色唇釉測評 (2026/11/10)
     "DfebFdRtSQq": "puppy_control",     # 被這隻狗狗硬控了10分鐘 (2026/11/08)
     "DfeZ8UjNtwU": "picnic_outfit",     # 151/45 野餐怎麼可以沒有花草跟小狗 (2026/11/08)
     "DfbLumTpofI": "dont_film_me",      # 再錄我打爆你喔👊🏻💥 背後激凸日常 (2026/11/07)
@@ -49,6 +57,18 @@ FEATURED_REELS = {
 
 # Featured Threads Posts (plus any auto-discovered posts saved in metrics.json)
 FEATURED_THREADS = {
+    "Df56q07ATev": "sunbathe_d190",        # 醫生叫我每天都要曬太陽D_190☀️ 還沒十點出門 求100個你很棒 (2026/11/19)
+    "Df6AlAhlYjH": "winter_vibe_threads",  # 151/45 2026第一個冬天⛄ 氛圍感穿搭 (2026/11/19)
+    "Df34utWAVL5": "sunbathe_d189",        # 醫生叫我每天都要曬太陽D_189☀️ 可是今天沒太陽 只能曬燈管 (2026/11/18)
+    "Df2FZKMAb4L": "sansui_daily_001",    # 一天一吸直到家裡沒有一根頭髮 001 (2026/11/17)
+    "DfyyujSJdiA": "threads_1116",         # 11/16 Threads 最新貼文 (2026/11/16)
+    "Dfwb6yOICAR": "sansui_palace_threads", # 山水吸塵器黑五大片《吸妃回宮》 (2026/11/15)
+    "Dfv_biQoN5X": "rhinestone_threads",   # 偶然在家裡撿到水鑽貼的我 (2026/11/15)
+    "DftQFBMld-9": "aomo_xmas_th_part1",   # 奧莫聖誕寫真一：聖誕老人培訓 (2026/11/14)
+    "DftRhtIlXpl": "aomo_xmas_th_part2",   # 奧莫聖誕寫真二：偷禮物不冬眠的熊 (2026/11/14)
+    "DftSCFmlZ9M": "aomo_xmas_th_part3",   # 奧莫聖誕寫真三：卡在煙囪口了啦 (2026/11/14)
+    "Dfon7LKgd9f": "sunbathe_d184",        # 醫生叫我每天都要曬太陽D_184☀️ 復健科時光屋2個半小時 (2026/11/12)
+    "DfocDLwAYUI": "aomo_xmas_final_threads", # 奧莫聖誕寫真板橋店30歲清單情報 (2026/11/12)
     "Dfl34SygXJy": "sunbathe_d183",        # 醫生叫我每天都要曬太陽D_183☀️ 再婚皇后50話 (2026/11/11)
     "Dfl4NTWAUye": "heels_walk_threads",   # 穿高跟鞋偷偷欣賞自己的步伐 (2026/11/11)
     "DfkDvF1gZMq": "flower_thread",        # 收過另一伴送你最印象深刻的花 (2026/11/10)
@@ -74,6 +94,9 @@ FEATURED_THREADS = {
 
 # Featured TikTok Videos
 FEATURED_TIKTOK_VIDEOS = {
+    "7709704711913393416": "winter_2026_tiktok", # 151/45 2026第一個冬天⛄ 氛圍感穿搭 (2026/11/19)
+    "7708324728032759092": "sansui_palace_tiktok", # 山水吸塵器黑五大片《吸妃回宮》 (2026/11/15)
+    "7707172066721598728": "aomo_xmas_tiktok",    # 奧莫韓式照相館板橋店聖誕寫真 (2026/11/12)
     "7706505140433374482": "nuegray_tiktok",      # nuegray 雙色唇釉測評 (2026/11/10)
     "7705726517854145810": "picnic_outfit",       # 151/45 野餐日穿搭 (2026/11/08)
     "7705259051969482002": "dont_film_me",        # 再看我打你喔 (2026/11/07)
