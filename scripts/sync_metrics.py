@@ -57,6 +57,10 @@ FEATURED_REELS = {
 
 # Featured Threads Posts (plus any auto-discovered posts saved in metrics.json)
 FEATURED_THREADS = {
+    "Df_KzrUgZMz": "sunbathe_d192",        # 醫生叫我每天都要曬太陽D_192☀️ 直接把太陽掛身上了 (2026/11/21)
+    "Df83zWwgcnH": "sunbathe_d191",        # 醫生叫我每天都要曬太陽D_191☀️ 政大女孩悄悄話文魚 (2026/11/20)
+    "Df83GqPAUeJ": "cutout_abstract_th",   # 當你覺得自己很完美但沒有地方拍照：直接摳出來 (2026/11/20)
+    "Df7rIoygQmB": "panic_relax_threads",  # 如何學會放鬆：從小認真讀書上班唯獨沒人教我放鬆 (2026/11/20)
     "Df56q07ATev": "sunbathe_d190",        # 醫生叫我每天都要曬太陽D_190☀️ 還沒十點出門 求100個你很棒 (2026/11/19)
     "Df6AlAhlYjH": "winter_vibe_threads",  # 151/45 2026第一個冬天⛄ 氛圍感穿搭 (2026/11/19)
     "Df34utWAVL5": "sunbathe_d189",        # 醫生叫我每天都要曬太陽D_189☀️ 可是今天沒太陽 只能曬燈管 (2026/11/18)
