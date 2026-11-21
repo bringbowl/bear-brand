@@ -1,20 +1,20 @@
 {
   "last_updated": "2026-11-21",
   "followers": {
-    "threads": 5300,
-    "instagram": 3864,
+    "threads": 5253,
+    "instagram": 3865,
     "tiktok": 2685
   },
   "instagram": {
     "is_verified": true,
-    "views_30d": 62089,
-    "reach_30d": 24000,
-    "interactions_30d": 2363,
+    "views_30d": 60526,
+    "reach_30d": 20632,
+    "interactions_30d": 2110,
     "reels_share": 91.6,
     "interaction_growth_pct": -20.2,
     "reach_growth_pct": -51.4,
-    "link_clicks_28d": 63,
-    "link_clicks_growth_pct": 530.0,
+    "link_clicks_28d": 71,
+    "link_clicks_growth_pct": 1320.0,
     "gender": {
       "female": 36.4,
       "male": 63.6
@@ -24,15 +24,23 @@
       "35_44": 35.3,
       "18_24": 7.4,
       "45_plus": 9.1
-    }
+    },
+    "ig_native_views_28d": 57874,
+    "fb_cross_views_28d": 2652,
+    "profile_visits_28d": 2324,
+    "follower_views_share_pct": 28.0,
+    "follower_views_growth_pct": 112.9,
+    "follower_interactions_share_pct": 53.0
   },
   "threads": {
-    "views_30d": 311200,
-    "reach_30d": 143919,
-    "interactions_30d": 20334,
+    "views_30d": 215744,
+    "reach_30d": 100067,
+    "interactions_30d": 12683,
     "interaction_growth_pct": -1.0,
-    "female_reach_ratio": 42.9,
-    "public_follower_badge": "5.3K"
+    "female_reach_ratio": 37.7,
+    "public_follower_badge": "5.3K",
+    "net_followers_30d": 265,
+    "follower_growth_pct": 5.0
   },
   "tiktok": {
     "likes_total": "1.6 萬+",
@@ -592,13 +600,13 @@
       "total": 11850
     },
     "2026-11-21": {
-      "threads": 5300,
-      "instagram": 3864,
+      "threads": 5253,
+      "instagram": 3865,
       "tiktok": 2685,
-      "total": 11849
+      "total": 11803
     }
   },
-  "last_manual_insights_date": "2026-11-11",
+  "last_manual_insights_date": "2026-11-21",
   "card_audit": {
     "strategy": "流量天花板優先（全時段最高＋品類互補）＋ 破紀錄黑馬自動升格",
     "incumbents": {

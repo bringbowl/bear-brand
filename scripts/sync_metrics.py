@@ -272,7 +272,8 @@ def fetch_public_threads_data(metrics):
                 else:
                     print(f"  🏆 Live Threads Followers (exact): {exact}")
             elif th_badge:
-                badge_floor = _parse_badge_to_int(th_badge)
+                raw_b = _parse_badge_to_int(th_badge)
+                badge_floor = max(0, raw_b - 50) if str(th_badge).upper().endswith("K") else raw_b
                 if badge_floor > cur_th:
                     metrics["followers"]["threads"] = badge_floor
                     print(f"  📈 Updated Threads follower baseline from badge {th_badge} -> {badge_floor}")
