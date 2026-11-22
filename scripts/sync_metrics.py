@@ -57,6 +57,7 @@ FEATURED_REELS = {
 
 # Featured Threads Posts (plus any auto-discovered posts saved in metrics.json)
 FEATURED_THREADS = {
+    "DgCcIP2IGgr": "remarried_empress_threads", # Disney+《再婚皇后》紫木槿快閃店＆撲克牌小卡 (2026/11/22)
     "Df_KzrUgZMz": "sunbathe_d192",        # 醫生叫我每天都要曬太陽D_192☀️ 直接把太陽掛身上了 (2026/11/21)
     "Df83zWwgcnH": "sunbathe_d191",        # 醫生叫我每天都要曬太陽D_191☀️ 政大女孩悄悄話文魚 (2026/11/20)
     "Df83GqPAUeJ": "cutout_abstract_th",   # 當你覺得自己很完美但沒有地方拍照：直接摳出來 (2026/11/20)
