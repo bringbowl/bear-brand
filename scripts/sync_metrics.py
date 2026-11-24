@@ -32,6 +32,7 @@ USER_AGENT = "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36
 
 # Featured Instagram Reels / Posts (plus any auto-discovered shortcodes saved in metrics.json)
 FEATURED_REELS = {
+    "Df62SLwIdby": "satur_zhongshan_ig",   # SATUR 中山門市探店穿搭圖文：在喧鬧的中山找到I人的小天地🚪 (2026/11/22)
     "Df5_XUeNWsC": "winter_2026_grwm",     # 151/45 2026第一個冬天⛄ 氛圍感穿搭 GRWM (2026/11/19)
     "Df3n0SBRtHk": "reel_dont_be_pushover", # 拒當受氣包😤😤 (2026/11/18)
     "Dfwa197N6Wz": "sansui_palace_reel",   # 山水吸塵器黑五大片《吸妃回宮：後宮掃除傳》 (2026/11/15)
@@ -60,6 +61,7 @@ FEATURED_THREADS = {
     "DgEt0iAgQL-": "sunbathe_d193",        # 醫生叫我每天都要曬太陽D_193☀️ 戀愛腦vs十年朋友腦 (2026/11/23)
     "DgEzpKngbHm": "xmas_tree_collection", # 蓋一個樓蒐集2026各地的聖誕樹🎄 (2026/11/23)
     "DgCcIP2IGgr": "remarried_empress_threads", # Disney+《再婚皇后》紫木槿快閃店＆撲克牌小卡 (2026/11/22)
+    "DgANPrcgRPP": "satur_zhongshan_threads", # SATUR 中山門市探店穿搭：在喧鬧的中山找到I人的小天地🚪 (2026/11/22)
     "Df_KzrUgZMz": "sunbathe_d192",        # 醫生叫我每天都要曬太陽D_192☀️ 直接把太陽掛身上了 (2026/11/21)
     "Df83zWwgcnH": "sunbathe_d191",        # 醫生叫我每天都要曬太陽D_191☀️ 政大女孩悄悄話文魚 (2026/11/20)
     "Df83GqPAUeJ": "cutout_abstract_th",   # 當你覺得自己很完美但沒有地方拍照：直接摳出來 (2026/11/20)
