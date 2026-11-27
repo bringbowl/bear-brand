@@ -32,6 +32,7 @@ USER_AGENT = "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36
 
 # Featured Instagram Reels / Posts (plus any auto-discovered shortcodes saved in metrics.json)
 FEATURED_REELS = {
+    "DgPeD0Ryrgj": "shark_puppy_reel",     # 鯊魚群裡混入狗狗是有可能的嗎 (2026/11/27)
     "DgKz6FMy2Hk": "qiaohu_locking_reel",  # 蛤 巧虎會locking??? (2026/11/25)
     "Df62SLwIdby": "satur_zhongshan_ig",   # SATUR 中山門市探店穿搭圖文：在喧鬧的中山找到I人的小天地🚪 (2026/11/22)
     "Df5_XUeNWsC": "winter_2026_grwm",     # 151/45 2026第一個冬天⛄ 氛圍感穿搭 GRWM (2026/11/19)
@@ -59,6 +60,7 @@ FEATURED_REELS = {
 
 # Featured Threads Posts (plus any auto-discovered posts saved in metrics.json)
 FEATURED_THREADS = {
+    "DgPbVeSAReS": "shark_puppy_threads",  # 老兄你還記得你是一隻鯊魚嗎 (2026/11/27)
     "DgPiWBKATr4": "avengers_doomsday_threads", # 復仇者聯盟：末日之戰 Threads 串文宣傳 (2026/11/27)
     "DgOt1vYAZxf": "sunbathe_d196",        # 醫生叫我每天都要曬太陽D_196☀️ 明阿仔丟袂蒜囉 (2026/11/27)
     "DgMVOmYgTPC": "sunbathe_d195",        # 醫生叫我每天都要曬太陽D_195☀️ 下雨是讓雨鞋可以出門的日子 (2026/11/26)
