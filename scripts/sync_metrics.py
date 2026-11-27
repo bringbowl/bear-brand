@@ -32,6 +32,7 @@ USER_AGENT = "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36
 
 # Featured Instagram Reels / Posts (plus any auto-discovered shortcodes saved in metrics.json)
 FEATURED_REELS = {
+    "DgKz6FMy2Hk": "qiaohu_locking_reel",  # 蛤 巧虎會locking??? (2026/11/25)
     "Df62SLwIdby": "satur_zhongshan_ig",   # SATUR 中山門市探店穿搭圖文：在喧鬧的中山找到I人的小天地🚪 (2026/11/22)
     "Df5_XUeNWsC": "winter_2026_grwm",     # 151/45 2026第一個冬天⛄ 氛圍感穿搭 GRWM (2026/11/19)
     "Df3n0SBRtHk": "reel_dont_be_pushover", # 拒當受氣包😤😤 (2026/11/18)
