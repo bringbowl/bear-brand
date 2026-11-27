@@ -59,6 +59,7 @@ FEATURED_REELS = {
 
 # Featured Threads Posts (plus any auto-discovered posts saved in metrics.json)
 FEATURED_THREADS = {
+    "DgPiWBKATr4": "avengers_doomsday_threads", # 復仇者聯盟：末日之戰 Threads 串文宣傳 (2026/11/27)
     "DgOt1vYAZxf": "sunbathe_d196",        # 醫生叫我每天都要曬太陽D_196☀️ 明阿仔丟袂蒜囉 (2026/11/27)
     "DgMVOmYgTPC": "sunbathe_d195",        # 醫生叫我每天都要曬太陽D_195☀️ 下雨是讓雨鞋可以出門的日子 (2026/11/26)
     "DgKPrwDgSph": "vieshow_magic_robot",  # 南港威秀《歡迎光臨魔法秘境》互動機器人 (2026/11/25)
