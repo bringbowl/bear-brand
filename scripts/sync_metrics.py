@@ -59,6 +59,8 @@ FEATURED_REELS = {
 
 # Featured Threads Posts (plus any auto-discovered posts saved in metrics.json)
 FEATURED_THREADS = {
+    "DgKPrwDgSph": "vieshow_magic_robot",  # 南港威秀《歡迎光臨魔法秘境》互動機器人 (2026/11/25)
+    "DgJ9o8hAQ_3": "sunbathe_d194",        # 醫生叫我每天都要曬太陽D_194☀️ 冷天每日循環心態 (2026/11/25)
     "DgEt0iAgQL-": "sunbathe_d193",        # 醫生叫我每天都要曬太陽D_193☀️ 戀愛腦vs十年朋友腦 (2026/11/23)
     "DgEzpKngbHm": "xmas_tree_collection", # 蓋一個樓蒐集2026各地的聖誕樹🎄 (2026/11/23)
     "DgCcIP2IGgr": "remarried_empress_threads", # Disney+《再婚皇后》紫木槿快閃店＆撲克牌小卡 (2026/11/22)
