@@ -59,6 +59,8 @@ FEATURED_REELS = {
 
 # Featured Threads Posts (plus any auto-discovered posts saved in metrics.json)
 FEATURED_THREADS = {
+    "DgOt1vYAZxf": "sunbathe_d196",        # 醫生叫我每天都要曬太陽D_196☀️ 明阿仔丟袂蒜囉 (2026/11/27)
+    "DgMVOmYgTPC": "sunbathe_d195",        # 醫生叫我每天都要曬太陽D_195☀️ 下雨是讓雨鞋可以出門的日子 (2026/11/26)
     "DgKPrwDgSph": "vieshow_magic_robot",  # 南港威秀《歡迎光臨魔法秘境》互動機器人 (2026/11/25)
     "DgJ9o8hAQ_3": "sunbathe_d194",        # 醫生叫我每天都要曬太陽D_194☀️ 冷天每日循環心態 (2026/11/25)
     "DgEt0iAgQL-": "sunbathe_d193",        # 醫生叫我每天都要曬太陽D_193☀️ 戀愛腦vs十年朋友腦 (2026/11/23)
